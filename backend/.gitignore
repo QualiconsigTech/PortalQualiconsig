@@ -1,0 +1,30 @@
+# Bytecode do Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Ambiente virtual
+venv/
+
+# Variáveis de ambiente e segredos
+.env
+
+# Migrations compiladas
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+
+# Arquivos de IDEs e editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de log
+*.log
