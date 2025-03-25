@@ -4,6 +4,7 @@ from .setor import Setor
 class Analista(models.Model):
     nome = models.CharField(max_length=100)
     email = models.EmailField()
+    senha = models.CharField(max_length=128)
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE)
     deletado = models.BooleanField(default=False)
 
