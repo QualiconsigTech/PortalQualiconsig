@@ -12,34 +12,24 @@ from .serializers import ChamadoSerializer, ChamadoResumoSerializer, ChamadoDeta
 # Configura o logger
 logger = logging.getLogger(__name__)
 
-## Criar chamado
+## Criar chamados
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def criar_chamado(request):
     try:
-        jwt_authenticator = JWTAuthentication()
-        header = get_authorization_header(request).decode('utf-8')
-        if not header:
-            return Response({"detail": "Token não fornecido."}, status=401)
+        usuario = request.user  
 
-        token = header.split(' ')[1]
-        validated_token = jwt_authenticator.get_validated_token(token)
+        if not isinstance(usuario, Usuario):
+            return Response({"erro": "Usuário não autorizado."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        user_id = validated_token.get('user_id')
-
-        logger.info(f"[CHAMADO] ID do usuário autenticado: {user_id}")
-
-        usuario = Usuario.objects.filter(id=user_id, deletado=False).first()
-        if not usuario:
-            logger.warning(f"[CHAMADO] Usuário ID={user_id} não encontrado no banco.")
-            return Response({"detail": "Usuário não encontrado", "code": "user_not_found"}, status=401)
+        logger.info(f"[CHAMADO] ID do usuário autenticado: {usuario.id}")
 
         data = request.data.copy()
-        data['usuario'] = usuario.id  # Associa o chamado ao usuário autenticado
+        data['usuario'] = usuario.id  
 
         serializer = ChamadoSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(usuario=usuario) 
             logger.info(f"[CHAMADO] Chamado criado com sucesso para o usuário ID={usuario.id}")
             return Response({'mensagem': 'Chamado criado com sucesso.'}, status=status.HTTP_201_CREATED)
 
@@ -48,7 +38,8 @@ def criar_chamado(request):
 
     except Exception as e:
         logger.error(f"[CHAMADO] Erro inesperado: {str(e)}")
-        return Response({"erro": str(e)}, status=500)
+        return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 ## Lista os 10 chamados
 @api_view(['GET'])

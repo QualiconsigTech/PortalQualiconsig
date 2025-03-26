@@ -34,14 +34,14 @@ def cadastrar_analista(request):
 @api_view(['POST'])
 def login(request):
     email = request.data.get('email')
-    senha = request.data.get('senha')
+    senha = request.data.get('password')  
 
     usuario = Usuario.objects.filter(email=email).first() or Analista.objects.filter(email=email).first()
-    if usuario and check_password(senha, usuario.senha):
+    if usuario and usuario.check_password(senha):
         token = generate_token(usuario)
         return Response({
             'token': token,
-            'id': usuario.id  # adiciona o ID do usuário ou analista logado
+            'id': usuario.id  
         }, status=status.HTTP_200_OK)
 
     return Response({'erro': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -82,4 +82,3 @@ def deletar_usuario_analista(request, tipo, id):
     instance.deletado = True
     instance.save()
     return Response({'mensagem': f'{tipo.capitalize()} deletado com sucesso.'}, status=status.HTTP_200_OK)
-
