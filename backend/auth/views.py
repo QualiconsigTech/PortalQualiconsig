@@ -38,8 +38,14 @@ def login(request):
 
     usuario = Usuario.objects.filter(email=email).first() or Analista.objects.filter(email=email).first()
     if usuario and check_password(senha, usuario.senha):
-        return Response({'token': generate_token(usuario)}, status=status.HTTP_200_OK)
+        token = generate_token(usuario)
+        return Response({
+            'token': token,
+            'id': usuario.id  # adiciona o ID do usuário ou analista logado
+        }, status=status.HTTP_200_OK)
+
     return Response({'erro': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 @api_view(['PUT'])
 def atualizar_usuario_analista(request, tipo, id):
