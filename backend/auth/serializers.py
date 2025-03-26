@@ -42,11 +42,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
 
 class AnalistaSerializer(serializers.ModelSerializer):
-    senha = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = Analista
-        fields = ['id', 'nome', 'email', 'senha', 'setor', 'deletado']
+        fields = ['id', 'nome', 'email', 'password', 'setor', 'deletado']
 
     def validate_email(self, value):
         if not validar_email(value):
@@ -55,7 +55,7 @@ class AnalistaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Este e-mail já está em uso.")
         return value
 
-    def validate_senha(self, value):
+    def validate_password(self, value):
         if not validar_senha(value):
             raise serializers.ValidationError(
                 "A senha deve ter pelo menos 8 caracteres, incluir uma letra maiúscula, um número e um caractere especial."
@@ -63,5 +63,5 @@ class AnalistaSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
+        validated_data['password'] = make_password(validated_data['password'])
         return super().create(validated_data)

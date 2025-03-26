@@ -34,17 +34,26 @@ def cadastrar_analista(request):
 @api_view(['POST'])
 def login(request):
     email = request.data.get('email')
-    senha = request.data.get('password')  
+    senha = request.data.get('password')
 
-    usuario = Usuario.objects.filter(email=email).first() or Analista.objects.filter(email=email).first()
+    usuario = Usuario.objects.filter(email=email).first()
     if usuario and usuario.check_password(senha):
         token = generate_token(usuario)
         return Response({
             'token': token,
-            'id': usuario.id  
+            'id': usuario.id
         }, status=status.HTTP_200_OK)
 
-    return Response({'erro': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+    analista = Analista.objects.filter(email=email).first()
+    if analista and analista.check_password(senha):
+        token = generate_token(analista)
+        return Response({
+            'token': token,
+            'id': analista.id
+        }, status=status.HTTP_200_OK)
+
+    return Response({'detail': 'Usuário e/ou senha incorreto(s)'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 @api_view(['PUT'])
