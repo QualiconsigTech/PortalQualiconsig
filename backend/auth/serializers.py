@@ -1,4 +1,3 @@
-# auth/serializers.py
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from users.models.usuarios import Usuario
@@ -63,5 +62,8 @@ class AnalistaSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super().create(validated_data)
+        password = validated_data.pop('password')
+        analista = Analista(**validated_data)
+        analista.set_password(password)
+        analista.save()
+        return analista
