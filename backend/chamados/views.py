@@ -3,16 +3,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import get_authorization_header
+
 from users.models.usuarios import Usuario
 from .models.chamados import Chamado
 from .serializers import ChamadoSerializer, ChamadoResumoSerializer, ChamadoDetalhadoSerializer
 
-# Configura o logger
 logger = logging.getLogger(__name__)
 
-## Criar chamados
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def criar_chamado(request):
@@ -41,33 +38,69 @@ def criar_chamado(request):
         return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-## Lista os 10 chamados
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listar_ultimos_chamados(request):
     usuario_id = request.user.id
     chamados = Chamado.objects.filter(usuario_id=usuario_id).order_by('-criado_em')[:10]
-    serializer = ChamadoResumoSerializer(chamados, many=True)
+    serializer = ChamadoSerializer(chamados, many=True)
     return Response(serializer.data)
 
 
-## Lista 10 chamados em historico
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listar_historico_chamados(request):
     usuario_id = request.user.id
-    chamados = Chamado.objects.filter(usuario_id=usuario_id).order_by('-criado_em')[:10]
-    serializer = ChamadoResumoSerializer(chamados, many=True)
+    chamados = Chamado.objects.filter(usuario_id=usuario_id).order_by('-criado_em')
+    serializer = ChamadoSerializer(chamados, many=True)
     return Response(serializer.data)
 
 
-## Lista Destalhes do chamados 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def detalhes_chamado(request, chamado_id):
     try:
-        chamado = Chamado.objects.get(id=chamado_id, usuario=request.user)
+        chamado = Chamado.objects.get(id=chamado_id)
+
+        if chamado.usuario != request.user and not request.user.is_admin:
+            return Response({'erro': 'Você não tem permissão para ver este chamado.'}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = ChamadoDetalhadoSerializer(chamado)
         return Response(serializer.data)
+
     except Chamado.DoesNotExist:
         return Response({'erro': 'Chamado não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def atualizar_chamado(request, chamado_id):
+    try:
+        chamado = Chamado.objects.get(id=chamado_id)
+    except Chamado.DoesNotExist:
+        return Response({'erro': 'Chamado não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user != chamado.usuario and not request.user.is_admin:
+        return Response({'erro': 'Você não tem permissão para atualizar este chamado.'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = ChamadoSerializer(chamado, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'mensagem': 'Chamado atualizado com sucesso.', 'dados': serializer.data}, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deletar_chamado(request, chamado_id):
+    try:
+        chamado = Chamado.objects.get(id=chamado_id)
+    except Chamado.DoesNotExist:
+        return Response({'erro': 'Chamado não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user != chamado.usuario and not request.user.is_admin:
+        return Response({'erro': 'Você não tem permissão para deletar este chamado.'}, status=status.HTTP_403_FORBIDDEN)
+
+    chamado.delete()
+    return Response({'mensagem': 'Chamado deletado com sucesso.'}, status=status.HTTP_200_OK)

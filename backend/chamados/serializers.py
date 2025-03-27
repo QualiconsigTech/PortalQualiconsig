@@ -10,7 +10,7 @@ class ChamadoSerializer(serializers.ModelSerializer):
 class ChamadoResumoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chamado
-        fields = ['id', 'titulo', 'criado_em', 'status']
+        fields = ['id', 'titulo', 'criado_em']
 
 
 class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
