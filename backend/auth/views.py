@@ -27,6 +27,7 @@ def cadastrar_usuario(request):
 @api_view(['POST'])
 def cadastrar_analista(request):
     serializer = AnalistaSerializer(data=request.data)
+    
     if serializer.is_valid():
         user = serializer.save()
         return Response({'mensagem': 'Cadastro realizado com sucesso'}, status=status.HTTP_201_CREATED)
@@ -37,6 +38,15 @@ def login(request):
     email = request.data.get('email')
     senha = request.data.get('password')
 
+    analista = Analista.objects.filter(email=email, deletado=False).first()
+
+    if analista and analista.check_password(senha):
+        token = generate_token(analista)
+        return Response({
+            'token': token,
+            'id': analista.id
+        }, status=status.HTTP_200_OK)
+
     usuario = Usuario.objects.filter(email=email).first()
     if usuario and usuario.check_password(senha):
         token = generate_token(usuario)
@@ -45,16 +55,7 @@ def login(request):
             'id': usuario.id
         }, status=status.HTTP_200_OK)
 
-    analista = Analista.objects.filter(email=email).first()
-    if analista and analista.check_password(senha):
-        token = generate_token(analista)
-        return Response({
-            'token': token,
-            'id': analista.id
-        }, status=status.HTTP_200_OK)
-
     return Response({'detail': 'Usuário e/ou senha incorreto(s)'}, status=status.HTTP_401_UNAUTHORIZED)
-
 
 
 @api_view(['PUT'])
