@@ -18,6 +18,8 @@ def create_monday_task(request):
 
         user = request.user
 
+        print(user)
+
         if not isinstance(user, Usuario):
             return Response({"erro": "Usuário não autorizado."}, status=status.HTTP_401_UNAUTHORIZED)
 
