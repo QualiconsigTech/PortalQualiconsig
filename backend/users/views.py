@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from chamados.models.chamados import Chamado
-#from .services import filtrar_chamados_por_setor, atribuir_chamado_ao_analista
 from chamados.serializers import ChamadoDetalhadoSerializer
+from users.services import filtrar_chamados_por_analista, atender_chamado, filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
 
 
 @api_view(['POST'])
@@ -32,21 +32,79 @@ def abrir_chamado(request):
         'chamado_id': chamado.id
     }, status=status.HTTP_201_CREATED)
 
-''''
 class ChamadosDoAnalistaView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        analista = request.user
-        chamados = filtrar_chamados_por_setor(analista)
+        chamados = filtrar_chamados_por_analista(request.user)
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
 class AtenderChamadoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, chamado_id):
-        analista = request.user
-        chamado = atribuir_chamado_ao_analista(chamado_id, analista)
-        return Response({"message": "Chamado atribuído com sucesso."})
-'''
+        try:
+            chamado = atender_chamado(request.user, chamado_id)
+            return Response({
+                "mensagem": f"Chamado '{chamado.titulo}' atribuído ao analista com sucesso."
+            }, status=status.HTTP_200_OK)
+        except PermissionError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class ChamadosAtribuidosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        chamados = filtra_chamados_atribuidos(request.user)
+        serializer = ChamadoDetalhadoSerializer(chamados, many=True)
+        return Response(serializer.data)
+    
+class EncerrarChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        chamado = encerrar_chamado(chamado_id, request.user)
+        return Response({
+            'mensagem': 'Chamado encerrado com sucesso.',
+            'chamado_id': chamado.id,
+            'encerrado_em': chamado.encerrado_em
+        })
+    
+## ANALISTA ADMIN    
+class ChamadosAdminView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        chamados = listar_chamados_admin(request.user)
+        serializer = ChamadoDetalhadoSerializer(chamados, many=True)
+        return Response(serializer.data)
+
+
+class ChamadosPorSetorAdminView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, setor_nome):
+        chamados = listar_chamados_admin(request.user, setor_nome)
+        serializer = ChamadoDetalhadoSerializer(chamados, many=True)
+        return Response(serializer.data)
+    
+## USUARIO
+class ChamadosDoUsuarioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        chamados = listar_chamados_do_usuario(request.user)
+        serializer = ChamadoDetalhadoSerializer(chamados, many=True)
+        return Response(serializer.data)
+    
+## USUARIOS ADMIN
+class ChamadosDoSetorView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        chamados = listar_chamados_do_setor(request.user)
+        serializer = ChamadoDetalhadoSerializer(chamados, many=True)
+        return Response(serializer.data)
