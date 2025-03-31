@@ -3,7 +3,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
 from users.models.usuarios import Usuario
 from .models.chamados import Chamado
 from .serializers import ChamadoSerializer, ChamadoResumoSerializer, ChamadoDetalhadoSerializer
