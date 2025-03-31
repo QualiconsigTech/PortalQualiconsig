@@ -69,3 +69,5 @@ def listar_chamados_do_setor(usuario):
 
     return Chamado.objects.filter(usuario__setor=usuario.setor)
 
+def obter_dados_do_usuario(usuario):
+    return usuario 

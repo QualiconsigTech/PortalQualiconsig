@@ -1,5 +1,5 @@
 from django.urls import path
-from users.views import ChamadosDoAnalistaView, AtenderChamadoView, ChamadosAtribuidosView, ChamadosDoSetorView,EncerrarChamadoView, ChamadosAdminView, ChamadosPorSetorAdminView,ChamadosDoUsuarioView
+from users.views import ChamadosDoAnalistaView, AtenderChamadoView, EnviarResetSenhaView, ConfirmarResetSenhaView,UsuarioLogadoView,ChamadosAtribuidosView, ChamadosDoSetorView,EncerrarChamadoView, ChamadosAdminView, ChamadosPorSetorAdminView,ChamadosDoUsuarioView
 
 urlpatterns = [
     ## ANALISTA
@@ -14,4 +14,7 @@ urlpatterns = [
      path('chamados/meus/', ChamadosDoUsuarioView.as_view(), name='chamados-do-usuario'),
     ## USUARIO ADMIN
     path('chamados/setor/', ChamadosDoSetorView.as_view(), name='chamados-do-setor'),
+    path('me/', UsuarioLogadoView.as_view(), name='usuario-logado'),
+    path('reset-password/', EnviarResetSenhaView.as_view(), name='enviar-reset-senha'),
+    path('reset-password/confirm/', ConfirmarResetSenhaView.as_view(), name='confirmar-reset-senha'),
 ]

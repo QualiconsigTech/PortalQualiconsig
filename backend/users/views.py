@@ -5,8 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from chamados.models.chamados import Chamado
 from chamados.serializers import ChamadoDetalhadoSerializer
-from users.services import filtrar_chamados_por_analista, atender_chamado, filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
-
+from users.serializers import UsuarioLogadoSerializer
+from users.services import filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
+from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
+from users.models.usuarios import Usuario
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -108,3 +110,36 @@ class ChamadosDoSetorView(APIView):
         chamados = listar_chamados_do_setor(request.user)
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
+    
+class UsuarioLogadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        usuario = obter_dados_do_usuario(request.user)
+        serializer = UsuarioLogadoSerializer(usuario)
+        return Response(serializer.data)
+    
+class EnviarResetSenhaView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        try:
+            usuario = Usuario.objects.get(email=email)
+            token = gerar_token_email(email)
+            enviar_email_reset_senha(email, token)
+            return Response({"mensagem": "E-mail de recuperação enviado com sucesso."})
+        except Usuario.DoesNotExist:
+            return Response({"erro": "E-mail não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        
+class ConfirmarResetSenhaView(APIView):
+    def post(self, request):
+        token = request.data.get("token")
+        nova_senha = request.data.get("nova_senha")
+
+        try:
+            email = validar_token_email(token)
+            usuario = Usuario.objects.get(email=email)
+            usuario.set_password(nova_senha)
+            usuario.save()
+            return Response({"mensagem": "Senha redefinida com sucesso."})
+        except Exception as e:
+            return Response({"erro": "Token inválido ou expirado."}, status=400)

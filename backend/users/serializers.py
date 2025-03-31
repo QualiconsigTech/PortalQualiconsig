@@ -8,4 +8,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = ['id', 'nome', 'email']
 
 
+class UsuarioLogadoSerializer(serializers.ModelSerializer):
+    setor = serializers.StringRelatedField()
+    cargo = serializers.StringRelatedField()
 
+    class Meta:
+        model = Usuario
+        fields = ['id', 'nome', 'email', 'tipo', 'setor', 'cargo', 'is_admin', 'deletado']
