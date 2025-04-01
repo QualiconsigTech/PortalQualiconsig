@@ -40,23 +40,23 @@ api.interceptors.response.use(
 // Serviços específicos para chamados
 export const chamadosService = {
   // Obter todos os chamados
-  getAll: () => api.get('/api/usuarios/chamados/'),
+  getAll: () => api.get('usuarios/chamados/'),
   
   // Obter chamados por setor
-  getBySetor: (setor: string) => api.get(`/api/usuarios/chamados/setor/${setor}/`),
+  getBySetor: (setor: string) => api.get(`usuarios/chamados/setor/${setor}/`),
   
   // Obter um chamado específico
-  getById: (id: number) => api.get(`/api/usuarios/chamados/${id}/`),
+  getById: (id: number) => api.get(`usuarios/chamados/${id}/`),
   
   // Criar um novo chamado
-  create: (data: any) => api.post('/api/usuarios/chamados/', data),
+  create: (data: any) => api.post('usuarios/chamados/', data),
   
   // Atualizar um chamado
-  update: (id: number, data: any) => api.put(`/api/usuarios/chamados/${id}/`, data),
+  update: (id: number, data: any) => api.put(`usuarios/chamados/${id}/`, data),
   
   // Atualizar parcialmente um chamado
-  patch: (id: number, data: any) => api.patch(`/api/usuarios/chamados/${id}/`, data),
+  patch: (id: number, data: any) => api.patch(`usuarios/chamados/${id}/`, data),
   
   // Excluir um chamado
-  delete: (id: number) => api.delete(`/api/usuarios/chamados/${id}/`),
+  delete: (id: number) => api.delete(`usuarios/chamados/${id}/`),
 };
