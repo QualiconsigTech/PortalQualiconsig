@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { format } from "date-fns";
 import { api } from "@/services/api";
 import { LogOut, LayoutList } from "lucide-react";
+import { Rethink_Sans } from "next/font/google";
+
 
 interface Chamado {
   id: number;
@@ -11,6 +13,19 @@ interface Chamado {
   status: string;
   prioridade: string;
   criado_em: string;
+  categoria: string;
+  setor: string;
+}
+
+const formatDate = (date: string) => {
+  if (!date || date === "N/A") return "N/A"
+  const d = new Date(date);
+  return d.toLocaleDateString("pt-BR"), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  }
 }
 
 export default function ChamadosAnalista() {
@@ -92,9 +107,12 @@ export default function ChamadosAnalista() {
                 chamados.map((chamado) => (
                   <tr key={chamado.id} className="border-t">
                     <td className="py-2">{chamado.titulo}</td>
-                    <td className="py-2">{chamado.id}</td>
-                    <td className="py-2">Devido</td>
+                    <td className="py-2">{chamado.categoria}</td>
+                    <td className="py-2">aberto</td>
                     <td className="py-2 text-orange-500">Pendente</td>
+                    <td className="py-2">{chamado.setor}</td>
+                    <td>{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
+                    <td className="py-2">atender</td>
                   </tr>
                 ))
               )}
