@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from chamados.models.chamados import Chamado
+from users.serializers import UsuarioSerializer
 
 class ChamadoSerializer(serializers.ModelSerializer):
+    usuario = UsuarioSerializer(read_only=True)
+    analista = UsuarioSerializer(read_only=True)
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
     class Meta:
@@ -16,6 +19,8 @@ class ChamadoResumoSerializer(serializers.ModelSerializer):
 
 
 class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
+    usuario = UsuarioSerializer(read_only=True)
+    analista = UsuarioSerializer(read_only=True)
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
     class Meta:
