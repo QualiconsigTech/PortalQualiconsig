@@ -223,15 +223,7 @@ export default function ChamadosAnalista() {
       return new Blob([byteArrays], { type: contentType });
     };
     
-    
-    
-    
-    
-    
-    
-    
-
-    const exibirMensagem = (texto: string) => {
+      const exibirMensagem = (texto: string) => {
       setMensagem(texto);
     
       setTimeout(() => {
