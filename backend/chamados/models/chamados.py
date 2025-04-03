@@ -16,7 +16,7 @@ class Chamado(models.Model):
     encerrado_em = models.DateTimeField(null=True, blank=True)
     solucao = models.TextField(blank=True, null=True)
     comentarios = models.TextField(blank=True, null=True)
-    arquivos = models.TextField(blank=True, null=True) 
+    arquivos = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.titulo
