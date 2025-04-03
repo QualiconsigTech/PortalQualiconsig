@@ -205,6 +205,14 @@ export default function ChamadosAnalista() {
       }
     };
     
+    const toBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file); // isso já inclui o `data:<tipo>;base64,...`
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+    };
     
     const base64ToBlob = (base64: string, contentType = "application/octet-stream") => {
       const byteCharacters = atob(base64);
@@ -214,6 +222,7 @@ export default function ChamadosAnalista() {
       }
       return new Blob([byteArrays], { type: contentType });
     };
+    
     
     
     
