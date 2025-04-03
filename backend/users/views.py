@@ -1,4 +1,3 @@
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,30 +8,6 @@ from users.serializers import UsuarioLogadoSerializer
 from users.services import filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
 from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
 from users.models.usuarios import Usuario
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def abrir_chamado(request):
-    data = request.data
-    required_fields = ['titulo', 'categoria', 'prioridade', 'gravidade', 'descricao']
-
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return Response({field: 'Campo obrigatório.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    chamado = Chamado.objects.create(
-        titulo=data['titulo'],
-        categoria_id=data['categoria'],
-        prioridade=data['prioridade'],
-        gravidade=data['gravidade'],
-        descricao=data['descricao'],
-        usuario=request.user
-    )
-
-    return Response({
-        'mensagem': 'Chamado criado com sucesso!',
-        'chamado_id': chamado.id
-    }, status=status.HTTP_201_CREATED)
 
 class ChamadosDoAnalistaView(APIView):
     permission_classes = [IsAuthenticated]
@@ -68,7 +43,7 @@ class EncerrarChamadoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, chamado_id):
-        chamado = encerrar_chamado(chamado_id, request.user)
+        chamado = encerrar_chamado(chamado_id, request.user, request.data)
         return Response({
             'mensagem': 'Chamado encerrado com sucesso.',
             'chamado_id': chamado.id,

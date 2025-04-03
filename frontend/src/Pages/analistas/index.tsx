@@ -15,7 +15,7 @@ interface Chamado {
   gravidade: string;
   criado_em: string;
   categoria_nome: string;
-  setor_nome : string;
+  setor_nome: string;
   usuario: {
     id: number;
     nome: string;
@@ -25,10 +25,11 @@ interface Chamado {
     nome: string;
   } | null;
   encerrado_em: string | null;
+  solucao?: string;
+  comentarios?: string;
+  arquivos?: string;
 
 }
-
-
 
 export default function ChamadosAnalista() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
@@ -40,7 +41,16 @@ export default function ChamadosAnalista() {
   const [nomeUsuario, setNomeUsuario] = useState<string>("");
   const [modalAberto, setModalAberto] = useState(false);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
+  const [isAtendendo, setIsAtendendo] = useState(false);
+  const [isEncerrando, setIsEncerrando] = useState(false);
   const router = useRouter();
+  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [solucao, setSolucao] = useState("");
+  const [comentarios, setComentarios] = useState("");
+  const [anexos, setAnexos] = useState<FileList | null>(null);
+
+  
+
 
    useEffect(() => {
       const token = localStorage.getItem("token");
@@ -70,8 +80,18 @@ export default function ChamadosAnalista() {
           router.push("/login");
           return;
         }
+    
+        setLoading(true);
+        let url = "";
+    
+        if (activeView === "meus") {
+          url = "/api/usuarios/chamados/atribuidos/";
+        } else if (activeView === "setor") {
+          url = "/api/usuarios/chamados/";
+        }
+    
         try {
-          const response = await api.get("/api/usuarios/chamados/", {
+          const response = await api.get(url, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -83,8 +103,10 @@ export default function ChamadosAnalista() {
           setLoading(false);
         }
       };
+    
       fetchChamados();
-    }, [router]);
+    }, [router, activeView]);
+    
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -92,6 +114,9 @@ export default function ChamadosAnalista() {
   };
   const handleOpenModal = (chamado: Chamado) => {
     setChamadoSelecionado(chamado);
+    setSolucao(chamado.solucao || "");
+    setComentarios(chamado.comentarios || "");
+    setAnexos(null); 
     setModalAberto(true);
   };
 
@@ -113,6 +138,103 @@ export default function ChamadosAnalista() {
     return { texto: "Desconhecido", cor: "text-gray-500" };
   };
   
+  const atenderChamado = async () => {
+      if (!chamadoSelecionado) return;
+      setIsAtendendo(true);
+      const token = localStorage.getItem("token");
+  
+      try {
+        await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/atender/`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        exibirMensagem("Chamado atribuído com sucesso.");
+        handleCloseModal();
+        router.reload();
+      } catch (err) {
+        exibirMensagem("Erro ao atender o chamado.");
+        console.error(err);
+      } finally {
+        setIsAtendendo(false);
+      }
+    };
+  
+    const encerrarChamado = async () => {
+      if (!chamadoSelecionado) return;
+    
+      if (!solucao.trim()) {
+        exibirMensagem("Por favor, preencha a solução antes de encerrar o chamado.");
+        return;
+      }
+    
+      setIsEncerrando(true);
+      const token = localStorage.getItem("token");
+    
+      const base64Arquivos = anexos
+        ? await Promise.all(Array.from(anexos).map(file => toBase64(file)))
+        : [];
+    
+      const payload = {
+        solucao,
+        comentarios,
+        arquivos: base64Arquivos.join(";") // apenas arquivos em base64, separados
+      };
+    
+      try {
+        await api.post(
+          `/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        exibirMensagem("Chamado encerrado com sucesso.");
+        handleCloseModal();
+        router.reload();
+      } catch (err) {
+        exibirMensagem("Erro ao encerrar o chamado.");
+        console.error(err);
+      } finally {
+        setIsEncerrando(false);
+      }
+    };
+    
+    
+    const toBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+    };
+    const base64ToBlob = (base64Data: string, contentType: string): Blob => {
+      const base64 = base64Data.split(",")[1]; 
+      const byteCharacters: string = atob(base64); 
+      const byteArrays: number[] = [];
+    
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteArrays.push(byteCharacters.charCodeAt(i));
+      }
+    
+      const byteArray = new Uint8Array(byteArrays);
+      return new Blob([byteArray], { type: contentType });
+    };
+    
+    
+
+    const exibirMensagem = (texto: string) => {
+      setMensagem(texto);
+    
+      setTimeout(() => {
+        setMensagem(null);
+        handleCloseModal(); 
+      }, 4000); 
+    };
+
+    const statusSelecionado = chamadoSelecionado ? getStatus(chamadoSelecionado) : null;
+    const podeAtender = statusSelecionado?.texto === "Aberto";
+    const podeEncerrar = statusSelecionado?.texto === "Aberto" || statusSelecionado?.texto === "Em Atendimento";
+   
 
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
@@ -227,8 +349,8 @@ export default function ChamadosAnalista() {
           </table>
         </section>
    {modalAberto && chamadoSelecionado && (
-             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-               <div className="bg-white w-[90%] max-w-4xl p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
+              <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex justify-center items-center z-50">
+                <div className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
                  <div className="flex justify-between items-center mb-4">
                    <h2 className="text-xl font-bold">Detalhes do Chamado</h2>
                    <button onClick={handleCloseModal} className="text-gray-600 hover:text-red-600">✕</button>
@@ -240,7 +362,7 @@ export default function ChamadosAnalista() {
                    <div><strong>Categoria:</strong> {chamadoSelecionado.categoria_nome}</div>
                    <div><strong>Data de abertura:</strong> {format(new Date(chamadoSelecionado.criado_em), "dd/MM/yyyy")}</div>
                    <div><strong>Status:</strong> {getStatus(chamadoSelecionado).texto}</div>
-                   <div><strong>Usuário:</strong> {chamadoSelecionado.usuario.nome}</div>
+                   <div><strong>Usuário:</strong> {chamadoSelecionado.usuario.nome || "não informado"}</div>
                    <div><strong>Prioridade:</strong> {chamadoSelecionado.prioridade}</div>
                    <div><strong>Gravidade:</strong> {chamadoSelecionado.gravidade}</div>
                  </div>
@@ -252,26 +374,88 @@ export default function ChamadosAnalista() {
    
                  <div className="mb-4">
                    <label className="block font-semibold mb-1">Solução:</label>
-                   <textarea className="w-full border rounded p-2" rows={3} />
+                   <textarea value={solucao} onChange={(e) => setSolucao(e.target.value)} readOnly={statusSelecionado?.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100"
+/>
                  </div>
    
                  <div className="mb-4">
                    <label className="block font-semibold mb-1">Comentários:</label>
-                   <textarea className="w-full border rounded p-2" rows={2} />
+                   <textarea value={comentarios} onChange={(e) => setComentarios(e.target.value)} readOnly={statusSelecionado?.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100"
+/>
                  </div>
    
                  <div className="mb-4">
-                   <label className="block font-semibold mb-1">Arquivos Anexados:</label>
-                   <input type="file" multiple className="w-full" />
-                 </div>
+                    <label className="block font-semibold mb-1">Arquivos Anexados:</label>
+
+                    {chamadoSelecionado.arquivos && (
+                    <div className="text-sm text-gray-600 mb-2">
+                      Arquivos já anexados:
+                      <br />
+                      {chamadoSelecionado.arquivos
+                        .split(";")
+                        .filter((file) => file.trim() !== "")
+                        .map((base64, idx) => (
+                          <a
+                            key={idx}
+                            href="#"
+                            onClick={() => {
+                              const blob = base64ToBlob(base64, "application/pdf");
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `arquivo_${idx + 1}.pdf`;
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            }}
+                            className="text-blue-600 hover:underline block"
+                          >
+                            📎 Baixar Arquivo {idx + 1}
+                          </a>
+
+                        ))}
+                    </div>
+                  )}
+
+
+                    <input
+                      type="file"
+                      multiple
+                      className="w-full"
+                      onChange={(e) => setAnexos(e.target.files)}
+                    />
+                  </div>
+
    
                  <div className="flex justify-end gap-2">
-                   <button className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900">Atender</button>
-                   <button className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Encerrar</button>
-                 </div>
+                    {podeAtender && (
+                      <button
+                        onClick={atenderChamado}
+                        disabled={isAtendendo || isEncerrando}
+                        className={`px-6 py-2 rounded text-white ${isAtendendo ? "bg-blue-400" : "bg-blue-800 hover:bg-blue-900"}`}
+                      >
+                        {isAtendendo ? "Atendendo..." : "Atender"}
+                      </button>
+                    )}
+                    {podeEncerrar && (
+                      <button
+                        onClick={encerrarChamado}
+                        disabled={isEncerrando || isAtendendo}
+                        className={`px-6 py-2 rounded text-white ${isEncerrando ? "bg-red-400" : "bg-red-600 hover:bg-red-700"}`}
+                      >
+                        {isEncerrando ? "Encerrando..." : "Encerrar"}
+                      </button>
+                    )}
+                  </div>
                </div>
              </div>
            )}
+           {mensagem && (
+              <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+                <div className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-xl border border-gray-300">
+                  {mensagem}
+                </div>
+              </div>
+            )}
          </main>
        </div>
      );

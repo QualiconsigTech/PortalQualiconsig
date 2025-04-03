@@ -33,18 +33,27 @@ def filtra_chamados_atribuidos(usuario):
     
     return Chamado.objects.filter(analista=usuario)
 
-def encerrar_chamado(chamado_id, analista):
-    try:
-        chamado = Chamado.objects.get(id=chamado_id)
-    except Chamado.DoesNotExist:
-        raise NotFound("Chamado não encontrado.")
+def encerrar_chamado(chamado_id, usuario, dados=None):
+    chamado = Chamado.objects.get(id=chamado_id)
 
-    if chamado.analista != analista:
-        raise PermissionDenied("Você não tem permissão para encerrar este chamado.")
+    if chamado.analista != usuario:
+        raise PermissionError("Você não tem permissão para encerrar este chamado.")
 
+    if chamado.encerrado_em:
+        raise ValueError("Chamado já encerrado.")
+
+    if not dados or not dados.get("solucao"):
+        raise ValueError("É necessário informar a solução para encerrar o chamado.")
+
+    chamado.solucao = dados.get("solucao")
+    chamado.comentarios = dados.get("comentarios")
+    chamado.arquivos = dados.get("arquivos")
     chamado.encerrado_em = timezone.now()
+    chamado.editado_em = timezone.now()
     chamado.save()
+
     return chamado
+
 
 # Analista Admin
 def listar_chamados_admin(usuario, setor_nome=None):
