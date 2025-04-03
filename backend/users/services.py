@@ -2,6 +2,7 @@ from chamados.models import Chamado
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied, NotFound
+import json
 
 
 # Analista
@@ -33,6 +34,7 @@ def filtra_chamados_atribuidos(usuario):
     
     return Chamado.objects.filter(analista=usuario)
 
+
 def encerrar_chamado(chamado_id, usuario, dados=None):
     chamado = Chamado.objects.get(id=chamado_id)
 
@@ -47,12 +49,22 @@ def encerrar_chamado(chamado_id, usuario, dados=None):
 
     chamado.solucao = dados.get("solucao")
     chamado.comentarios = dados.get("comentarios")
-    chamado.arquivos = dados.get("arquivos")
+    arquivos_raw = dados.get("arquivos")
+    try:
+        arquivos_json = json.loads(arquivos_raw) if arquivos_raw else []
+        if not isinstance(arquivos_json, list):
+            raise ValueError("Formato inválido de arquivos.")
+    except json.JSONDecodeError:
+        raise ValueError("Erro ao decodificar os arquivos.")
+    
+    chamado.arquivos = arquivos_json
+
     chamado.encerrado_em = timezone.now()
     chamado.editado_em = timezone.now()
     chamado.save()
 
     return chamado
+
 
 
 # Analista Admin

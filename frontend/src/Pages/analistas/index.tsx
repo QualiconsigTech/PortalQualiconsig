@@ -112,6 +112,7 @@ export default function ChamadosAnalista() {
     localStorage.removeItem("token");
     router.push("/login");
   };
+
   const handleOpenModal = (chamado: Chamado) => {
     setChamadoSelecionado(chamado);
     setSolucao(chamado.solucao || "");
@@ -170,14 +171,20 @@ export default function ChamadosAnalista() {
       const token = localStorage.getItem("token");
     
       const base64Arquivos = anexos
-        ? await Promise.all(Array.from(anexos).map(file => toBase64(file)))
+        ? await Promise.all(
+            Array.from(anexos).map(async (file) => {
+              const conteudo = await toBase64(file);
+              return { nome: file.name, conteudo };
+            })
+          )
         : [];
-    
+
       const payload = {
         solucao,
         comentarios,
-        arquivos: base64Arquivos.join(";") // apenas arquivos em base64, separados
+        arquivos: JSON.stringify(base64Arquivos), // <- muito importante!
       };
+
     
       try {
         await api.post(
@@ -198,27 +205,29 @@ export default function ChamadosAnalista() {
       }
     };
     
-    
     const toBase64 = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // isso já inclui o `data:<tipo>;base64,...`
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
       });
     };
-    const base64ToBlob = (base64Data: string, contentType: string): Blob => {
-      const base64 = base64Data.split(",")[1]; 
-      const byteCharacters: string = atob(base64); 
-      const byteArrays: number[] = [];
     
+    const base64ToBlob = (base64: string, contentType = "application/octet-stream") => {
+      const byteCharacters = atob(base64);
+      const byteArrays = new Uint8Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
-        byteArrays.push(byteCharacters.charCodeAt(i));
+        byteArrays[i] = byteCharacters.charCodeAt(i);
       }
-    
-      const byteArray = new Uint8Array(byteArrays);
-      return new Blob([byteArray], { type: contentType });
+      return new Blob([byteArrays], { type: contentType });
     };
+    
+    
+    
+    
+    
+    
     
     
 
@@ -383,47 +392,75 @@ export default function ChamadosAnalista() {
                    <textarea value={comentarios} onChange={(e) => setComentarios(e.target.value)} readOnly={statusSelecionado?.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100"
 />
                  </div>
-   
                  <div className="mb-4">
-                    <label className="block font-semibold mb-1">Arquivos Anexados:</label>
+                  <label className="block font-semibold mb-1">Arquivos Anexados:</label>
 
-                    {chamadoSelecionado.arquivos && (
-                    <div className="text-sm text-gray-600 mb-2">
-                      Arquivos já anexados:
-                      <br />
-                      {chamadoSelecionado.arquivos
-                        .split(";")
-                        .filter((file) => file.trim() !== "")
-                        .map((base64, idx) => (
-                          <a
-                            key={idx}
-                            href="#"
-                            onClick={() => {
-                              const blob = base64ToBlob(base64, "application/pdf");
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement("a");
-                              a.href = url;
-                              a.download = `arquivo_${idx + 1}.pdf`;
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            }}
-                            className="text-blue-600 hover:underline block"
-                          >
-                            📎 Baixar Arquivo {idx + 1}
-                          </a>
+                  {/* Exibição de arquivos já anexados */}
+                  {(() => {
+                    let arquivos: { nome: string; conteudo: string }[] = [];
 
-                        ))}
-                    </div>
-                  )}
+                    if (chamadoSelecionado.arquivos) {
+                      try {
+                        // Se for string, tenta fazer o parse
+                        if (typeof chamadoSelecionado.arquivos === "string") {
+                          arquivos = JSON.parse(chamadoSelecionado.arquivos);
+                        } else if (Array.isArray(chamadoSelecionado.arquivos)) {
+                          arquivos = chamadoSelecionado.arquivos;
+                        }
+                      } catch (e) {
+                        return (
+                          <p className="text-sm text-red-600">Erro ao carregar arquivos anexados</p>
+                        );
+                      }
+                    }
+
+                    if (arquivos.length === 0) {
+                      return (
+                        <p className="text-sm text-gray-500">Nenhum arquivo anexado.</p>
+                      );
+                    }
+
+                    return (
+                      <div className="text-sm text-gray-600 mb-2">
+                        Arquivos já anexados:
+                        <br />
+                        {arquivos.map((arquivo, idx) => {
+                          const [meta, base64Content] = arquivo.conteudo.split(",");
+                          const mime = meta?.split(":")[1]?.split(";")[0] || "application/octet-stream";
+                          return (
+                            <a
+                              key={idx}
+                              href="#"
+                              onClick={() => {
+                                const blob = base64ToBlob(base64Content, mime);
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = arquivo.nome;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              className="text-blue-600 hover:underline block"
+                            >
+                              📎 Baixar {arquivo.nome}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  <input
+                    type="file"
+                    multiple
+                    className="w-full mt-2"
+                    onChange={(e) => setAnexos(e.target.files)}
+                    disabled={getStatus(chamadoSelecionado).texto === "Encerrado"}
+                  />
+                </div>
 
 
-                    <input
-                      type="file"
-                      multiple
-                      className="w-full"
-                      onChange={(e) => setAnexos(e.target.files)}
-                    />
-                  </div>
+
 
    
                  <div className="flex justify-end gap-2">
