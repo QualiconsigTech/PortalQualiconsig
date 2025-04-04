@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { api } from "@/services/api";
-import { TableOfContents } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
-
+import { ChamadoModal } from "@/components/ChamadoModal";
 import { Chamado, base64ToBlob, getStatus, toBase64 } from "@/utils/chamadoUtils";
-import ChamadoModal from "@/components/ChamadoModal";
+import { TableOfContents } from "lucide-react";
 
 export default function ChamadosAnalistas() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
@@ -19,13 +18,31 @@ export default function ChamadosAnalistas() {
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [isAtendendo, setIsAtendendo] = useState(false);
   const [isEncerrando, setIsEncerrando] = useState(false);
+  const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
+  const [nomeDoSetor, setNomeDoSetor] = useState<string>("Setor");
+  const [activeView, setActiveView] = useState("meus");
+
+  const fetchUsuario = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.get("/api/usuarios/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNomeUsuario(response.data.nome);
+      setNomeDoSetor(response.data.setor);
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  };
 
   const fetchChamados = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     setLoading(true);
+    let url = activeView === "meus" ? "/api/usuarios/chamados/atribuidos/" : "/api/usuarios/chamados/";
     try {
-      const response = await api.get("/api/usuarios/chamados/atribuidos/", {
+      const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChamados(response.data);
@@ -37,8 +54,12 @@ export default function ChamadosAnalistas() {
   };
 
   useEffect(() => {
-    fetchChamados();
+    fetchUsuario();
   }, []);
+
+  useEffect(() => {
+    fetchChamados();
+  }, [activeView]);
 
   const atenderChamado = async () => {
     if (!chamadoSelecionado) return;
@@ -65,6 +86,7 @@ export default function ChamadosAnalistas() {
     }
     setIsEncerrando(true);
     const token = localStorage.getItem("token");
+
     const base64Arquivos = anexos
       ? await Promise.all(
           Array.from(anexos).map(async (file) => {
@@ -100,7 +122,12 @@ export default function ChamadosAnalistas() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      nomeUsuario={nomeUsuario}
+      nomeDoSetor={nomeDoSetor}
+      activeView={activeView}
+      setActiveView={setActiveView}
+    >
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
@@ -125,12 +152,16 @@ export default function ChamadosAnalistas() {
               chamados.map((chamado) => {
                 const status = getStatus(chamado);
                 return (
-                  <tr key={chamado.id} className="border-t hover:bg-gray-50 cursor-pointer" onDoubleClick={() => {
-                    setChamadoSelecionado(chamado);
-                    setSolucao(chamado.solucao || "");
-                    setComentarios(chamado.comentarios || "");
-                    setModalAberto(true);
-                  }}>
+                  <tr
+                    key={chamado.id}
+                    className="border-t hover:bg-gray-50 cursor-pointer"
+                    onDoubleClick={() => {
+                      setChamadoSelecionado(chamado);
+                      setSolucao(chamado.solucao || "");
+                      setComentarios(chamado.comentarios || "");
+                      setModalAberto(true);
+                    }}
+                  >
                     <td className="py-2">{chamado.titulo}</td>
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
@@ -138,8 +169,20 @@ export default function ChamadosAnalistas() {
                     <td className="py-2">{chamado.setor_nome}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
-                      <TableOfContents size={20} />
+                      <button
+                        onClick={() => {
+                          setChamadoSelecionado(chamado);
+                          setSolucao(chamado.solucao || "");
+                          setComentarios(chamado.comentarios || "");
+                          setModalAberto(true);
+                        }}
+                        className="text-gray-700 hover:text-blue-900 transition-colors"
+                        title="Visualizar detalhes"
+                      >
+                        <TableOfContents size={20} />
+                      </button>
                     </td>
+
                   </tr>
                 );
               })
@@ -151,10 +194,12 @@ export default function ChamadosAnalistas() {
       {modalAberto && chamadoSelecionado && (
         <ChamadoModal
           chamado={chamadoSelecionado}
+          aberto={modalAberto}
           onClose={() => setModalAberto(false)}
-          onEncerrar={encerrarChamado}
           onAtender={atenderChamado}
-          status={getStatus(chamadoSelecionado).texto}
+          onEncerrar={encerrarChamado}
+          podeAtender={getStatus(chamadoSelecionado).texto === "Aberto"}
+          podeEncerrar={["Aberto", "Em Atendimento"].includes(getStatus(chamadoSelecionado).texto)}
           solucao={solucao}
           setSolucao={setSolucao}
           comentarios={comentarios}

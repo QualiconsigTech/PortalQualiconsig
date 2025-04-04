@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { base64ToBlob, getStatus } from "@/utils/chamadoUtils";
-import { Chamado } from "@/types/Chamado"; // certifique-se que tenha esse type exportado
+import { Chamado } from "@/types/Chamado"; 
 
 interface ChamadoModalProps {
   chamado: Chamado;
