@@ -8,6 +8,7 @@ interface DashboardLayoutProps {
   nomeDoSetor?: string;
   activeView?: string;
   setActiveView?: (view: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function DashboardLayout({
@@ -16,6 +17,7 @@ export default function DashboardLayout({
   nomeDoSetor = "Setor",
   activeView = "meus",
   setActiveView,
+  isAdmin = false,
 }: DashboardLayoutProps) {
   const router = useRouter();
 
@@ -35,28 +37,62 @@ export default function DashboardLayout({
           <p className="text-sm text-black-500 font-semibold mb-2">MENU</p>
 
           <nav className="space-y-2">
-            <button
-              onClick={() => setActiveView?.("meus")}
-              className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeView === "meus"
-                  ? "bg-blue-100 text-blue-700"
-                  : "hover:bg-gray-100 text-gray-700"
-              }`}
-            >
-              Meus Chamados
-            </button>
-
-            {nomeDoSetor && (
-              <button
-                onClick={() => setActiveView?.("setor")}
-                className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeView === "setor"
-                    ? "bg-blue-100 text-blue-700"
-                    : "hover:bg-gray-100 text-gray-700"
-                }`}
-              >
-                {nomeDoSetor}
-              </button>
+            {isAdmin ? (
+              <>
+                <button
+                  onClick={() => setActiveView?.("todos")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "todos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Todos Chamados
+                </button>
+                <button
+                  onClick={() => setActiveView?.("desenvolvimento")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "desenvolvimento" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Desenvolvimento
+                </button>
+                <button
+                  onClick={() => setActiveView?.("dados")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "dados" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Dados
+                </button>
+                <button
+                  onClick={() => setActiveView?.("suporte")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "suporte" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Suporte
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setActiveView?.("meus")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Meus Chamados
+                </button>
+                {nomeDoSetor && (
+                  <button
+                    onClick={() => setActiveView?.("setor")}
+                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeView === "setor" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {nomeDoSetor}
+                  </button>
+                )}
+              </>
             )}
           </nav>
         </div>

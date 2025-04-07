@@ -16,16 +16,24 @@ export default function ChamadosAnalistasAdmin() {
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [activeView, setActiveView] = useState("todos");
 
-  const fetchChamados = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    setLoading(true);
-    try {
-      const response = await api.get("/api/usuarios/chamados/admin/", {
-        headers: { Authorization: `Bearer ${token}` },
+  const buscarChamados = async (rota: string) => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      setLoading(true);
+      try {
+        const response = await api.get(rota, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      const ordenado = [...response.data].sort((a, b) => {
+        const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
       });
-      setChamados(response.data);
+
+      setChamados(ordenado);
     } catch (err) {
       setErro("Erro ao carregar chamados.");
     } finally {
@@ -34,16 +42,31 @@ export default function ChamadosAnalistasAdmin() {
   };
 
   useEffect(() => {
-    fetchChamados();
+    handleFiltro("todos");
   }, []);
+  const handleFiltro = (filtro: string) => {
+    setActiveView(filtro);
+    if (filtro === "todos") {
+      buscarChamados("/api/usuarios/chamados/admin/");
+    } else {
+      buscarChamados(`/api/usuarios/chamados/admin/${filtro}/`);
+    }
+  };
 
   const exibirMensagem = (texto: string) => {
     setMensagem(texto);
     setTimeout(() => setMensagem(null), 4000);
   };
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const chamadosAtuais = chamados.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(chamados.length / itemsPerPage);
 
+  const changePage = (page: number) => {
+    setCurrentPage(page);
+  };
   return (
-    <DashboardLayout>
+    <DashboardLayout isAdmin activeView={activeView} setActiveView={handleFiltro}>
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
@@ -64,10 +87,10 @@ export default function ChamadosAnalistasAdmin() {
               <tr><td colSpan={9} className="text-center py-6">Carregando chamados...</td></tr>
             ) : erro ? (
               <tr><td colSpan={9} className="text-center text-red-500 py-6">{erro}</td></tr>
-            ) : chamados.length === 0 ? (
+            ) : chamadosAtuais.length === 0 ? (
               <tr><td colSpan={9} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td></tr>
             ) : (
-              chamados.map((chamado) => {
+              chamadosAtuais.map((chamado) => {
                 const status = getStatus(chamado);
                 return (
                   <tr key={chamado.id} className="border-t hover:bg-gray-50 cursor-pointer" onDoubleClick={() => {
@@ -104,6 +127,20 @@ export default function ChamadosAnalistasAdmin() {
             )}
           </tbody>
         </table>
+         {/* Paginação */}
+         <div className="flex justify-center gap-2 mt-4">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => changePage(i + 1)}
+              className={`px-3 py-1 rounded ${
+                currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
       </section>
 
       {modalAberto && chamadoSelecionado && (
