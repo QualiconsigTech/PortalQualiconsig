@@ -18,6 +18,7 @@ interface ChamadoModalProps {
   setAnexos: (value: FileList | null) => void;
   isAtendendo: boolean;
   isEncerrando: boolean;
+  modoAdmin?: boolean;
 }
 
 export const ChamadoModal = ({
@@ -36,6 +37,7 @@ export const ChamadoModal = ({
   setAnexos,
   isAtendendo,
   isEncerrando,
+  modoAdmin = false,
 }: ChamadoModalProps) => {
   if (!aberto) return null;
 
@@ -70,6 +72,13 @@ export const ChamadoModal = ({
           <div><strong>Usuário:</strong> {chamado.usuario.nome || "não informado"}</div>
           <div><strong>Prioridade:</strong> {chamado.prioridade}</div>
           <div><strong>Gravidade:</strong> {chamado.gravidade}</div>
+          {/* SOMENTE SE FOR ADMIN MOSTRAR */}
+          {modoAdmin && (
+            <>
+              <div><strong>Analista Atribuído:</strong> {chamado.analista?.nome || "Não informado"}</div>
+              <div><strong>Usuário Atribuído:</strong> {chamado.usuario?.nome || "Não informado"}</div>
+            </>
+          )}
         </div>
 
         <div className="mb-4">
