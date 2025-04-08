@@ -9,6 +9,7 @@ interface DashboardLayoutProps {
   activeView?: string;
   setActiveView?: (view: string) => void;
   isAdmin?: boolean;
+  isUsuarioAdmin?: boolean;
 }
 
 export default function DashboardLayout({
@@ -18,6 +19,7 @@ export default function DashboardLayout({
   activeView = "meus",
   setActiveView,
   isAdmin = false,
+  isUsuarioAdmin = false,
 }: DashboardLayoutProps) {
   const router = useRouter();
 
@@ -37,7 +39,8 @@ export default function DashboardLayout({
           <p className="text-sm text-black-500 font-semibold mb-2">MENU</p>
 
           <nav className="space-y-2">
-            {isAdmin ? (
+            {/* MENU PARA ANALISTA ADMIN */}
+            {isAdmin && (
               <>
                 <button
                   onClick={() => setActiveView?.("todos")}
@@ -72,7 +75,9 @@ export default function DashboardLayout({
                   Suporte
                 </button>
               </>
-            ) : (
+            )}
+            {/* MENU PARA USUÁRIO ADMIN */}
+            {isUsuarioAdmin && (
               <>
                 <button
                   onClick={() => setActiveView?.("meus")}
@@ -82,6 +87,34 @@ export default function DashboardLayout({
                 >
                   Meus Chamados
                 </button>
+                <button
+                  onClick={() => setActiveView?.("analistas")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "analistas" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Analistas
+                </button>
+                <button
+                  onClick={() => setActiveView?.("faq")}
+                  className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 text-gray-700"
+                >
+                  Perguntas Frequentes
+                </button>
+              </>
+            )}
+
+            {/* MENU PARA ANALISTA COMUM */}
+            {!isAdmin && !isUsuarioAdmin && (
+              <>
+                <button
+                  onClick={() => setActiveView?.("meus")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Meus Chamados
+                </button>                
                 {nomeDoSetor && (
                   <button
                     onClick={() => setActiveView?.("setor")}
@@ -92,6 +125,7 @@ export default function DashboardLayout({
                     {nomeDoSetor}
                   </button>
                 )}
+                
               </>
             )}
           </nav>
