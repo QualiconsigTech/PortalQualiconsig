@@ -4,18 +4,22 @@ import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
 import { AbrirChamadoModal } from "@/components/AbrirChamadoModal";
-import { toBase64 } from "@/utils/chamadoUtils";
+import { getStatus, toBase64 } from "@/utils/chamadoUtils";
 
 export default function ChamadosUsuariosAdmin() {
   const [chamados, setChamados] = useState<any[]>([]);
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [activeView, setActiveView] = useState("meus");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   
   const fetchChamados = async (url: string) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
+      setLoading(true);
+      setErro(null);
   
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -24,6 +28,9 @@ export default function ChamadosUsuariosAdmin() {
       setChamados(response.data);
     } catch (error) {
       console.error("Erro ao buscar chamados", error);
+      setErro("Erro ao buscar chamados");
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -84,7 +91,7 @@ export default function ChamadosUsuariosAdmin() {
 
       exibirMensagem("Chamado aberto com sucesso!");
       setAbrirModalAberto(false);
-      fetchChamados();
+      fetchChamados("/api/usuarios/chamados/meus/");
     } catch (error) {
       exibirMensagem("Erro ao abrir chamado.");
       console.error(error);
@@ -109,7 +116,7 @@ export default function ChamadosUsuariosAdmin() {
           <thead className="text-left text-gray-600 border-b">
             <tr>
               <th className="py-2">N° Chamado</th>
-              <th className="py-2">Titulo</th>
+              <th className="py-2">Título</th>
               <th className="py-2">Status</th>
               <th className="py-2">Prioridade</th>
               <th className="py-2">Atribuído</th>
@@ -119,40 +126,46 @@ export default function ChamadosUsuariosAdmin() {
             </tr>
           </thead>
           <tbody>
-            {chamados.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="text-center py-6 text-gray-500">
-                  Nenhum chamado encontrado.
-                </td>
-              </tr>
-            ) : (
-              chamados.map((chamado) => (
-                <tr key={chamado.id} className="border-t hover:bg-gray-50">
-                  <td className="py-2">{chamado.id}</td>
-                  <td className="py-2">{chamado.titulo}</td>
-                  <td className="py-2">{chamado.status ?? "Aberto"}</td>
-                  <td className="py-2">{chamado.prioridade}</td>
-                  <td className="py-2">{chamado.analista?.nome || "Não atribuído"}</td>
-                  <td className="py-2">{chamado.setor?.nome || "--"}</td>
-                  <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
-                  <td className="py-2">
-                    <button
-                      onClick={() => {
-                        // abrir modal de detalhes (próxima fase)
-                      }}
-                      className="text-gray-700 hover:text-blue-900 transition-colors"
-                      title="Visualizar detalhes"
-                    >
-                      <TableOfContents size={20} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </section>
-
+                      {loading ? (
+                        <tr>
+                          <td colSpan={8} className="text-center py-6">Carregando chamados...</td>
+                        </tr>
+                      ) : erro ? (
+                        <tr>
+                          <td colSpan={8} className="text-center text-red-500 py-6">{erro}</td>
+                        </tr>
+                      ) : chamados.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td>
+                        </tr>
+                      ) : (
+                        chamados.map((chamado) => {
+                          const status = getStatus(chamado);
+                          return (
+                            <tr key={chamado.numero} className="border-t hover:bg-gray-50 cursor-pointer">
+                              <td className="py-2">{chamado.numero}</td>
+                              <td className="py-2">{chamado.titulo}</td>
+                              <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
+                              <td className="py-2 text-orange-500">{chamado.prioridade}</td>
+                              <td className="py-2">{chamado.analista_atribuido || "Não atribuído"}</td>
+                              <td className="py-2">{chamado.setor_nome || "--"}</td>
+                              <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
+                              <td className="py-2">
+                                {/* Botão de ações ou modal futuro */}
+                                <button
+                                  className="text-gray-700 hover:text-blue-900 transition-colors"
+                                  title="Visualizar detalhes"
+                                >
+                                  <TableOfContents size={20} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                 </table>
+            </section>
       <AbrirChamadoModal
         aberto={abrirModalAberto}
         onClose={() => setAbrirModalAberto(false)}
