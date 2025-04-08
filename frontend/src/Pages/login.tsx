@@ -31,12 +31,20 @@ const LoginPage: React.FC = () => {
 
       const userData = meResponse.data;
 
-    if (userData.is_admin) {
-      window.location.href = '/analistasadmin';
-    } else {
-      window.location.href = '/analistas';
-    }
-
+      if (userData.is_admin) {
+        if (userData.tipo === "usuario") {
+          window.location.href = '/usuarioadmin';
+        } else if (userData.tipo === "analista") {
+          window.location.href = '/analistasadmin';
+        }
+      } else {
+        if (userData.tipo === "usuario") {
+          window.location.href = '/usuariosadmin';
+        } else if (userData.tipo === "analista") {
+          window.location.href = '/analistas';
+        }
+      }
+      
     } catch (e: any) {
       console.error(e);
       setError(e.response?.data?.detail ?? "Erro desconhecido");
