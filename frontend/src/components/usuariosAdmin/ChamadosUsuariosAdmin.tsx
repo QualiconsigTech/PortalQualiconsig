@@ -4,15 +4,26 @@ import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
 import { AbrirChamadoModal } from "@/components/AbrirChamadoModal";
+import { ChamadoModal } from "@/components/ChamadoModal"; 
 import { getStatus, toBase64 } from "@/utils/chamadoUtils";
+import { Chamado } from "@/types/Chamado";
+
 
 export default function ChamadosUsuariosAdmin() {
-  const [chamados, setChamados] = useState<any[]>([]);
+  const [chamados, setChamados] = useState<Chamado[]>([]);
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [activeView, setActiveView] = useState("meus");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
+  const [solucao, setSolucao] = useState("");
+  const [comentarios, setComentarios] = useState("");
+  const [anexos, setAnexos] = useState<FileList | null>(null);
+  const [categorias, setCategorias] = useState([]);
+  const [setores, setSetores] = useState([]);
+
   
   const fetchChamados = async (url: string) => {
     try {
@@ -33,13 +44,42 @@ export default function ChamadosUsuariosAdmin() {
       setLoading(false);
     }
   };
+
+  const fetchCategorias = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.get("/api/usuarios/categorias/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCategorias(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar categorias", error);
+    }
+  };
   
-  // Quando a tela carregar, busca inicialmente "Meus Chamados"
+  const fetchSetores = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.get("/api/usuarios/setores/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSetores(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar setores", error);
+    }
+  };
+  
+  
+
   useEffect(() => {
     fetchChamados("/api/usuarios/chamados/meus/");
+    fetchCategorias();
+    fetchSetores();
   }, []);
   
-  // Quando o botão mudar (meus ou analistas), altera a consulta
+
   useEffect(() => {
     if (activeView === "meus") {
       fetchChamados("/api/usuarios/chamados/meus/");
@@ -61,6 +101,7 @@ export default function ChamadosUsuariosAdmin() {
     prioridade: string;
     gravidade: string;
     descricao: string;
+    setor: number;
     anexos: FileList | null;
   }) => {
     try {
@@ -78,14 +119,15 @@ export default function ChamadosUsuariosAdmin() {
 
       const payload = {
         titulo: dados.titulo,
-        categoria_nome: dados.categoria,
         prioridade: dados.prioridade,
         gravidade: dados.gravidade,
         descricao: dados.descricao,
+        categoria: dados.categoria,
+        setor: dados.setor,
         arquivos: JSON.stringify(arquivosBase64),
       };
 
-      await api.post("/api/usuarios/chamados/", payload, {
+      await api.post("/api/usuarios/criar/", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -96,6 +138,13 @@ export default function ChamadosUsuariosAdmin() {
       exibirMensagem("Erro ao abrir chamado.");
       console.error(error);
     }
+  };
+  // Função para abrir o modal passando os dados
+  const abrirModalChamado = (chamado: Chamado) => {
+    setChamadoSelecionado(chamado);
+    setSolucao(chamado.solucao || "");
+    setComentarios(chamado.comentarios || "");
+    setModalAberto(true);
   };
 
   return (
@@ -125,52 +174,78 @@ export default function ChamadosUsuariosAdmin() {
               <th className="py-2">Ações</th>
             </tr>
           </thead>
-          <tbody>
-                      {loading ? (
-                        <tr>
-                          <td colSpan={8} className="text-center py-6">Carregando chamados...</td>
-                        </tr>
-                      ) : erro ? (
-                        <tr>
-                          <td colSpan={8} className="text-center text-red-500 py-6">{erro}</td>
-                        </tr>
-                      ) : chamados.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td>
-                        </tr>
-                      ) : (
-                        chamados.map((chamado) => {
-                          const status = getStatus(chamado);
-                          return (
-                            <tr key={chamado.numero} className="border-t hover:bg-gray-50 cursor-pointer">
-                              <td className="py-2">{chamado.numero}</td>
-                              <td className="py-2">{chamado.titulo}</td>
-                              <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                              <td className="py-2 text-orange-500">{chamado.prioridade}</td>
-                              <td className="py-2">{chamado.analista_atribuido || "Não atribuído"}</td>
-                              <td className="py-2">{chamado.setor_nome || "--"}</td>
-                              <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
-                              <td className="py-2">
-                                {/* Botão de ações ou modal futuro */}
-                                <button
-                                  className="text-gray-700 hover:text-blue-900 transition-colors"
-                                  title="Visualizar detalhes"
-                                >
-                                  <TableOfContents size={20} />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                 </table>
-            </section>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-6">Carregando chamados...</td>
+                </tr>
+              ) : erro ? (
+                <tr>
+                  <td colSpan={8} className="text-center text-red-500 py-6">{erro}</td>
+                </tr>
+              ) : chamados.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td>
+                </tr>
+              ) : (
+                chamados.map((chamado) => {
+                  const status = getStatus(chamado);
+                  return (
+                    <tr
+                    key={chamado.numero}
+                    className="border-t hover:bg-gray-50 cursor-pointer"
+                    onDoubleClick={() => abrirModalChamado(chamado)}
+                  >
+                      <td className="py-2">{chamado.numero}</td>
+                      <td className="py-2">{chamado.titulo}</td>
+                      <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
+                      <td className="py-2 text-orange-500">{chamado.prioridade}</td>
+                      <td className="py-2">{chamado.analista_atribuido || "Não atribuído"}</td>
+                      <td className="py-2">{chamado.setor_nome || "--"}</td>
+                      <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
+                      <td className="py-2">
+                        {/* Botão de ações ou modal futuro */}
+                        <button
+                          className="text-gray-700 hover:text-blue-900 transition-colors"
+                          title="Visualizar detalhes"
+                          onClick={() => abrirModalChamado(chamado)}
+                          >
+                          <TableOfContents size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </section>
       <AbrirChamadoModal
         aberto={abrirModalAberto}
         onClose={() => setAbrirModalAberto(false)}
         onSalvar={handleSalvarChamado}
       />
+       {/* Modal de Visualizar Chamado */}
+       {chamadoSelecionado && (
+        <ChamadoModal
+          chamado={chamadoSelecionado}
+          aberto={modalAberto}
+          onClose={() => setModalAberto(false)}
+          onAtender={() => {}}
+          onEncerrar={() => {}}
+          podeAtender={false}
+          podeEncerrar={false}
+          solucao={solucao}
+          comentarios={comentarios}
+          setSolucao={setSolucao}
+          setComentarios={setComentarios}
+          anexos={anexos}
+          setAnexos={setAnexos}
+          isAtendendo={false}
+          isEncerrando={false}
+          modoAdmin={false}
+        />
+      )}
 
       {mensagem && (
         <div className="fixed inset-0 flex items-center justify-center z-[9999]">

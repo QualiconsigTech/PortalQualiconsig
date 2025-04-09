@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
         }
       } else {
         if (userData.tipo === "usuario") {
-          window.location.href = '/usuariosadmin';
+          window.location.href = '/usuario';
         } else if (userData.tipo === "analista") {
           window.location.href = '/analistas';
         }
