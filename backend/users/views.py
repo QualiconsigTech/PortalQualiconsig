@@ -5,7 +5,7 @@ from rest_framework import status
 from chamados.models.chamados import Chamado
 from chamados.serializers import ChamadoDetalhadoSerializer
 from users.serializers import UsuarioLogadoSerializer
-from users.services import filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
+from users.services import listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
 from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
 from users.models.usuarios import Usuario
 
@@ -118,3 +118,21 @@ class ConfirmarResetSenhaView(APIView):
             return Response({"mensagem": "Senha redefinida com sucesso."})
         except Exception as e:
             return Response({"erro": "Token inválido ou expirado."}, status=400)
+        
+class CategoriasListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        categorias = listar_categorias()
+        data = [{"id": cat.id, "nome": cat.nome} for cat in categorias]
+        return Response(data)
+
+
+class SetoresListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        setores = listar_setores()
+        data = [{"id": setor.id, "nome": setor.nome} for setor in setores]
+        return Response(data)
+

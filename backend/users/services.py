@@ -3,6 +3,8 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied, NotFound
 import json
+from chamados.models import Chamado, Categoria
+from users.models import Setor
 
 
 # Analista
@@ -92,3 +94,9 @@ def listar_chamados_do_setor(usuario):
 
 def obter_dados_do_usuario(usuario):
     return usuario 
+
+def listar_categorias():
+    return Categoria.objects.all()
+
+def listar_setores():
+    return Setor.objects.all()
