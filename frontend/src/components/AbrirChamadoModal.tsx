@@ -1,27 +1,50 @@
 // src/components/usuariosAdmin/AbrirChamadoModal.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface AbrirChamadoModalProps {
   aberto: boolean;
   onClose: () => void;
   onSalvar: (dados: {
     titulo: string;
-    categoria: string;
     prioridade: string;
     gravidade: string;
     descricao: string;
+    categoria: number;
+    setor: number;
     anexos: FileList | null;
   }) => void;
+  categorias: { id: number; nome: string }[];
+  setores: { id: number; nome: string }[];
 }
 
-export const AbrirChamadoModal = ({ aberto, onClose, onSalvar }: AbrirChamadoModalProps) => {
+export const AbrirChamadoModal = ({
+  aberto,
+  onClose,
+  onSalvar,
+  categorias,
+  setores,
+}: AbrirChamadoModalProps) => {
   const [titulo, setTitulo] = useState("");
-  const [categoria, setCategoria] = useState("");
   const [prioridade, setPrioridade] = useState("");
   const [gravidade, setGravidade] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<number>(0);
+  const [setorSelecionado, setSetorSelecionado] = useState<number>(0);
   const [anexos, setAnexos] = useState<FileList | null>(null);
+
+  useEffect(() => {
+    if (aberto) {
+      // Sempre resetar os campos ao abrir
+      setTitulo("");
+      setPrioridade("");
+      setGravidade("");
+      setDescricao("");
+      setCategoriaSelecionada(0);
+      setSetorSelecionado(0);
+      setAnexos(null);
+    }
+  }, [aberto]);
 
   if (!aberto) return null;
 
@@ -38,13 +61,33 @@ export const AbrirChamadoModal = ({ aberto, onClose, onSalvar }: AbrirChamadoMod
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
           />
-          <input
-            type="text"
-            placeholder="Categoria"
+          {/* Select de Categoria */}
+          <select
             className="w-full border rounded p-2"
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
-          />
+            value={categoriaSelecionada}
+            onChange={(e) => setCategoriaSelecionada(Number(e.target.value))}
+          >
+            <option value={0}>Selecione a Categoria</option>
+            {categorias.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.nome}
+              </option>
+            ))}
+          </select>
+
+          {/* Select de Setor */}
+          <select
+            className="w-full border rounded p-2"
+            value={setorSelecionado}
+            onChange={(e) => setSetorSelecionado(Number(e.target.value))}
+          >
+            <option value={0}>Selecione o Setor</option>
+            {setores.map((setor) => (
+              <option key={setor.id} value={setor.id}>
+                {setor.nome}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             placeholder="Prioridade"
@@ -82,8 +125,19 @@ export const AbrirChamadoModal = ({ aberto, onClose, onSalvar }: AbrirChamadoMod
             Cancelar
           </button>
           <button
-            onClick={() => onSalvar({ titulo, categoria, prioridade, gravidade, descricao, anexos })}
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+            onClick={() =>
+              onSalvar({
+                titulo,
+                prioridade,
+                gravidade,
+                descricao,
+                categoria: categoriaSelecionada,
+                setor: setorSelecionado,
+                anexos,
+              })
+            }
+            disabled={categoriaSelecionada === 0 || setorSelecionado === 0}
+            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
           >
             Abrir Chamado
           </button>
