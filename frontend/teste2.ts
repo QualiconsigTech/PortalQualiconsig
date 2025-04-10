@@ -1,11 +1,8 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/router";
 import { getPerfilUsuario } from "@/utils/chamadoUtils";
-import { api } from "@/services/api"; 
-import PerguntasFrequentes from "@/components/PerguntasFrequentes";
-
-
+import { api } from "@/services/api";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,12 +10,9 @@ interface DashboardLayoutProps {
   nomeDoSetor?: string;
   activeView?: string;
   setActiveView?: (view: string) => void;
-
-  totalItems?: number;            
-  itemsPerPage?: number;           
+  totalItems?: number;
+  itemsPerPage?: number;
   onPageChange?: (page: number) => void;
-
-
 }
 
 export default function DashboardLayout({
@@ -26,35 +20,32 @@ export default function DashboardLayout({
   nomeUsuario = "Usuário",
   nomeDoSetor = "Setor",
   activeView = "meus",
-
-
   setActiveView,
-
   totalItems = 0,
   itemsPerPage = 10,
   onPageChange,
 }: DashboardLayoutProps) {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+
   const [tipoUsuario, setTipoUsuario] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-      useEffect(() => {
-        async function fetchUsuario() {
-          try {
-            const { data } = await api.get("/api/usuarios/me/");
-            setTipoUsuario(data.tipo || "");
-            setIsAdmin(data.is_admin || false);
-          } catch (error) {
-            console.error("Erro ao buscar dados do usuário", error);
-          }
-        }
-    
-        fetchUsuario();
-      }, []);
-    
-      const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
-    
+  useEffect(() => {
+    async function fetchUsuario() {
+      try {
+        const { data } = await api.get("/api/usuarios/me/");
+        setTipoUsuario(data.tipo || "");
+        setIsAdmin(data.is_admin || false);
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário", error);
+      }
+    }
+
+    fetchUsuario();
+  }, []);
+
+  const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -63,11 +54,11 @@ export default function DashboardLayout({
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    onPageChange?.(page); 
+    onPageChange?.(page);
   };
+
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
       <aside className="w-64 bg-white shadow flex flex-col">
@@ -116,6 +107,7 @@ export default function DashboardLayout({
                 </button>
               </>
             )}
+
             {/* MENU PARA USUÁRIO ADMIN */}
             {perfilUsuario === "usuario_admin" && (
               <>
@@ -154,7 +146,7 @@ export default function DashboardLayout({
                   }`}
                 >
                   Meus Chamados
-                </button>                
+                </button>
                 {nomeDoSetor && (
                   <button
                     onClick={() => setActiveView?.("setor")}
@@ -167,27 +159,28 @@ export default function DashboardLayout({
                 )}
               </>
             )}
-             {/* MENU PARA USUÁRIO COMUM */}
-             {perfilUsuario === "usuario" && (
-                  <>
-                    <button
-                      onClick={() => setActiveView?.("meus")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Meus Chamados
-                    </button>
-                    <button
-                      onClick={() => setActiveView?.("faq")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "faq" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Perguntas Frequentes
-                    </button>
-                  </>
-                )}
+
+            {/* MENU PARA USUÁRIO COMUM */}
+            {perfilUsuario === "usuario" && (
+              <>
+                <button
+                  onClick={() => setActiveView?.("meus")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Meus Chamados
+                </button>
+                <button
+                  onClick={() => setActiveView?.("faq")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "faq" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Perguntas Frequentes
+                </button>
+              </>
+            )}
           </nav>
         </div>
 
@@ -214,11 +207,8 @@ export default function DashboardLayout({
         </header>
 
         <div className="p-6">
-          {activeView === "faq" ? (
-            <PerguntasFrequentes />
-          ) : (
-            children
-          )}
+          {children}
+
           {/* PAGINAÇÃO */}
           {totalPages > 1 && (
             <div className="flex justify-center mt-8 gap-2">

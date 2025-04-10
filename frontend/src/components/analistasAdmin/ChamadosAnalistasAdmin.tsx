@@ -18,6 +18,9 @@ export default function ChamadosAnalistasAdmin() {
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [activeView, setActiveView] = useState("todos");
 
   const buscarChamados = async (rota: string) => {
@@ -57,16 +60,19 @@ export default function ChamadosAnalistasAdmin() {
     setMensagem(texto);
     setTimeout(() => setMensagem(null), 4000);
   };
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const chamadosAtuais = chamados.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(chamados.length / itemsPerPage);
-
+ 
   const changePage = (page: number) => {
     setCurrentPage(page);
   };
   return (
-    <DashboardLayout isAdmin activeView={activeView} setActiveView={handleFiltro}>
+    <DashboardLayout 
+    isAdmin 
+    activeView={activeView} 
+    setActiveView={handleFiltro} 
+    totalItems={chamados.length} 
+    itemsPerPage={itemsPerPage}             
+    onPageChange={(page) => setCurrentPage(page)}
+    >
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
@@ -87,10 +93,10 @@ export default function ChamadosAnalistasAdmin() {
               <tr><td colSpan={9} className="text-center py-6">Carregando chamados...</td></tr>
             ) : erro ? (
               <tr><td colSpan={9} className="text-center text-red-500 py-6">{erro}</td></tr>
-            ) : chamadosAtuais.length === 0 ? (
+            ) : paginatedChamados.length === 0 ? (
               <tr><td colSpan={9} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td></tr>
             ) : (
-              chamadosAtuais.map((chamado) => {
+              paginatedChamados.map((chamado) => {
                 const status = getStatus(chamado);
                 return (
                   <tr key={chamado.id} className="border-t hover:bg-gray-50 cursor-pointer" onDoubleClick={() => {
@@ -127,20 +133,6 @@ export default function ChamadosAnalistasAdmin() {
             )}
           </tbody>
         </table>
-         {/* Paginação */}
-         <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => changePage(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
       </section>
 
       {modalAberto && chamadoSelecionado && (

@@ -23,6 +23,9 @@ export default function ChamadosAnalistas() {
   const [activeView, setActiveView] = useState("meus");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
 
 
   const fetchUsuario = async () => {
@@ -128,10 +131,6 @@ export default function ChamadosAnalistas() {
     setMensagem(texto);
     setTimeout(() => setMensagem(null), 4000);
   };
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const chamadosAtuais = chamados.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(chamados.length / itemsPerPage);
 
   const changePage = (page: number) => {
     setCurrentPage(page);
@@ -142,6 +141,9 @@ export default function ChamadosAnalistas() {
       nomeDoSetor={nomeDoSetor}
       activeView={activeView}
       setActiveView={setActiveView}
+      totalItems={chamados.length} 
+      itemsPerPage={itemsPerPage}             
+      onPageChange={(page) => setCurrentPage(page)}
     >
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
@@ -161,10 +163,10 @@ export default function ChamadosAnalistas() {
               <tr><td colSpan={7} className="text-center py-6">Carregando chamados...</td></tr>
             ) : erro ? (
               <tr><td colSpan={7} className="text-center text-red-500 py-6">{erro}</td></tr>
-            ) : chamados.length === 0 ? (
+            ) : paginatedChamados.length === 0 ? (
               <tr><td colSpan={7} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td></tr>
             ) : (
-              chamadosAtuais.map((chamado) => {
+              paginatedChamados.map((chamado) => {
                 const status = getStatus(chamado);
                 return (
                   <tr
@@ -204,20 +206,6 @@ export default function ChamadosAnalistas() {
             )}
           </tbody>
         </table>
-        {/* Paginação */}
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => changePage(i + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
       </section>
 
       {modalAberto && chamadoSelecionado && (

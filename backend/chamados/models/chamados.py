@@ -6,7 +6,7 @@ class Chamado(models.Model):
     titulo = models.CharField(max_length=200)
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     prioridade = models.CharField(max_length=50)
-    gravidade = models.CharField(max_length=50)
+    gravidade = models.CharField(max_length=50, blank=True, null=True)
     descricao = models.TextField()
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     analista = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='chamados_atendidos')

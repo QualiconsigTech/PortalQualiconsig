@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from users.models.usuarios import Usuario
 from .models.chamados import Chamado
-from .serializers import ChamadoSerializer, ChamadoResumoSerializer, ChamadoDetalhadoSerializer
+from chamados.models.perguntas import PerguntaFrequente
+from .serializers import ChamadoSerializer,  ChamadoDetalhadoSerializer, PerguntaFrequenteSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -103,3 +104,22 @@ def deletar_chamado(request, chamado_id):
 
     chamado.delete()
     return Response({'mensagem': 'Chamado deletado com sucesso.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def criar_pergunta_frequente(request):
+    serializer = PerguntaFrequenteSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'mensagem': 'Pergunta cadastrada com sucesso.'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def listar_perguntas_frequentes(request):
+    perguntas = PerguntaFrequente.objects.filter(deletado=False).order_by('id')
+    serializer = PerguntaFrequenteSerializer(perguntas, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
