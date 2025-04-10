@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from chamados.models.chamados import Chamado
+from chamados.models.perguntas import PerguntaFrequente
 from users.serializers import UsuarioSerializer
 
 class ChamadoSerializer(serializers.ModelSerializer):
@@ -26,3 +27,8 @@ class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chamado
         fields = '__all__'
+
+class PerguntaFrequenteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PerguntaFrequente
+        fields = ['id', 'pergunta', 'resposta', 'deletado']
