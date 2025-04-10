@@ -20,6 +20,12 @@ export default function ChamadosUsuarios() {
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [categorias, setCategorias] = useState([]);
+  const [setores, setSetores] = useState([])
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
 
   const fetchChamados = async () => {
     try {
@@ -31,7 +37,13 @@ export default function ChamadosUsuarios() {
       const response = await api.get("/api/usuarios/chamados/meus/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setChamados(response.data);
+
+      const ordenado = [...response.data].sort((a, b) => {
+        const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
+      });
+
+      setChamados(ordenado);
     } catch (error) {
       console.error("Erro ao buscar chamados", error);
       setErro("Erro ao buscar chamados");
@@ -53,9 +65,23 @@ export default function ChamadosUsuarios() {
     }
   };
 
+    const fetchSetores = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const response = await api.get("/api/usuarios/setores/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSetores(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar setores", error);
+      }
+    };
+
   useEffect(() => {
     fetchChamados();
     fetchCategorias();
+    fetchSetores();
   }, []);
 
   const exibirMensagem = (texto: string) => {
@@ -67,7 +93,7 @@ export default function ChamadosUsuarios() {
     titulo: string;
     categoria: string;
     prioridade: string;
-    gravidade: string;
+    setor: number;
     descricao: string;
     anexos: FileList | null;
   }) => {
@@ -87,13 +113,13 @@ export default function ChamadosUsuarios() {
       const payload = {
         titulo: dados.titulo,
         prioridade: dados.prioridade,
-        gravidade: dados.gravidade,
         descricao: dados.descricao,
         categoria: dados.categoria,
+        setor: dados.setor,
         arquivos: JSON.stringify(arquivosBase64),
       };
 
-      await api.post("/api/usuarios/criar/", payload, {
+      await api.post("/api/chamados/criar/", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -114,7 +140,11 @@ export default function ChamadosUsuarios() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      totalItems={chamados.length} 
+      itemsPerPage={itemsPerPage}             
+      onPageChange={(page) => setCurrentPage(page)} 
+      >
       {/* Botão Novo Chamado */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
@@ -147,20 +177,20 @@ export default function ChamadosUsuarios() {
               <tr>
                 <td colSpan={6} className="text-center text-red-500 py-6">{erro}</td>
               </tr>
-            ) : chamados.length === 0 ? (
+            ) : paginatedChamados.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td>
               </tr>
             ) : (
-              chamados.map((chamado) => {
+              paginatedChamados.map((chamado) => {
                 const status = getStatus(chamado);
                 return (
                   <tr
-                    key={chamado.numero}
+                    key={chamado.id}
                     className="border-t hover:bg-gray-50 cursor-pointer"
                     onDoubleClick={() => abrirModalChamado(chamado)}
                   >
-                    <td className="py-2">{chamado.numero}</td>
+                    <td className="py-2">{chamado.id}</td>
                     <td className="py-2">{chamado.titulo}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
                     <td className="py-2 text-orange-500">{chamado.prioridade}</td>
@@ -187,6 +217,7 @@ export default function ChamadosUsuarios() {
         onClose={() => setAbrirModalAberto(false)}
         onSalvar={handleSalvarChamado}
         categorias={categorias}
+        setores={setores}
       />
 
       {chamadoSelecionado && (

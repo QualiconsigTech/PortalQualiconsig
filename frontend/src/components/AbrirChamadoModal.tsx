@@ -8,7 +8,6 @@ interface AbrirChamadoModalProps {
   onSalvar: (dados: {
     titulo: string;
     prioridade: string;
-    gravidade: string;
     descricao: string;
     categoria: number;
     setor: number;
@@ -27,7 +26,6 @@ export const AbrirChamadoModal = ({
 }: AbrirChamadoModalProps) => {
   const [titulo, setTitulo] = useState("");
   const [prioridade, setPrioridade] = useState("");
-  const [gravidade, setGravidade] = useState("");
   const [descricao, setDescricao] = useState("");
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<number>(0);
   const [setorSelecionado, setSetorSelecionado] = useState<number>(0);
@@ -38,7 +36,6 @@ export const AbrirChamadoModal = ({
       // Sempre resetar os campos ao abrir
       setTitulo("");
       setPrioridade("");
-      setGravidade("");
       setDescricao("");
       setCategoriaSelecionada(0);
       setSetorSelecionado(0);
@@ -95,13 +92,6 @@ export const AbrirChamadoModal = ({
             value={prioridade}
             onChange={(e) => setPrioridade(e.target.value)}
           />
-          <input
-            type="text"
-            placeholder="Gravidade"
-            className="w-full border rounded p-2"
-            value={gravidade}
-            onChange={(e) => setGravidade(e.target.value)}
-          />
           <textarea
             placeholder="Descrição"
             className="w-full border rounded p-2"
@@ -129,7 +119,6 @@ export const AbrirChamadoModal = ({
               onSalvar({
                 titulo,
                 prioridade,
-                gravidade,
                 descricao,
                 categoria: categoriaSelecionada,
                 setor: setorSelecionado,

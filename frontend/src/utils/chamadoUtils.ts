@@ -35,3 +35,36 @@ export const getStatus = (chamado: {
     return new Blob([byteArrays], { type: contentType });
   };
   
+  export function getNomeAnalista(chamado: Chamado): string {
+    const status = getStatus(chamado);
+  
+    if (status.texto === "Aberto") {
+      return "Não atribuído";
+    }
+  
+    return chamado.analista?.nome || "Sem informação";
+  }
+  
+  interface UsuarioInfo {
+    tipo: string;
+    is_admin: boolean;
+  }
+  
+  export function getPerfilUsuario(usuario: UsuarioInfo): string {
+    if (usuario.is_admin) {
+      if (usuario.tipo === "analista") {
+        return "analista_admin";
+      } else if (usuario.tipo === "usuario") {
+        return "usuario_admin";
+      }
+    } else {
+      if (usuario.tipo === "analista") {
+        return "analista";
+      } else if (usuario.tipo === "usuario") {
+        return "usuario";
+      }
+    }
+  
+    return "desconhecido";
+  }
+  

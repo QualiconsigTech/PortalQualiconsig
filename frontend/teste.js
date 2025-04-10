@@ -1,233 +1,238 @@
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
-import { api } from "@/services/api";
-import DashboardLayout from "@/layouts/DashboardLayout";
-import { ChamadoModal } from "@/components/ChamadoModal";
-import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
-import { TableOfContents } from "lucide-react";
+import { ReactNode, useState } from "react";
+import { LogOut } from "lucide-react";
+import { useRouter } from "next/router";
+import { getPerfilUsuario } from "@/utils/chamadoUtils";
+import { api } from "@/services/api"; 
 
-export default function ChamadosAnalistas() {
-  const [chamados, setChamados] = useState<Chamado[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState("");
-  const [modalAberto, setModalAberto] = useState(false);
-  const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
-  const [solucao, setSolucao] = useState("");
-  const [comentarios, setComentarios] = useState("");
-  const [anexos, setAnexos] = useState<FileList | null>(null);
-  const [mensagem, setMensagem] = useState<string | null>(null);
-  const [isAtendendo, setIsAtendendo] = useState(false);
-  const [isEncerrando, setIsEncerrando] = useState(false);
-  const [nomeUsuario, setNomeUsuario] = useState("Usuário");
-  const [nomeDoSetor, setNomeDoSetor] = useState("Setor");
-  const [activeView, setActiveView] = useState("meus");
 
-  const fetchUsuario = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      const { data } = await api.get("/api/usuarios/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNomeUsuario(data.nome);
-      setNomeDoSetor(data.setor);
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
-    }
+interface DashboardLayoutProps {
+  children: ReactNode;
+  nomeUsuario?: string;
+  nomeDoSetor?: string;
+  activeView?: string;
+  setActiveView?: (view: string) => void;
+  totalItems?: number;            
+  itemsPerPage?: number;           
+  onPageChange?: (page: number) => void;
+  
+}
+
+export default function DashboardLayout({
+  children,
+  nomeUsuario = "Usuário",
+  nomeDoSetor = "Setor",
+  activeView = "meus",
+  setActiveView,
+  totalItems = 0,
+  itemsPerPage = 10,
+  onPageChange,
+}: DashboardLayoutProps) {
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+  // Novo: estados locais para o tipo e admin
+    const [tipoUsuario, setTipoUsuario] = useState<string>("");
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  
+    // Novo: buscar o usuário na primeira montagem
+    useEffect(() => {
+      async function fetchUsuario() {
+        try {
+          const { data } = await api.get("/api/usuarios/me/");
+          setTipoUsuario(data.tipo || "");
+          setIsAdmin(data.is_admin || false);
+        } catch (error) {
+          console.error("Erro ao buscar dados do usuário", error);
+        }
+      }
+  
+      fetchUsuario();
+    }, []);
+  
+    const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
+  
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
   };
 
-  const fetchChamados = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    setLoading(true);
-    try {
-      const url = activeView === "meus"
-        ? "/api/usuarios/chamados/atribuidos/"
-        : "/api/usuarios/chamados/";
-      const { data } = await api.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const ordenado = [...data].sort((a, b) => {
-        const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
-        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
-      });
-      setChamados(ordenado);
-    } catch (error) {
-      setErro("Erro ao carregar chamados.");
-    } finally {
-      setLoading(false);
-    }
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+ 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    onPageChange?.(page); 
+
+   
   };
-
-  useEffect(() => {
-    fetchUsuario();
-  }, []);
-
-  useEffect(() => {
-    fetchChamados();
-  }, [activeView]);
-
-  const atenderChamado = async () => {
-    if (!chamadoSelecionado) return;
-    setIsAtendendo(true);
-    const token = localStorage.getItem("token");
-    try {
-      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/atender/`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      exibirMensagem("Chamado atribuído com sucesso.");
-      fetchChamados();
-      setModalAberto(false);
-    } catch (error) {
-      exibirMensagem("Erro ao atender o chamado.");
-    } finally {
-      setIsAtendendo(false);
-    }
-  };
-
-  const encerrarChamado = async () => {
-    if (!chamadoSelecionado || !solucao.trim()) {
-      exibirMensagem("Por favor, preencha a solução.");
-      return;
-    }
-    setIsEncerrando(true);
-    const token = localStorage.getItem("token");
-
-    const base64Arquivos = anexos
-      ? await Promise.all(Array.from(anexos).map(async (file) => ({
-          nome: file.name,
-          conteudo: await toBase64(file),
-        })))
-      : [];
-
-    const payload = {
-      solucao,
-      comentarios,
-      arquivos: JSON.stringify(base64Arquivos),
-    };
-
-    try {
-      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      exibirMensagem("Chamado encerrado com sucesso.");
-      fetchChamados();
-      setModalAberto(false);
-    } catch (error) {
-      exibirMensagem("Erro ao encerrar o chamado.");
-    } finally {
-      setIsEncerrando(false);
-    }
-  };
-
-  const exibirMensagem = (texto: string) => {
-    setMensagem(texto);
-    setTimeout(() => setMensagem(null), 4000);
-  };
-
   return (
-    <DashboardLayout
-      nomeUsuario={nomeUsuario}
-      nomeDoSetor={nomeDoSetor}
-      activeView={activeView}
-      setActiveView={setActiveView}
-      items={chamados}
-      itemsPerPage={10}
-    >
-      {(currentItems) => (
-        <section className="bg-white p-6 rounded-xl shadow mt-4">
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="loader mb-4"></div>
-              <p>Carregando chamados...</p>
-            </div>
-          ) : erro ? (
-            <div className="text-center text-red-500 py-20">{erro}</div>
-          ) : currentItems.length === 0 ? (
-            <div className="text-center text-gray-500 py-20">Nenhum chamado encontrado.</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="text-left text-gray-600 border-b">
-                <tr>
-                  <th className="py-2">Nome Chamado</th>
-                  <th className="py-2">Categoria</th>
-                  <th className="py-2">Status</th>
-                  <th className="py-2">Prioridade</th>
-                  <th className="py-2">Setor</th>
-                  <th className="py-2">Data</th>
-                  <th className="py-2">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((chamado) => {
-                  const status = getStatus(chamado);
-                  return (
-                    <tr
-                      key={chamado.id}
-                      className="border-t hover:bg-gray-50 cursor-pointer"
-                      onDoubleClick={() => {
-                        setChamadoSelecionado(chamado);
-                        setSolucao(chamado.solucao || "");
-                        setComentarios(chamado.comentarios || "");
-                        setModalAberto(true);
-                      }}
-                    >
-                      <td className="py-2">{chamado.titulo}</td>
-                      <td className="py-2">{chamado.categoria_nome}</td>
-                      <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                      <td className="py-2 text-orange-500">{chamado.prioridade}</td>
-                      <td className="py-2">{chamado.setor_nome}</td>
-                      <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
-                      <td className="py-2">
-                        <button
-                          className="text-gray-700 hover:text-blue-900 transition-colors"
-                          title="Visualizar detalhes"
-                          onClick={() => {
-                            setChamadoSelecionado(chamado);
-                            setSolucao(chamado.solucao || "");
-                            setComentarios(chamado.comentarios || "");
-                            setModalAberto(true);
-                          }}
-                        >
-                          <TableOfContents size={20} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </section>
-      )}
-
-      {modalAberto && chamadoSelecionado && (
-        <ChamadoModal
-          chamado={chamadoSelecionado}
-          aberto={modalAberto}
-          onClose={() => setModalAberto(false)}
-          onAtender={atenderChamado}
-          onEncerrar={encerrarChamado}
-          podeAtender={getStatus(chamadoSelecionado).texto === "Aberto"}
-          podeEncerrar={["Aberto", "Em Atendimento"].includes(getStatus(chamadoSelecionado).texto)}
-          solucao={solucao}
-          setSolucao={setSolucao}
-          comentarios={comentarios}
-          setComentarios={setComentarios}
-          anexos={anexos}
-          setAnexos={setAnexos}
-          isEncerrando={isEncerrando}
-          isAtendendo={isAtendendo}
-        />
-      )}
-
-      {mensagem && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-          <div className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-xl border border-gray-300">
-            {mensagem}
-          </div>
+    <div className="flex min-h-screen bg-[#f9f9fb]">
+      <aside className="w-64 bg-white shadow flex flex-col">
+        <div className="px-10 pt-12 pb-2">
+          <h1 className="text-xl font-bold text-[#041161]">Portal Qualiconsig</h1>
         </div>
-      )}
-    </DashboardLayout>
+
+        <div className="flex-1 flex flex-col items-center px-6 mt-12">
+          <p className="text-sm text-black-500 font-semibold mb-2">MENU</p>
+
+          <nav className="space-y-2">
+            {/* MENU PARA ANALISTA ADMIN */}
+            {perfilUsuario === "analista_admin" && (
+              <>
+                <button
+                  onClick={() => setActiveView?.("todos")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "todos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Todos Chamados
+                </button>
+                <button
+                  onClick={() => setActiveView?.("desenvolvimento")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "desenvolvimento" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Desenvolvimento
+                </button>
+                <button
+                  onClick={() => setActiveView?.("dados")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "dados" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Dados
+                </button>
+                <button
+                  onClick={() => setActiveView?.("suporte")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "suporte" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Suporte
+                </button>
+              </>
+            )}
+            {/* MENU PARA USUÁRIO ADMIN */}
+            {perfilUsuario === "usuario_admin" && (
+              <>
+                <button
+                  onClick={() => setActiveView?.("meus")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Meus Chamados
+                </button>
+                <button
+                  onClick={() => setActiveView?.("analistas")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "analistas" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Analistas
+                </button>
+                <button
+                  onClick={() => setActiveView?.("faq")}
+                  className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 text-gray-700"
+                >
+                  Perguntas Frequentes
+                </button>
+              </>
+            )}
+
+            {/* MENU PARA ANALISTA COMUM */}
+            {perfilUsuario === "analista" && (
+              <>
+                <button
+                  onClick={() => setActiveView?.("meus")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Meus Chamados
+                </button>                
+                {nomeDoSetor && (
+                  <button
+                    onClick={() => setActiveView?.("setor")}
+                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeView === "setor" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {nomeDoSetor}
+                  </button>
+                )}
+              </>
+            )}
+            {/* MENU PARA USUÁRIO COMUM */}
+            {perfilUsuario === "usuario" && (
+                  <>
+                    <button
+                      onClick={() => setActiveView?.("meus")}
+                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      Meus Chamados
+                    </button>
+                    <button
+                      onClick={() => setActiveView?.("faq")}
+                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeView === "faq" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      Perguntas Frequentes
+                    </button>
+                  </>
+                )}
+          </nav>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 text-sm text-gray-700 hover:text-red-500 transition-colors"
+          >
+            <LogOut size={18} /> SAIR
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-1">
+        <header className="bg-[#00247A] text-white px-6 py-4 flex justify-between items-center shadow-md">
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/Qualiconsig-Logo-branco-1-1024x341.png"
+              alt="Logo Qualiconsig"
+              className="h-15"
+            />
+          </div>
+          <p className="text-white">Olá, {nomeUsuario}</p>
+        </header>
+
+        <div className="p-6">
+          {children}
+
+          {/* PAGINAÇÃO */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8 gap-2">
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    currentPage === index + 1
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
+
