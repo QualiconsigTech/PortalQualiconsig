@@ -8,6 +8,7 @@ class ChamadoSerializer(serializers.ModelSerializer):
     analista = UsuarioSerializer(read_only=True)
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
+    prioridade_nome = serializers.CharField(source='prioridade.nome', read_only=True)
     class Meta:
         model = Chamado
         fields = '__all__'
@@ -24,6 +25,7 @@ class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
     analista = UsuarioSerializer(read_only=True)
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
+    prioridade_nome = serializers.CharField(source='prioridade.nome', read_only=True)
     class Meta:
         model = Chamado
         fields = '__all__'

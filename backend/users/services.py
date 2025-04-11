@@ -5,6 +5,7 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 import json
 from chamados.models import Chamado, Categoria
 from users.models import Setor
+from users.models.prioridade import Prioridade
 
 
 # Analista
@@ -92,6 +93,7 @@ def listar_chamados_do_setor(usuario):
 
     return Chamado.objects.filter(usuario__setor=usuario.setor)
 
+#Listagem 
 def obter_dados_do_usuario(usuario):
     return usuario 
 
@@ -100,3 +102,6 @@ def listar_categorias():
 
 def listar_setores():
     return Setor.objects.all()
+
+def listar_prioridades():
+    return Prioridade.objects.all()
