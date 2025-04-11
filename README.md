@@ -129,8 +129,7 @@ https://www.notion.so/Hist-ria-PortalQuali-1bdc31d9667d8061b94aedbb39f5c16c?pvs=
 
 
 ## Postman 
+[PortalQuali.postman_collection.json](https://github.com/user-attachments/files/19707817/PortalQuali.postman_collection.json)
 
-[PortalQuali.postman_collection.json](https://github.com/user-attachments/files/19707785/PortalQuali.postman_collection.json)
-[Uploading PortalQuali.postman_collection.json…]()
 
 
