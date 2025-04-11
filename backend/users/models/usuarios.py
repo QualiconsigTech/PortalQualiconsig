@@ -3,6 +3,8 @@ from django.db import models
 from .cargo import Cargo
 from .setor import Setor
 
+TIPOS_USUARIO = (('usuario', 'Usuário Comum'),('analista', 'Analista'),)
+
 class UsuarioManager(BaseUserManager):
     def create_user(self, email, senha=None, **extra_fields):
         if not email:
@@ -25,24 +27,17 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE)
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE)
     deletado = models.BooleanField(default=False)
+    tipo = models.CharField(max_length=20, choices=TIPOS_USUARIO, default='usuario')
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
-    groups = models.ManyToManyField(
-        Group,
-        related_name='usuario_set',
-        blank=True
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name='usuario_set',
-        blank=True
-    )
+    groups = models.ManyToManyField(Group,related_name='usuario_set',blank=True)
+    user_permissions = models.ManyToManyField(Permission,related_name='usuario_set',blank=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nome', 'cargo', 'setor']
+    REQUIRED_FIELDS = ['nome', 'cargo', 'setor', 'tipo']
 
     objects = UsuarioManager()
 

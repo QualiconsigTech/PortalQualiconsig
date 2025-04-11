@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from users.models.usuarios import Usuario
-from users.models.analista import Analista
 import re
 
 def validar_email(email):
@@ -17,12 +16,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['id', 'nome', 'email', 'password', 'cargo', 'setor', 'deletado', 'is_admin']
+        fields = ['id', 'nome', 'email', 'password', 'cargo', 'setor', 'deletado', 'is_admin', 'tipo']
 
     def validate_email(self, value):
         if not validar_email(value):
             raise serializers.ValidationError("Email inválido.")
-        if Usuario.objects.filter(email=value).exists() or Analista.objects.filter(email=value).exists():
+        if Usuario.objects.filter(email=value).exists():
             raise serializers.ValidationError("Este e-mail já está em uso.")
         return value
 
@@ -40,30 +39,3 @@ class UsuarioSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class AnalistaSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = Analista
-        fields = ['id', 'nome', 'email', 'password', 'setor', 'deletado', 'is_admin']
-
-    def validate_email(self, value):
-        if not validar_email(value):
-            raise serializers.ValidationError("Email inválido.")
-        if Usuario.objects.filter(email=value).exists() or Analista.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Este e-mail já está em uso.")
-        return value
-
-    def validate_password(self, value):
-        if not validar_senha(value):
-            raise serializers.ValidationError(
-                "A senha deve ter pelo menos 8 caracteres, incluir uma letra maiúscula, um número e um caractere especial."
-            )
-        return value
-
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        analista = Analista(**validated_data)
-        analista.set_password(password)
-        analista.save()
-        return analista
