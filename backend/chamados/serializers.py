@@ -2,6 +2,8 @@ from rest_framework import serializers
 from chamados.models.chamados import Chamado
 from chamados.models.perguntas import PerguntaFrequente
 from users.serializers import UsuarioSerializer
+from chamados.models.comentario import ComentarioChamado
+
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
@@ -34,3 +36,18 @@ class PerguntaFrequenteSerializer(serializers.ModelSerializer):
     class Meta:
         model = PerguntaFrequente
         fields = ['id', 'pergunta', 'resposta', 'deletado']
+
+
+
+class ComentarioChamadoSerializer(serializers.ModelSerializer):
+    autor_nome = serializers.CharField(source='autor.username', read_only=True)
+    autor = UsuarioSerializer(read_only=True) 
+
+    class Meta:
+        model = ComentarioChamado
+        fields = ['id', 'chamado', 'autor', 'autor_nome', 'texto', 'criado_em']
+        read_only_fields = ['id', 'autor_nome', 'criado_em']
+
+
+
+

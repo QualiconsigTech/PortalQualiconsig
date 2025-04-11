@@ -6,7 +6,11 @@ from rest_framework import status
 from users.models.usuarios import Usuario
 from .models.chamados import Chamado
 from chamados.models.perguntas import PerguntaFrequente
-from .serializers import ChamadoSerializer,  ChamadoDetalhadoSerializer, PerguntaFrequenteSerializer
+from .serializers import ChamadoSerializer,  ChamadoDetalhadoSerializer, PerguntaFrequenteSerializer, ComentarioChamadoSerializer
+from chamados.models.comentario import ComentarioChamado
+from chamados.models.chamados import Chamado
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -123,3 +127,32 @@ def listar_perguntas_frequentes(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def listar_comentarios_chamado(request, chamado_id):
+    comentarios = ComentarioChamado.objects.filter(chamado_id=chamado_id).order_by('criado_em')
+    serializer = ComentarioChamadoSerializer(comentarios, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def criar_comentario_chamado(request, chamado_id):
+    try:
+        chamado = Chamado.objects.get(id=chamado_id)
+    except Chamado.DoesNotExist:
+        return Response({"erro": "Chamado não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    texto = request.data.get('texto')
+    if not texto:
+        return Response({"erro": "Texto do comentário é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(texto) > 1000:
+        return Response({"erro": "Texto muito grande (máximo 1000 caracteres)."}, status=status.HTTP_400_BAD_REQUEST)
+
+    comentario = ComentarioChamado.objects.create(
+        chamado=chamado,
+        autor=request.user,
+        texto=texto
+    )
+
+    return Response({"mensagem": "Comentário adicionado com sucesso."}, status=status.HTTP_201_CREATED)
