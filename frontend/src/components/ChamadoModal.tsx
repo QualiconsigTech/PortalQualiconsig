@@ -1,6 +1,15 @@
 import { format } from "date-fns";
 import { base64ToBlob, getStatus } from "@/utils/chamadoUtils";
 import { Chamado } from "@/types/Chamado"; 
+import { useEffect, useState } from "react";
+import { api } from "@/services/api";
+interface Comentario {
+  id: number;
+  chamado: number;
+  usuario: { id: number; nome: string; tipo: string };
+  mensagem: string;
+  criado_em: string;
+}
 
 interface ChamadoModalProps {
   chamado: Chamado;
@@ -39,9 +48,81 @@ export const ChamadoModal = ({
   isEncerrando,
   modoAdmin = false,
 }: ChamadoModalProps) => {
-  if (!aberto) return null;
-
+  const [chatMensagens, setChatMensagens] = useState<any[]>([]);
+  const [novaMensagem, setNovaMensagem] = useState("");
   const status = getStatus(chamado);
+
+  useEffect(() => {
+    if (chamado.id) {
+      buscarComentarios();
+    }
+  }, [chamado.id]);
+  
+    const buscarComentarios = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const response = await api.get(`/api/chamados/${chamado.id}/comentarios/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setChatMensagens(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar comentários", error);
+      }
+    };
+  
+    const enviarComentario = async () => {
+      if (!novaMensagem.trim()) return;
+      if (chamado.encerrado_em) return;
+      if (!podeComentar(chamado)) return; 
+    
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+    
+        await api.post(`/api/chamados/${chamado.id}/comentarios/criar/`, { texto: novaMensagem }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+    
+        setNovaMensagem("");
+        buscarComentarios();
+      } catch (error) {
+        console.error("Erro ao enviar comentário", error);
+      }
+    };
+    
+
+    const podeComentar = (chamado: Chamado) => {
+      const userStr = localStorage.getItem("usuario");
+      if (!userStr) {
+        console.log("Usuário não encontrado no localStorage");
+        return false;
+      }
+    
+      const usuario = JSON.parse(userStr);
+      console.log("Usuário do localStorage:", usuario);
+      console.log("Chamado atual:", chamado);
+    
+      // Verificações para permitir comentário:
+      if (usuario.tipo === "usuario" && chamado.usuario?.id === usuario.id) {
+        console.log("Usuário comum autorizado a comentar");
+        return true;
+      }
+      if (usuario.tipo === "analista" && chamado.analista?.id === usuario.id) {
+        console.log("Analista autorizado a comentar");
+        return true;
+      }
+    
+      console.log("Usuário não autorizado a comentar");
+      return false;
+    };
+    
+    
+    
+    
+    
+
+  if (!aberto) return null;
 
   let arquivosAnexados: { nome: string; conteudo: string }[] = [];
 
@@ -54,7 +135,7 @@ export const ChamadoModal = ({
   } catch (e) {
     console.error("Erro ao interpretar arquivos:", e);
   }
-
+  
   return (
     <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex justify-center items-center z-50">
       <div className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
@@ -91,10 +172,58 @@ export const ChamadoModal = ({
           <textarea value={solucao} onChange={(e) => setSolucao(e.target.value)} readOnly={status.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100" />
         </div>
 
-        <div className="mb-4">
-          <label className="block font-semibold mb-1">Comentários:</label>
-          <textarea value={comentarios} onChange={(e) => setComentarios(e.target.value)} readOnly={status.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100" />
+       {/* Chat de Comentários */}
+        <div className="mb-6">
+          <label className="block font-semibold mb-2">Histórico de Comentários:</label>
+          <div className="border rounded p-3 h-60 overflow-y-auto bg-gray-50 space-y-3">
+          {chatMensagens.length > 0 ? (
+            chatMensagens.map((msg, idx) => (
+              <div key={idx} className="bg-white rounded-lg p-2 shadow-sm">
+                <div className="text-sm text-gray-800">
+                  <strong>
+                  {msg.autor?.nome
+                    ? (modoAdmin ? 'Analista' : 'Usuário') + ": " + msg.autor.nome
+                    : 'Desconhecido'}
+
+                  </strong>
+                </div>
+                <div className="text-gray-600 text-xs mb-1">{format(new Date(msg.criado_em), "dd/MM/yyyy HH:mm")}</div>
+                <div className="text-gray-700 text-sm break-words">{msg.mensagem}</div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400">Nenhum comentário ainda.</p>
+          )}
+          </div>
+
+          {/* Campo nova mensagem */}
+            {podeComentar() && (
+              <div className="flex mt-3 gap-2">
+                <input
+                  type="text"
+                  value={novaMensagem}
+                  onChange={(e) => setNovaMensagem(e.target.value)}
+                  maxLength={1000}
+                  placeholder="Digite sua mensagem..."
+                  className="flex-1 border rounded p-2"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      enviarComentario();
+                    }
+                  }}
+                />
+                <button
+                  onClick={enviarComentario}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Enviar
+                </button>
+              </div>
+            )}
+
         </div>
+
 
         <div className="mb-4">
           <label className="block font-semibold mb-1">Arquivos Anexados:</label>
