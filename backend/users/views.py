@@ -5,10 +5,11 @@ from rest_framework import status
 from chamados.models.chamados import Chamado
 from chamados.serializers import ChamadoDetalhadoSerializer
 from users.serializers import UsuarioLogadoSerializer
-from users.services import listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
+from users.services import listar_prioridades,listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
 from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
 from users.models.usuarios import Usuario
 
+## ANALISTA COMUM
 class ChamadosDoAnalistaView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -94,6 +95,8 @@ class UsuarioLogadoView(APIView):
         serializer = UsuarioLogadoSerializer(usuario)
         return Response(serializer.data)
     
+
+## RESETE DE SENHA    
 class EnviarResetSenhaView(APIView):
     def post(self, request):
         email = request.data.get("email")
@@ -119,6 +122,8 @@ class ConfirmarResetSenhaView(APIView):
         except Exception as e:
             return Response({"erro": "Token inválido ou expirado."}, status=400)
         
+
+ ## LISTAGEM       
 class CategoriasListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -134,5 +139,13 @@ class SetoresListView(APIView):
     def get(self, request):
         setores = listar_setores()
         data = [{"id": setor.id, "nome": setor.nome} for setor in setores]
+        return Response(data)
+    
+class PrioridadesListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prioridades = listar_prioridades()
+        data = [{"id": prioridades.id, "nome": prioridades.nome} for prioridades in prioridades]
         return Response(data)
 

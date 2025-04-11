@@ -4,7 +4,7 @@ import { api } from "@/services/api";
 import { TableOfContents } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { ChamadoModal } from "@/components/ChamadoModal";
-import { Chamado, base64ToBlob, getStatus, toBase64 } from "@/utils/chamadoUtils";
+import { Chamado, getStatus } from "@/utils/chamadoUtils";
 
 export default function ChamadosAnalistasAdmin() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
@@ -108,7 +108,7 @@ export default function ChamadosAnalistasAdmin() {
                     <td className="py-2">{chamado.titulo}</td>
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                    <td className="py-2 text-orange-500">{chamado.prioridade}</td>
+                    <td className="py-2 text-orange-500">{chamado.prioridade_nome}</td>
                     <td className="py-2">{chamado.setor_nome}</td>
                     <td className="py-2">{chamado.analista ? chamado.analista.nome : "Não atribuído"}</td>
                     <td className="py-2">{chamado.usuario ? chamado.usuario.nome : "Não informado"}</td>
@@ -152,7 +152,7 @@ export default function ChamadosAnalistasAdmin() {
           setAnexos={setAnexos}
           isAtendendo={false}
           isEncerrando={false}
-          modoAdmin={true} // <<< Ativando o Modo Admin no Modal
+          modoAdmin={true} 
         />
       )}
 

@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { api } from "@/services/api";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { ChamadoModal } from "@/components/ChamadoModal";
-import { Chamado, base64ToBlob, getStatus, toBase64 } from "@/utils/chamadoUtils";
+import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
 
 export default function ChamadosAnalistas() {
@@ -182,7 +182,7 @@ export default function ChamadosAnalistas() {
                     <td className="py-2">{chamado.titulo}</td>
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                    <td className="py-2 text-orange-500">{chamado.prioridade}</td>
+                    <td className="py-2 text-orange-500">{chamado.prioridade_nome}</td>
                     <td className="py-2">{chamado.setor_nome}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
