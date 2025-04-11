@@ -70,9 +70,9 @@ export const ChamadoModal = ({
           <div><strong>Data de abertura:</strong> {format(new Date(chamado.criado_em), "dd/MM/yyyy")}</div>
           <div><strong>Status:</strong> {status.texto}</div>
           <div><strong>Usuário:</strong> {chamado.usuario.nome || "não informado"}</div>
-          <div><strong>Prioridade:</strong> {chamado.prioridade}</div>
+          <div><strong>Prioridade:</strong> {chamado.prioridade_nome}</div>
           <div><strong>Gravidade:</strong> {chamado.gravidade}</div>
-          {/* SOMENTE SE FOR ADMIN MOSTRAR */}
+          
           {modoAdmin && (
             <>
               <div><strong>Analista Atribuído:</strong> {chamado.analista?.nome || "Não informado"}</div>

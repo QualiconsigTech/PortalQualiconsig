@@ -1,5 +1,3 @@
-// src/components/usuariosAdmin/AbrirChamadoModal.tsx
-
 import { useState, useEffect } from "react";
 
 interface AbrirChamadoModalProps {
@@ -7,7 +5,7 @@ interface AbrirChamadoModalProps {
   onClose: () => void;
   onSalvar: (dados: {
     titulo: string;
-    prioridade: string;
+    prioridade: number;
     descricao: string;
     categoria: number;
     setor: number;
@@ -15,6 +13,7 @@ interface AbrirChamadoModalProps {
   }) => void;
   categorias: { id: number; nome: string }[];
   setores: { id: number; nome: string }[];
+  prioridades: { id: number; nome: string }[];
 }
 
 export const AbrirChamadoModal = ({
@@ -23,9 +22,10 @@ export const AbrirChamadoModal = ({
   onSalvar,
   categorias,
   setores,
+  prioridades = [],  
 }: AbrirChamadoModalProps) => {
   const [titulo, setTitulo] = useState("");
-  const [prioridade, setPrioridade] = useState("");
+  const [prioridadeSelecionada, setPrioridadeSelecionada] = useState<number>(0);
   const [descricao, setDescricao] = useState("");
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<number>(0);
   const [setorSelecionado, setSetorSelecionado] = useState<number>(0);
@@ -33,9 +33,8 @@ export const AbrirChamadoModal = ({
 
   useEffect(() => {
     if (aberto) {
-      // Sempre resetar os campos ao abrir
       setTitulo("");
-      setPrioridade("");
+      setPrioridadeSelecionada(0);
       setDescricao("");
       setCategoriaSelecionada(0);
       setSetorSelecionado(0);
@@ -85,13 +84,20 @@ export const AbrirChamadoModal = ({
               </option>
             ))}
           </select>
-          <input
-            type="text"
-            placeholder="Prioridade"
+          {/* Select de Prioridade */}
+          <select
             className="w-full border rounded p-2"
-            value={prioridade}
-            onChange={(e) => setPrioridade(e.target.value)}
-          />
+            value={prioridadeSelecionada}
+            onChange={(e) => setPrioridadeSelecionada(Number(e.target.value))}
+          >
+            <option value={0}>Selecione o Prioridade</option>
+            {prioridades.map((prioridade) => (
+              <option key={prioridade.id} value={prioridade.id}>
+                {prioridade.nome}
+              </option>
+            ))}
+          </select>
+          
           <textarea
             placeholder="Descrição"
             className="w-full border rounded p-2"
@@ -118,14 +124,14 @@ export const AbrirChamadoModal = ({
             onClick={() =>
               onSalvar({
                 titulo,
-                prioridade,
+                prioridade: prioridadeSelecionada,
                 descricao,
                 categoria: categoriaSelecionada,
                 setor: setorSelecionado,
                 anexos,
               })
             }
-            disabled={categoriaSelecionada === 0 || setorSelecionado === 0}
+            disabled={categoriaSelecionada === 0 || setorSelecionado === 0 || prioridadeSelecionada === 0}
             className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
           >
             Abrir Chamado

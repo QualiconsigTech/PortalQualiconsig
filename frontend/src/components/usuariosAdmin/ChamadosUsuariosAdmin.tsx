@@ -23,6 +23,7 @@ export default function ChamadosUsuariosAdmin() {
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [categorias, setCategorias] = useState([]);
   const [setores, setSetores] = useState([]);
+  const [prioridades, setPrioridades] = useState<{ id: number; nome: string }[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -80,6 +81,18 @@ export default function ChamadosUsuariosAdmin() {
       console.error("Erro ao buscar setores", error);
     }
   };
+  const fetchPrioridades = async () => { 
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const response = await api.get("/api/usuarios/prioridades/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPrioridades(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar prioridades", error);
+      }
+    };
   
   
 
@@ -87,6 +100,7 @@ export default function ChamadosUsuariosAdmin() {
     fetchChamados("/api/usuarios/chamados/meus/");
     fetchCategorias();
     fetchSetores();
+    fetchPrioridades();
   }, []);
   
 
@@ -147,7 +161,7 @@ export default function ChamadosUsuariosAdmin() {
       console.error(error);
     }
   };
-  // Função para abrir o modal passando os dados
+  
   const abrirModalChamado = (chamado: Chamado) => {
     setChamadoSelecionado(chamado);
     setSolucao(chamado.solucao || "");
@@ -162,8 +176,9 @@ export default function ChamadosUsuariosAdmin() {
     setActiveView={setActiveView} 
     totalItems={chamados.length} 
     itemsPerPage={itemsPerPage}             
-    onPageChange={(page) => setCurrentPage(page)} >
-      {/* Botão Novo Chamado */}
+    onPageChange={(page) => setCurrentPage(page)} 
+    >
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
         <button
@@ -213,12 +228,12 @@ export default function ChamadosUsuariosAdmin() {
                       <td className="py-2">{chamado.id}</td>
                       <td className="py-2">{chamado.titulo}</td>
                       <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                      <td className="py-2 text-orange-500">{chamado.prioridade}</td>
+                      <td className="py-2 text-orange-500">{chamado.prioridade_nome || "--"}</td>
                       <td className="py-2">{getNomeAnalista(chamado)}</td>
                       <td className="py-2">{chamado.setor_nome || "--"}</td>
                       <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                       <td className="py-2">
-                        {/* Botão de ações ou modal futuro */}
+                        
                         <button
                           className="text-gray-700 hover:text-blue-900 transition-colors"
                           title="Visualizar detalhes"
@@ -240,8 +255,9 @@ export default function ChamadosUsuariosAdmin() {
         onSalvar={handleSalvarChamado}
         categorias={categorias}
         setores={setores}
+        prioridades={prioridades}
       />
-       {/* Modal de Visualizar Chamado */}
+       
        {chamadoSelecionado && (
         <ChamadoModal
           chamado={chamadoSelecionado}

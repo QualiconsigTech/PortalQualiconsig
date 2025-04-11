@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell  } from "lucide-react";
 import { useRouter } from "next/router";
 import { getPerfilUsuario } from "@/utils/chamadoUtils";
 import { api } from "@/services/api"; 
@@ -26,10 +26,7 @@ export default function DashboardLayout({
   nomeUsuario = "Usuário",
   nomeDoSetor = "Setor",
   activeView = "meus",
-
-
   setActiveView,
-
   totalItems = 0,
   itemsPerPage = 10,
   onPageChange,
@@ -38,6 +35,9 @@ export default function DashboardLayout({
   const [currentPage, setCurrentPage] = useState(1);
   const [tipoUsuario, setTipoUsuario] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [notificacoes, setNotificacoes] = useState<string[]>([]);
+  const [mostrarNotificacoes, setMostrarNotificacoes] = useState(false);
+
 
       useEffect(() => {
         async function fetchUsuario() {
@@ -51,6 +51,26 @@ export default function DashboardLayout({
         }
     
         fetchUsuario();
+      }, []);
+      useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+          const botao = document.getElementById("botao-notificacao");
+          const menu = document.getElementById("menu-notificacao");
+    
+          if (
+            botao &&
+            menu &&
+            !botao.contains(event.target as Node) &&
+            !menu.contains(event.target as Node)
+          ) {
+            setMostrarNotificacoes(false);
+          }
+        }
+    
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
       }, []);
     
       const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
@@ -67,6 +87,9 @@ export default function DashboardLayout({
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     onPageChange?.(page); 
+  };
+  const adicionarNotificacao = (mensagem: string) => {
+    setNotificacoes((prev) => [...prev, mensagem]);
   };
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
@@ -210,7 +233,37 @@ export default function DashboardLayout({
               className="h-15"
             />
           </div>
+          <div className="flex items-center gap-4 relative">
+            {/* Ícone de notificações */}
+            <button
+              id="botao-notificacao"
+              className="relative"
+              onClick={() => setMostrarNotificacoes(!mostrarNotificacoes)}
+            >
+              <Bell className="w-6 h-6" />
+              {notificacoes.length > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                  {notificacoes.length}
+                </span>
+              )}
+            </button>
           <p className="text-white">Olá, {nomeUsuario}</p>
+           {/* Mini-menu de notificações */}
+           {mostrarNotificacoes && (
+              <div id="menu-notificacao" className="absolute right-0 mt-10 w-64 bg-white text-black rounded shadow-md z-50">
+              <div className="p-4 font-bold border-b">Notificações</div>
+              {notificacoes.length === 0 ? (
+                <div className="p-4 text-sm">Nenhuma notificação</div>
+              ) : (
+                notificacoes.map((n, index) => (
+                  <div key={index} className="p-4 text-sm border-b">
+                    {n}
+                  </div>
+                ))
+              )}
+            </div>
+            )}
+          </div>
         </header>
 
         <div className="p-6">

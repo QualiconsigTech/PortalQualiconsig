@@ -21,6 +21,7 @@ export default function ChamadosUsuarios() {
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [categorias, setCategorias] = useState([]);
   const [setores, setSetores] = useState([])
+  const [prioridades, setPrioridades] = useState<{ id: number; nome: string }[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -77,11 +78,24 @@ export default function ChamadosUsuarios() {
         console.error("Erro ao buscar setores", error);
       }
     };
+    const fetchPrioridades = async () => { 
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const response = await api.get("/api/usuarios/prioridades/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setPrioridades(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar prioridades", error);
+      }
+    };
 
   useEffect(() => {
     fetchChamados();
     fetchCategorias();
     fetchSetores();
+    fetchPrioridades();
   }, []);
 
   const exibirMensagem = (texto: string) => {
@@ -145,7 +159,6 @@ export default function ChamadosUsuarios() {
       itemsPerPage={itemsPerPage}             
       onPageChange={(page) => setCurrentPage(page)} 
       >
-      {/* Botão Novo Chamado */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
         <button
@@ -193,7 +206,7 @@ export default function ChamadosUsuarios() {
                     <td className="py-2">{chamado.id}</td>
                     <td className="py-2">{chamado.titulo}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                    <td className="py-2 text-orange-500">{chamado.prioridade}</td>
+                    <td className="py-2 text-orange-500">{chamado.prioridade_nome || "--"}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
                       <button
@@ -218,6 +231,7 @@ export default function ChamadosUsuarios() {
         onSalvar={handleSalvarChamado}
         categorias={categorias}
         setores={setores}
+        prioridades={prioridades}
       />
 
       {chamadoSelecionado && (
