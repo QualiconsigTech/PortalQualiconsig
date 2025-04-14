@@ -12,7 +12,8 @@ import { Chamado } from "@/types/Chamado";
 export default function ChamadosUsuariosAdmin() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
-  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMensagem, setToastMensagem] = useState(""); 
   const [activeView, setActiveView] = useState("meus");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -94,8 +95,6 @@ export default function ChamadosUsuariosAdmin() {
       }
     };
   
-  
-
   useEffect(() => {
     fetchChamados("/api/usuarios/chamados/meus/");
     fetchCategorias();
@@ -114,11 +113,7 @@ export default function ChamadosUsuariosAdmin() {
   }, [activeView]);
   
 
-  const exibirMensagem = (texto: string) => {
-    setMensagem(texto);
-    setTimeout(() => setMensagem(null), 4000);
-  };
-
+ 
   const handleSalvarChamado = async (dados: {
     titulo: string;
     categoria: string;
@@ -153,11 +148,16 @@ export default function ChamadosUsuariosAdmin() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      exibirMensagem("Chamado aberto com sucesso!");
+      setToastMensagem("Chamado aberto com sucesso!");
+      setShowToast(true); 
+      setTimeout(() => {
+        setShowToast(false);
+      }, 1000);
       setAbrirModalAberto(false);
       fetchChamados("/api/usuarios/chamados/meus/");
     } catch (error) {
-      exibirMensagem("Erro ao abrir chamado.");
+      setToastMensagem("Erro ao abrir chamado.");
+      setShowToast(true); 
       console.error(error);
     }
   };
@@ -277,14 +277,6 @@ export default function ChamadosUsuariosAdmin() {
           isEncerrando={false}
           modoAdmin={false}
         />
-      )}
-
-      {mensagem && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-          <div className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-xl border border-gray-300">
-            {mensagem}
-          </div>
-        </div>
       )}
     </DashboardLayout>
   );

@@ -51,10 +51,26 @@ export const ChamadoModal = ({
   const [chatMensagens, setChatMensagens] = useState<any[]>([]);
   const [novaMensagem, setNovaMensagem] = useState("");
   const status = getStatus(chamado);
+  const [usuarioLogado, setUsuarioLogado] = useState<{ id: number, tipo: string } | null>(null);
 
+  const fetchUsuario = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+  
+    try {
+      const response = await api.get("/api/usuarios/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsuarioLogado({ id: response.data.id, tipo: response.data.tipo });
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  };
+  
   useEffect(() => {
     if (chamado.id) {
       buscarComentarios();
+      fetchUsuario();
     }
   }, [chamado.id]);
   
@@ -93,35 +109,19 @@ export const ChamadoModal = ({
     
 
     const podeComentar = (chamado: Chamado) => {
-      const userStr = localStorage.getItem("usuario");
-      if (!userStr) {
-        console.log("Usuário não encontrado no localStorage");
-        return false;
-      }
-    
-      const usuario = JSON.parse(userStr);
-      console.log("Usuário do localStorage:", usuario);
-      console.log("Chamado atual:", chamado);
-    
-      // Verificações para permitir comentário:
-      if (usuario.tipo === "usuario" && chamado.usuario?.id === usuario.id) {
-        console.log("Usuário comum autorizado a comentar");
+      if (!usuarioLogado) return false;
+  
+      if (usuarioLogado.tipo === "usuario" && chamado.usuario?.id === usuarioLogado.id) {
         return true;
       }
-      if (usuario.tipo === "analista" && chamado.analista?.id === usuario.id) {
-        console.log("Analista autorizado a comentar");
+  
+      if (usuarioLogado.tipo === "analista" && chamado.analista?.id === usuarioLogado.id) {
         return true;
       }
-    
-      console.log("Usuário não autorizado a comentar");
+  
       return false;
     };
     
-    
-    
-    
-    
-
   if (!aberto) return null;
 
   let arquivosAnexados: { nome: string; conteudo: string }[] = [];
@@ -137,8 +137,14 @@ export const ChamadoModal = ({
   }
   
   return (
-    <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex justify-center items-center z-50">
-      <div className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
+    <div
+    className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center z-50"
+    onClick={onClose}
+  >
+    <div
+      className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Detalhes do Chamado</h2>
           <button onClick={onClose} className="text-gray-600 hover:text-red-600">✕</button>
@@ -160,7 +166,7 @@ export const ChamadoModal = ({
               <div><strong>Usuário Atribuído:</strong> {chamado.usuario?.nome || "Não informado"}</div>
             </>
           )}
-        </div>
+        </div>      
 
         <div className="mb-4">
           <label className="block font-semibold mb-1">Descrição:</label>
@@ -197,7 +203,7 @@ export const ChamadoModal = ({
           </div>
 
           {/* Campo nova mensagem */}
-            {podeComentar() && (
+            {podeComentar(chamado) && (
               <div className="flex mt-3 gap-2">
                 <input
                   type="text"

@@ -11,7 +11,8 @@ import { Chamado } from "@/types/Chamado";
 export default function ChamadosUsuarios() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
-  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMensagem, setToastMensagem] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
@@ -98,11 +99,7 @@ export default function ChamadosUsuarios() {
     fetchPrioridades();
   }, []);
 
-  const exibirMensagem = (texto: string) => {
-    setMensagem(texto);
-    setTimeout(() => setMensagem(null), 4000);
-  };
-
+ 
   const handleSalvarChamado = async (dados: {
     titulo: string;
     categoria: string;
@@ -137,11 +134,16 @@ export default function ChamadosUsuarios() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      exibirMensagem("Chamado aberto com sucesso!");
+      setToastMensagem("Chamado aberto com sucesso!");
+      setShowToast(true); 
+      setTimeout(() => {
+        setShowToast(false);
+      }, 1000);
       setAbrirModalAberto(false);
       fetchChamados();
     } catch (error) {
-      exibirMensagem("Erro ao abrir chamado.");
+      setToastMensagem("Erro ao abrir chamado.");
+      setShowToast(true); 
       console.error(error);
     }
   };
@@ -225,6 +227,15 @@ export default function ChamadosUsuarios() {
         </table>
       </section>
 
+      {showToast && (
+        <div
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg cursor-pointer z-50 animate-slide-up"
+          onClick={() => setShowToast(false)}
+        >
+          {toastMensagem}
+        </div>
+      )}
+
       <AbrirChamadoModal
         aberto={abrirModalAberto}
         onClose={() => setAbrirModalAberto(false)}
@@ -253,14 +264,6 @@ export default function ChamadosUsuarios() {
           isEncerrando={false}
           modoAdmin={false}
         />
-      )}
-
-      {mensagem && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-          <div className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-xl border border-gray-300">
-            {mensagem}
-          </div>
-        </div>
       )}
     </DashboardLayout>
   );
