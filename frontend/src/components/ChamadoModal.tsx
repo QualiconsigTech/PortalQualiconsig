@@ -101,7 +101,7 @@ export const ChamadoModal = ({
         });
     
         setNovaMensagem("");
-        buscarComentarios();
+        await buscarComentarios();
       } catch (error) {
         console.error("Erro ao enviar comentário", error);
       }
@@ -187,14 +187,11 @@ export const ChamadoModal = ({
               <div key={idx} className="bg-white rounded-lg p-2 shadow-sm">
                 <div className="text-sm text-gray-800">
                   <strong>
-                  {msg.autor?.nome
-                    ? (modoAdmin ? 'Analista' : 'Usuário') + ": " + msg.autor.nome
-                    : 'Desconhecido'}
-
+                  {msg.autor?.nome || 'Desconhecido'}
                   </strong>
                 </div>
                 <div className="text-gray-600 text-xs mb-1">{format(new Date(msg.criado_em), "dd/MM/yyyy HH:mm")}</div>
-                <div className="text-gray-700 text-sm break-words">{msg.mensagem}</div>
+                <div className="text-gray-700 text-sm break-words">{msg.texto}</div>
               </div>
             ))
           ) : (
