@@ -3,7 +3,7 @@ from chamados.models.chamados import Chamado
 from chamados.models.perguntas import PerguntaFrequente
 from users.serializers import UsuarioSerializer
 from chamados.models.comentario import ComentarioChamado
-
+from chamados.models.notificacao import Notificacao
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
@@ -37,8 +37,6 @@ class PerguntaFrequenteSerializer(serializers.ModelSerializer):
         model = PerguntaFrequente
         fields = ['id', 'pergunta', 'resposta', 'deletado']
 
-
-
 class ComentarioChamadoSerializer(serializers.ModelSerializer):
     autor_nome = serializers.CharField(source='autor.username', read_only=True)
     autor = UsuarioSerializer(read_only=True) 
@@ -47,6 +45,13 @@ class ComentarioChamadoSerializer(serializers.ModelSerializer):
         model = ComentarioChamado
         fields = ['id', 'chamado', 'autor', 'autor_nome', 'texto', 'criado_em']
         read_only_fields = ['id', 'autor_nome', 'criado_em']
+
+class NotificacaoSerializer(serializers.ModelSerializer):
+    chamado_id = serializers.IntegerField(source='chamado.id', read_only=True) 
+
+    class Meta:
+        model = Notificacao
+        fields = ['id', 'mensagem', 'visualizado', 'criado_em', 'chamado_id'] 
 
 
 

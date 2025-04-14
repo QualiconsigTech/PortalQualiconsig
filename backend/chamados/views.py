@@ -6,19 +6,19 @@ from rest_framework import status
 from users.models.usuarios import Usuario
 from .models.chamados import Chamado
 from chamados.models.perguntas import PerguntaFrequente
-from .serializers import ChamadoSerializer,  ChamadoDetalhadoSerializer, PerguntaFrequenteSerializer, ComentarioChamadoSerializer
+from .serializers import NotificacaoSerializer ,ChamadoSerializer,  ChamadoDetalhadoSerializer, PerguntaFrequenteSerializer, ComentarioChamadoSerializer
 from chamados.models.comentario import ComentarioChamado
 from chamados.models.chamados import Chamado
-
-
+from chamados.models.notificacao import Notificacao
 
 logger = logging.getLogger(__name__)
 
+#CHAMADOS
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def criar_chamado(request):
     try:
-        usuario = request.user  
+        usuario = request.user
 
         if not isinstance(usuario, Usuario):
             return Response({"erro": "Usuário não autorizado."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -26,12 +26,22 @@ def criar_chamado(request):
         logger.info(f"[CHAMADO] ID do usuário autenticado: {usuario.id}")
 
         data = request.data.copy()
-        data['usuario'] = usuario.id  
+        data['usuario'] = usuario.id
 
         serializer = ChamadoSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(usuario=usuario) 
+            chamado = serializer.save(usuario=usuario)
+
             logger.info(f"[CHAMADO] Chamado criado com sucesso para o usuário ID={usuario.id}")
+
+            
+            mensagem_notificacao = f"Seu chamado de  N°{chamado.id} foi aberto com sucesso."
+            Notificacao.objects.create(
+                mensagem=mensagem_notificacao,
+                usuario_destino=usuario,  
+                chamado=chamado
+            )
+
             return Response({'mensagem': 'Chamado criado com sucesso.'}, status=status.HTTP_201_CREATED)
 
         logger.warning(f"[CHAMADO] Erro de validação: {serializer.errors}")
@@ -40,6 +50,8 @@ def criar_chamado(request):
     except Exception as e:
         logger.error(f"[CHAMADO] Erro inesperado: {str(e)}")
         return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 @api_view(['GET'])
@@ -109,7 +121,7 @@ def deletar_chamado(request, chamado_id):
     chamado.delete()
     return Response({'mensagem': 'Chamado deletado com sucesso.'}, status=status.HTTP_200_OK)
 
-
+#FAQ
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def criar_pergunta_frequente(request):
@@ -127,6 +139,7 @@ def listar_perguntas_frequentes(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+#COMENTARIOS
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def listar_comentarios_chamado(request, chamado_id):
@@ -155,4 +168,63 @@ def criar_comentario_chamado(request, chamado_id):
         texto=texto
     )
 
+    if request.user.tipo == 'analista':
+        Notificacao.objects.create(
+            usuario_destino=chamado.usuario,
+            chamado=chamado,
+            mensagem=f"Seu chamado {chamado.titulo} recebeu uma resposta do analista."
+        )
+    elif request.user.tipo == 'usuario' and chamado.analista:
+        Notificacao.objects.create(
+            usuario_destino=chamado.analista,
+            chamado=chamado,
+            mensagem=f"Novo comentário no chamado {chamado.titulo} que você está atendendo."
+        )
     return Response({"mensagem": "Comentário adicionado com sucesso."}, status=status.HTTP_201_CREATED)
+
+
+#NOTIFICAÇÃO
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def criar_notificacao(request):
+    serializer = NotificacaoSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def listar_notificacoes_usuario(request):
+    notificacoes = Notificacao.objects.filter(usuario_destino=request.user).order_by('-criado_em')
+    serializer = NotificacaoSerializer(notificacoes, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def marcar_notificacao_visualizada(request, notificacao_id):
+    try:
+        notificacao = Notificacao.objects.get(id=notificacao_id, usuario_destino=request.user)
+        notificacao.visualizado = True
+        notificacao.save()
+        return Response({"detail": "Notificação marcada como visualizada."}, status=status.HTTP_200_OK)
+    except Notificacao.DoesNotExist:
+        return Response({"detail": "Notificação não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def marcar_todas_notificacoes_lidas(request):
+    try:
+        usuario = request.user
+        
+        notificacoes = Notificacao.objects.filter(usuario_destino=usuario, visualizado=False)
+
+        notificacoes.update(visualizado=True)
+
+        return Response({"mensagem": "Todas as notificações foram marcadas como lidas."}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+

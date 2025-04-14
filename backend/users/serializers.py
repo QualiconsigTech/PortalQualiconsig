@@ -3,9 +3,10 @@ from users.models.usuarios import Usuario
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    setor_nome = serializers.CharField(source='setor.nome', read_only=True)
     class Meta:
         model = Usuario
-        fields = ['id', 'nome', 'email']
+        fields = ['id', 'nome', 'email', 'setor_nome']
 
 
 class UsuarioLogadoSerializer(serializers.ModelSerializer):

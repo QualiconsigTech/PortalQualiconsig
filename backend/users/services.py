@@ -8,7 +8,7 @@ from users.models import Setor
 from users.models.prioridade import Prioridade
 
 
-# Analista
+#ANALISTA
 def filtrar_chamados_por_analista(usuario):
     if usuario.tipo != 'analista' or not usuario.setor:
         return Chamado.objects.none()
@@ -70,7 +70,7 @@ def encerrar_chamado(chamado_id, usuario, dados=None):
 
 
 
-# Analista Admin
+#ANALISTA ADMIN
 def listar_chamados_admin(usuario, setor_nome=None):
     if usuario.tipo != 'analista' or not usuario.is_admin:
         raise PermissionDenied("Acesso negado.")
@@ -79,21 +79,21 @@ def listar_chamados_admin(usuario, setor_nome=None):
         return Chamado.objects.filter(setor__nome__iexact=setor_nome)
     return Chamado.objects.all()
 
-## Usuarios
+#USUARIO
 def listar_chamados_do_usuario(usuario):
     if usuario.tipo != 'usuario':
         raise PermissionDenied("Apenas usuários comuns podem acessar seus chamados.")
     
     return Chamado.objects.filter(usuario=usuario)
 
-## Usuarios Admin
+#USUARIO ADMIN
 def listar_chamados_do_setor(usuario):
     if usuario.tipo != 'usuario' or not usuario.is_admin:
         raise PermissionDenied("Apenas usuários administradores podem acessar essa informação.")
 
     return Chamado.objects.filter(usuario__setor=usuario.setor)
 
-#Listagem 
+#LISTAGEM 
 def obter_dados_do_usuario(usuario):
     return usuario 
 
