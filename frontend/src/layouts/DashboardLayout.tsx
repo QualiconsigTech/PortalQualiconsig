@@ -4,8 +4,15 @@ import { useRouter } from "next/router";
 import { getPerfilUsuario } from "@/utils/chamadoUtils";
 import { api } from "@/services/api"; 
 import PerguntasFrequentes from "@/components/PerguntasFrequentes";
+import { motion, AnimatePresence } from "framer-motion";
 
-
+interface Notificacao {
+  id: number;
+  mensagem: string;
+  visualizado: boolean;
+  criado_em: string;
+  chamado_id: number;
+}
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,12 +20,11 @@ interface DashboardLayoutProps {
   nomeDoSetor?: string;
   activeView?: string;
   setActiveView?: (view: string) => void;
-
   totalItems?: number;            
   itemsPerPage?: number;           
   onPageChange?: (page: number) => void;
-
-
+  setChamadoSelecionado?: (chamado: any) => void;
+  setModalAberto?: (open: boolean) => void;
 }
 
 export default function DashboardLayout({
@@ -30,6 +36,8 @@ export default function DashboardLayout({
   totalItems = 0,
   itemsPerPage = 10,
   onPageChange,
+  setChamadoSelecionado,   
+  setModalAberto,
 }: DashboardLayoutProps) {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,47 +47,72 @@ export default function DashboardLayout({
   const [mostrarNotificacoes, setMostrarNotificacoes] = useState(false);
 
 
-      useEffect(() => {
-        async function fetchUsuario() {
-          try {
-            const { data } = await api.get("/api/usuarios/me/");
-            setTipoUsuario(data.tipo || "");
-            setIsAdmin(data.is_admin || false);
-          } catch (error) {
-            console.error("Erro ao buscar dados do usuário", error);
-          }
-        }
-    
-        fetchUsuario();
-      }, []);
-      useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-          const botao = document.getElementById("botao-notificacao");
-          const menu = document.getElementById("menu-notificacao");
-    
-          if (
-            botao &&
-            menu &&
-            !botao.contains(event.target as Node) &&
-            !menu.contains(event.target as Node)
-          ) {
-            setMostrarNotificacoes(false);
-          }
-        }
-    
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-          document.removeEventListener("mousedown", handleClickOutside);
-        };
-      }, []);
-    
-      const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
-    
+  const fetchUsuario = async () => {
+    try {
+      const { data } = await api.get("/api/usuarios/me/");
+      setTipoUsuario(data.tipo || "");
+      setIsAdmin(data.is_admin || false);
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário", error);
+    }
+  };
+  
+  const fetchNotificacoes = async () => {
+    try {
+      const { data } = await api.get("/api/chamados/notificacoes/");
+      setNotificacoes(data);
+    } catch (error) {
+      console.error("Erro ao buscar notificações", error);
+    }
+  };
+
+    useEffect(() => {
+    fetchUsuario();
+    fetchNotificacoes();
+  
+    const interval = setInterval(fetchNotificacoes, 5000); 
+  
+    return () => clearInterval(interval); 
+  }, []);
+  
+  const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     router.push("/login");
   };
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+  
+    function handleClickOutside(event: MouseEvent) {
+      const botao = document.getElementById("botao-notificacao");
+      const menu = document.getElementById("menu-notificacao");
+  
+      if (
+        botao && menu && !botao.contains(event.target as Node) && !menu.contains(event.target as Node)
+      ) {
+        setMostrarNotificacoes(false);
+      }
+    }
+  
+    function startAutoClose() {
+      timeout = setTimeout(() => {
+        setMostrarNotificacoes(false);
+      }, 5000); 
+    }
+  
+    if (mostrarNotificacoes) {
+      document.addEventListener("mousedown", handleClickOutside);
+      startAutoClose();
+    }
+  
+    return () => {
+      clearTimeout(timeout);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mostrarNotificacoes]);
+  
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -88,9 +121,65 @@ export default function DashboardLayout({
     setCurrentPage(page);
     onPageChange?.(page); 
   };
-  const adicionarNotificacao = (mensagem: string) => {
-    setNotificacoes((prev) => [...prev, mensagem]);
+  const marcarNotificacaoComoLida = async (id: number) => {
+    try {
+      await api.post(`/api/chamados/notificacoes/${id}/visualizar/`);
+      setNotificacoes((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, visualizado: true } : n
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao marcar notificação como lida", error);
+    }
   };
+  
+  const marcarTodasComoLidas = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+  
+      await api.post("/api/chamados/notificacoes/marcar-todas/", {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      setNotificacoes((prev) =>
+        prev.map((n) => ({ ...n, visualizado: true }))
+      );
+
+      setTimeout(() => {
+        setNotificacoes((prev) =>
+          prev.filter((n) => !n.visualizado)
+        );
+      }, 5000); 
+      
+    } catch (error) {
+      console.error("Erro ao marcar notificações como lidas", error);
+    }
+  };
+  
+  const abrirModalChamado = async (chamadoId: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token || !setChamadoSelecionado || !setModalAberto) return;
+  
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      setChamadoSelecionado(data);
+      setModalAberto(true);
+    } catch (error) {
+      console.error("Erro ao buscar chamado para abrir modal:", error);
+    }
+  };
+  
+  
+
+  const notificacoesNaoLidas = notificacoes.filter(n => !n.visualizado);
+
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
       <aside className="w-64 bg-white shadow flex flex-col">
@@ -217,8 +306,7 @@ export default function DashboardLayout({
         <div className="px-6 py-4 border-t border-gray-200">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 text-sm text-gray-700 hover:text-red-500 transition-colors"
-          >
+            className="w-full flex items-center gap-2 text-sm text-gray-700 hover:text-red-500 transition-colors">
             <LogOut size={18} /> SAIR
           </button>
         </div>
@@ -234,34 +322,105 @@ export default function DashboardLayout({
             />
           </div>
           <div className="flex items-center gap-4 relative">
-            {/* Ícone de notificações */}
+          {/* NOTIFICAÇÕES */}  
             <button
               id="botao-notificacao"
               className="relative"
               onClick={() => setMostrarNotificacoes(!mostrarNotificacoes)}
             >
               <Bell className="w-6 h-6" />
-              {notificacoes.length > 0 && (
+              {notificacoesNaoLidas.length > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-                  {notificacoes.length}
+                  {notificacoesNaoLidas.length}
                 </span>
               )}
             </button>
-          <p className="text-white">Olá, {nomeUsuario}</p>
-           {/* Mini-menu de notificações */}
-           {mostrarNotificacoes && (
-              <div id="menu-notificacao" className="absolute right-0 mt-10 w-64 bg-white text-black rounded shadow-md z-50">
-              <div className="p-4 font-bold border-b">Notificações</div>
-              {notificacoes.length === 0 ? (
-                <div className="p-4 text-sm">Nenhuma notificação</div>
-              ) : (
-                notificacoes.map((n, index) => (
-                  <div key={index} className="p-4 text-sm border-b">
-                    {n}
+            <p className="text-white">Olá, {nomeUsuario}</p>
+           
+            {mostrarNotificacoes && (
+              <AnimatePresence>
+                <motion.div
+                  id="menu-notificacao"
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 top-full mt-2 w-80 bg-white text-black rounded shadow-md z-50 max-h-80 overflow-y-auto scrollbar-hide"
+                  style={{ 
+                    minWidth: "20rem",
+                    scrollbarWidth: "none", 
+                    msOverflowStyle: "none", 
+                  }}
+                >
+                  <style jsx>{`#menu-notificacao::-webkit-scrollbar {display: none;}`}</style>
+                  <div className="flex items-center justify-between p-4 font-bold border-b">
+                    <span>Notificações</span>
+                    {notificacoes.length > 0 && (
+                      <button
+                        onClick={marcarTodasComoLidas}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Marcar todas como lidas
+                      </button>
+                    )}
                   </div>
-                ))
-              )}
-            </div>
+
+                  {notificacoes.length === 0 ? (
+                    <div className="p-4 text-sm">Nenhuma notificação</div>
+                  ) : (
+                    notificacoes.map((n, index) => {
+                      let clickTimeout: NodeJS.Timeout | null = null;
+
+                      const handleClick = () => {
+                        if (clickTimeout) {
+                          clearTimeout(clickTimeout);
+                          clickTimeout = null;
+                          abrirModalChamado(n.chamado_id); 
+                        } else {
+                          clickTimeout = setTimeout(() => {
+                            marcarNotificacaoComoLida(n.id);
+                            clickTimeout = null;
+                          }, 300);
+                        }
+                      };
+                      
+
+                      return (
+                        <div
+                          key={index}
+                          onClick={handleClick}
+                          className={`flex items-start gap-2 p-4 text-sm border-b cursor-pointer transition-all ${
+                            n.visualizado
+                              ? "bg-gray-100 text-gray-500"
+                              : "bg-white hover:bg-blue-50 text-gray-800 font-semibold"
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center">
+                              <span className="break-words">{n.mensagem}</span>
+                              {!n.visualizado && (
+                                <span className="text-[10px] text-white bg-red-500 px-2 py-0.5 rounded-full ml-2">
+                                  Nova
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-1">
+                              {new Date(n.criado_em).toLocaleString("pt-BR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
             )}
           </div>
         </header>
@@ -270,7 +429,10 @@ export default function DashboardLayout({
           {activeView === "faq" ? (
             <PerguntasFrequentes />
           ) : (
-            children
+            children &&
+          (typeof children === 'object' && 'props' in children
+            ? { ...children, props: { ...children.props, refetchNotificacoes: fetchNotificacoes } }
+            : children)
           )}
           {/* PAGINAÇÃO */}
           {totalPages > 1 && (

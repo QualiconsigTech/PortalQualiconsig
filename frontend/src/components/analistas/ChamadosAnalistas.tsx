@@ -15,7 +15,6 @@ export default function ChamadosAnalistas() {
   const [solucao, setSolucao] = useState("");
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
-  const [mensagem, setMensagem] = useState<string | null>(null);
   const [isAtendendo, setIsAtendendo] = useState(false);
   const [isEncerrando, setIsEncerrando] = useState(false);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
@@ -26,6 +25,9 @@ export default function ChamadosAnalistas() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMensagem, setToastMensagem] = useState(""); 
+  
 
 
   const fetchUsuario = async () => {
@@ -80,11 +82,17 @@ export default function ChamadosAnalistas() {
       await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/atender/`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      exibirMensagem("Chamado atribuído com sucesso.");
+      
+      setToastMensagem("Chamado atribuído com sucesso.");
+      setShowToast(true); 
+      setTimeout(() => {
+        setShowToast(false);
+      }, 1000);
       fetchChamados();
       setModalAberto(false);
     } catch (err) {
-      exibirMensagem("Erro ao atender o chamado.");
+      setToastMensagem("Erro ao atender o chamado.");
+      setShowToast(true);
     } finally {
       setIsAtendendo(false);
     }
@@ -92,7 +100,8 @@ export default function ChamadosAnalistas() {
 
   const encerrarChamado = async () => {
     if (!chamadoSelecionado || !solucao.trim()) {
-      exibirMensagem("Por favor, preencha a solução.");
+      setToastMensagem("Por favor, preencha a solução.");
+      setShowToast(true); 
       return;
     }
     setIsEncerrando(true);
@@ -117,22 +126,23 @@ export default function ChamadosAnalistas() {
       await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      exibirMensagem("Chamado encerrado com sucesso.");
+    
+      setToastMensagem("Chamado encerrado com sucesso.");
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+      }, 1000);
       fetchChamados();
       setModalAberto(false);
     } catch (err) {
-      exibirMensagem("Erro ao encerrar o chamado.");
+      setToastMensagem("Erro ao encerrar o chamado.");
+      setShowToast(true);
     } finally {
       setIsEncerrando(false);
     }
   };
 
-  const exibirMensagem = (texto: string) => {
-    setMensagem(texto);
-    setTimeout(() => setMensagem(null), 4000);
-  };
-
-  const changePage = (page: number) => {
+    const changePage = (page: number) => {
     setCurrentPage(page);
   };
   return (
@@ -144,6 +154,8 @@ export default function ChamadosAnalistas() {
       totalItems={chamados.length} 
       itemsPerPage={itemsPerPage}             
       onPageChange={(page) => setCurrentPage(page)}
+      setChamadoSelecionado={setChamadoSelecionado}  
+      setModalAberto={setModalAberto}                 
     >
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
@@ -183,7 +195,7 @@ export default function ChamadosAnalistas() {
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
                     <td className="py-2 text-orange-500">{chamado.prioridade_nome}</td>
-                    <td className="py-2">{chamado.setor_nome}</td>
+                    <td className="py-2">{chamado.usuario?.setor_nome }</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
                       <button
@@ -207,6 +219,16 @@ export default function ChamadosAnalistas() {
           </tbody>
         </table>
       </section>
+      {showToast && (
+        <div
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg cursor-pointer z-50 animate-slide-up"
+          onClick={() => setShowToast(false)}
+        >
+          {toastMensagem}
+        </div>
+      )}
+
+
 
       {modalAberto && chamadoSelecionado && (
         <ChamadoModal
@@ -226,14 +248,6 @@ export default function ChamadosAnalistas() {
           isEncerrando={isEncerrando}
           isAtendendo={isAtendendo}
         />
-      )}
-
-      {mensagem && (
-        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-          <div className="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-xl border border-gray-300">
-            {mensagem}
-          </div>
-        </div>
       )}
     </DashboardLayout>
   );

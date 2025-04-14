@@ -1,5 +1,19 @@
 from django.urls import path
-from chamados.views import (listar_comentarios_chamado, criar_comentario_chamado, criar_pergunta_frequente, listar_perguntas_frequentes, criar_chamado, listar_ultimos_chamados, listar_historico_chamados, detalhes_chamado, atualizar_chamado, deletar_chamado)
+from chamados.views import (criar_notificacao,
+listar_notificacoes_usuario, 
+marcar_notificacao_visualizada, 
+listar_comentarios_chamado, 
+criar_comentario_chamado, 
+criar_pergunta_frequente, 
+listar_perguntas_frequentes, 
+criar_chamado, 
+listar_ultimos_chamados, 
+listar_historico_chamados, 
+detalhes_chamado, 
+atualizar_chamado, 
+deletar_chamado,
+marcar_todas_notificacoes_lidas
+)
 
 urlpatterns = [
     path('criar/', criar_chamado),
@@ -12,5 +26,9 @@ urlpatterns = [
     path('faq/', listar_perguntas_frequentes, name='listar-perguntas-frequentes'),
     path('<int:chamado_id>/comentarios/', listar_comentarios_chamado, name="listar_comentarios_chamado"),
     path('<int:chamado_id>/comentarios/criar/', criar_comentario_chamado, name="criar_comentario_chamado"),
+    path('notificacoes/criar/', criar_notificacao, name='criar-notificacao'),
+    path('notificacoes/', listar_notificacoes_usuario, name='listar-notificacoes-usuario'),
+    path('notificacoes/<int:notificacao_id>/visualizar/', marcar_notificacao_visualizada, name='marcar-notificacao-visualizada'),
+     path('notificacoes/marcar-todas/', marcar_todas_notificacoes_lidas, name='marcar-todas-notificacoes'),
 
 ]

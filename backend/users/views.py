@@ -2,14 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from chamados.models.chamados import Chamado
+from chamados.models.notificacao import Notificacao
 from chamados.serializers import ChamadoDetalhadoSerializer
 from users.serializers import UsuarioLogadoSerializer
 from users.services import listar_prioridades,listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
 from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
 from users.models.usuarios import Usuario
 
-## ANALISTA COMUM
+#ANALISTA COMUM
 class ChamadosDoAnalistaView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -24,13 +24,24 @@ class AtenderChamadoView(APIView):
     def post(self, request, chamado_id):
         try:
             chamado = atender_chamado(request.user, chamado_id)
+
+           
+            Notificacao.objects.create(
+                usuario_destino=chamado.usuario,     
+                mensagem=f"Seu chamado {chamado.titulo} está em atendimento.",
+                chamado=chamado                     
+            )
+
             return Response({
                 "mensagem": f"Chamado '{chamado.titulo}' atribuído ao analista com sucesso."
             }, status=status.HTTP_200_OK)
+        
         except PermissionError as e:
             return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        
         except ValueError as e:
             return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         
 class ChamadosAtribuidosView(APIView):
     permission_classes = [IsAuthenticated]
@@ -45,13 +56,21 @@ class EncerrarChamadoView(APIView):
 
     def post(self, request, chamado_id):
         chamado = encerrar_chamado(chamado_id, request.user, request.data)
+
+        Notificacao.objects.create(
+            usuario_destino=chamado.usuario,
+            chamado=chamado,
+            mensagem=f"Seu chamado {chamado.titulo} foi encerrado."
+        )
+
         return Response({
             'mensagem': 'Chamado encerrado com sucesso.',
             'chamado_id': chamado.id,
             'encerrado_em': chamado.encerrado_em
         })
+
     
-## ANALISTA ADMIN    
+#ANALISTA ADMIN    
 class ChamadosAdminView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -69,7 +88,7 @@ class ChamadosPorSetorAdminView(APIView):
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
     
-## USUARIO
+#USUARIO
 class ChamadosDoUsuarioView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -78,7 +97,7 @@ class ChamadosDoUsuarioView(APIView):
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
     
-## USUARIOS ADMIN
+#USUARIOS ADMIN
 class ChamadosDoSetorView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -96,7 +115,7 @@ class UsuarioLogadoView(APIView):
         return Response(serializer.data)
     
 
-## RESETE DE SENHA    
+#RESETE DE SENHA    
 class EnviarResetSenhaView(APIView):
     def post(self, request):
         email = request.data.get("email")
@@ -123,7 +142,7 @@ class ConfirmarResetSenhaView(APIView):
             return Response({"erro": "Token inválido ou expirado."}, status=400)
         
 
- ## LISTAGEM       
+#LISTAGEM       
 class CategoriasListView(APIView):
     permission_classes = [IsAuthenticated]
 
