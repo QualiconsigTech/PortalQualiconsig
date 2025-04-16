@@ -454,71 +454,56 @@ export default function DashboardLayout({
           {activeView === "faq" ? (
             <PerguntasFrequentes />
           ) : (
-            children &&
-          (typeof children === 'object' && 'props' in children
-            ? { ...children, props: { ...children.props, refetchNotificacoes: fetchNotificacoes } }
-            : children)
-          )}
-          {/* PAGINAÇÃO */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8 gap-2">
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    currentPage === index + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
+            <>
+              {typeof children === 'object' && 'props' in children
+                ? React.cloneElement(children, {
+                    ...children.props,
+                    refetchNotificacoes: fetchNotificacoes,
+                  })
+                : children}
+
+              {/* PAGINAÇÃO visível somente fora da FAQ */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8 gap-2">
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handlePageChange(index + 1)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        currentPage === index + 1
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
+
         {modalAberto && chamadoSelecionado && (
-          perfilUsuario === "usuario" ? (
             <ChamadoModal
-              chamado={chamadoSelecionado}
-              aberto={modalAberto}
-              onClose={() => setModalAberto(false)}
-              onAtender={() => {}}
-              onEncerrar={() => {}}
-              podeAtender={false}
-              podeEncerrar={false}
-              solucao={""}
-              comentarios={""}
-              setSolucao={() => {}}
-              setComentarios={() => {}}
-              anexos={null}
-              setAnexos={() => {}}
-              isAtendendo={false}
-              isEncerrando={false}
-              modoAdmin={false}
+            chamado={chamadoSelecionado}
+            aberto={modalAberto}
+            onClose={() => setModalAberto(false)}
+            onAtender={() => {}}
+            onEncerrar={() => {}}
+            podeAtender={perfilUsuario !== "usuario"}
+            podeEncerrar={perfilUsuario !== "usuario"}
+            solucao={""}
+            comentarios={""}
+            setSolucao={() => {}}
+            setComentarios={() => {}}
+            anexos={null}
+            setAnexos={() => {}}
+            isAtendendo={false}
+            isEncerrando={false}
+            modoAdmin={perfilUsuario !== "usuario"}
             />
-          ) : (
-            <ChamadoModal
-              chamado={chamadoSelecionado}
-              aberto={modalAberto}
-              onClose={() => setModalAberto(false)}
-              onAtender={() => {}}
-              onEncerrar={() => {}}
-              podeAtender={true} 
-              podeEncerrar={true} 
-              solucao={""}
-              comentarios={""}
-              setSolucao={() => {}}
-              setComentarios={() => {}}
-              anexos={null}
-              setAnexos={() => {}}
-              isAtendendo={false}
-              isEncerrando={false}
-              modoAdmin={true}
-            />
-          )
-        )}
+          )}
       </main>
     </div>
   );
