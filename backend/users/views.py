@@ -157,7 +157,7 @@ class SetoresListView(APIView):
 
     def get(self, request):
         setores = listar_setores()
-        data = [{"id": setor.id, "nome": setor.nome} for setor in setores]
+        data = [{"id": setor.id, "nome": setor.nome, "area_id": setor.area_id} for setor in setores]
         return Response(data)
     
 class PrioridadesListView(APIView):

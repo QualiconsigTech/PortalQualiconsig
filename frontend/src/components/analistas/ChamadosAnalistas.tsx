@@ -27,6 +27,10 @@ export default function ChamadosAnalistas() {
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
+  const [produtos, setProdutos] = useState([]);
+  const [usarProduto, setUsarProduto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
+  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   
 
 
@@ -104,36 +108,48 @@ export default function ChamadosAnalistas() {
       setShowToast(true); 
       return;
     }
+  
     setIsEncerrando(true);
     const token = localStorage.getItem("token");
-
-    const base64Arquivos = anexos
-      ? await Promise.all(
-          Array.from(anexos).map(async (file) => {
-            const conteudo = await toBase64(file);
-            return { nome: file.name, conteudo };
-          })
-        )
-      : [];
-
-    const payload = {
-      solucao,
-      comentarios,
-      arquivos: JSON.stringify(base64Arquivos),
-    };
-
+  
     try {
+      // 🔽 1. Debitar produto do estoque (caso marcado)
+      if (usarProduto && produtoSelecionado) {
+        await api.post("/api/chamados/produtos/usar/", {
+          produto_id: produtoSelecionado,
+          quantidade: quantidadeUsada,
+        }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+  
+      // 🔽 2. Converter arquivos para base64
+      const base64Arquivos = anexos
+        ? await Promise.all(
+            Array.from(anexos).map(async (file) => {
+              const conteudo = await toBase64(file);
+              return { nome: file.name, conteudo };
+            })
+          )
+        : [];
+  
+      // 🔽 3. Payload e requisição de encerramento
+      const payload = {
+        solucao,
+        comentarios,
+        arquivos: JSON.stringify(base64Arquivos),
+      };
+  
       await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-    
+  
       setToastMensagem("Chamado encerrado com sucesso.");
       setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-      }, 1000);
+      setTimeout(() => setShowToast(false), 1000);
       fetchChamados();
       setModalAberto(false);
+  
     } catch (err) {
       setToastMensagem("Erro ao encerrar o chamado.");
       setShowToast(true);
@@ -141,6 +157,7 @@ export default function ChamadosAnalistas() {
       setIsEncerrando(false);
     }
   };
+  
 
     const changePage = (page: number) => {
     setCurrentPage(page);
@@ -247,6 +264,12 @@ export default function ChamadosAnalistas() {
           setAnexos={setAnexos}
           isEncerrando={isEncerrando}
           isAtendendo={isAtendendo}
+          usarProduto={usarProduto}
+          setUsarProduto={setUsarProduto}
+          produtoSelecionado={produtoSelecionado}
+          setProdutoSelecionado={setProdutoSelecionado}
+          quantidadeUsada={quantidadeUsada}
+          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
     </DashboardLayout>
