@@ -4,6 +4,7 @@ from chamados.models.perguntas import PerguntaFrequente
 from users.serializers import UsuarioSerializer
 from chamados.models.comentario import ComentarioChamado
 from chamados.models.notificacao import Notificacao
+from chamados.models import Produto
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
@@ -52,6 +53,13 @@ class NotificacaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notificacao
         fields = ['id', 'mensagem', 'visualizado', 'criado_em', 'chamado_id'] 
+
+
+class ProdutoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Produto
+        fields = ['id', 'nome', 'quantidade']
+
 
 
 

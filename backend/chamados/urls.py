@@ -12,7 +12,9 @@ listar_historico_chamados,
 detalhes_chamado, 
 atualizar_chamado, 
 deletar_chamado,
-marcar_todas_notificacoes_lidas
+marcar_todas_notificacoes_lidas,
+produtos_view,
+usar_produto
 )
 
 urlpatterns = [
@@ -29,6 +31,9 @@ urlpatterns = [
     path('notificacoes/criar/', criar_notificacao, name='criar-notificacao'),
     path('notificacoes/', listar_notificacoes_usuario, name='listar-notificacoes-usuario'),
     path('notificacoes/<int:notificacao_id>/visualizar/', marcar_notificacao_visualizada, name='marcar-notificacao-visualizada'),
-     path('notificacoes/marcar-todas/', marcar_todas_notificacoes_lidas, name='marcar-todas-notificacoes'),
+    path('notificacoes/marcar-todas/', marcar_todas_notificacoes_lidas, name='marcar-todas-notificacoes'),
+    path('produtos/', produtos_view),
+    path('produtos/usar/', usar_produto),
+
 
 ]
