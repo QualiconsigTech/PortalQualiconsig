@@ -28,6 +28,12 @@ interface ChamadoModalProps {
   isAtendendo: boolean;
   isEncerrando: boolean;
   modoAdmin?: boolean;
+  usarProduto: boolean;
+  setUsarProduto: (value: boolean) => void;
+  produtoSelecionado: number | null;
+  setProdutoSelecionado: (value: number | null) => void;
+  quantidadeUsada: number;
+  setQuantidadeUsada: (value: number) => void;
 }
 
 export const ChamadoModal = ({
@@ -52,6 +58,10 @@ export const ChamadoModal = ({
   const [novaMensagem, setNovaMensagem] = useState("");
   const status = getStatus(chamado);
   const [usuarioLogado, setUsuarioLogado] = useState<{ id: number, tipo: string } | null>(null);
+  const [produtos, setProdutos] = useState([]);
+  const [usarProduto, setUsarProduto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
+  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
 
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
@@ -71,8 +81,20 @@ export const ChamadoModal = ({
     if (chamado.id) {
       buscarComentarios();
       fetchUsuario();
+      fetchProdutos();
     }
   }, [chamado.id]);
+  const fetchProdutos = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await api.get("/api/chamados/produtos/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProdutos(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error);
+    }
+  };
   
     const buscarComentarios = async () => {
       try {
@@ -177,6 +199,47 @@ export const ChamadoModal = ({
           <label className="block font-semibold mb-1">Solução:</label>
           <textarea value={solucao} onChange={(e) => setSolucao(e.target.value)} readOnly={status.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100" />
         </div>
+
+        {/* Uso de Produto */}
+        {usuarioLogado?.tipo === "analista" && (
+  <       div className="mb-4 space-y-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={usarProduto}
+                onChange={(e) => setUsarProduto(e.target.checked)}
+              />
+              Utilizei algum produto do estoque?
+            </label>
+
+            {usarProduto && (
+              <>
+                <select
+                  className="w-full p-2 border rounded"
+                  value={produtoSelecionado ?? ""}
+                  onChange={(e) => setProdutoSelecionado(Number(e.target.value))}
+                >
+                  <option value="">Selecione um produto</option>
+                  {produtos.map((produto: any) => (
+                    <option key={produto.id} value={produto.id}>
+                      {produto.nome} ({produto.quantidade} disponíveis)
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full p-2 border rounded"
+                  placeholder="Quantidade utilizada"
+                  value={quantidadeUsada}
+                  onChange={(e) => setQuantidadeUsada(Number(e.target.value))}
+                />
+              </>
+            )}
+          </div>
+        )}
+
 
        {/* Chat de Comentários */}
         <div className="mb-6">
