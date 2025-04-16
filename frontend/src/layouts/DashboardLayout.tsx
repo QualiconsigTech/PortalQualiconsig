@@ -5,6 +5,8 @@ import { getPerfilUsuario } from "@/utils/chamadoUtils";
 import { api } from "@/services/api"; 
 import PerguntasFrequentes from "@/components/PerguntasFrequentes";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChamadoModal } from "@/components/ChamadoModal";
+
 
 interface Notificacao {
   id: number;
@@ -12,19 +14,6 @@ interface Notificacao {
   visualizado: boolean;
   criado_em: string;
   chamado_id: number;
-}
-
-interface DashboardLayoutProps {
-  children: ReactNode;
-  nomeUsuario?: string;
-  nomeDoSetor?: string;
-  activeView?: string;
-  setActiveView?: (view: string) => void;
-  totalItems?: number;            
-  itemsPerPage?: number;           
-  onPageChange?: (page: number) => void;
-  setChamadoSelecionado?: (chamado: any) => void;
-  setModalAberto?: (open: boolean) => void;
 }
 
 export default function DashboardLayout({
@@ -36,17 +25,25 @@ export default function DashboardLayout({
   totalItems = 0,
   itemsPerPage = 10,
   onPageChange,
-  setChamadoSelecionado,   
-  setModalAberto,
-}: DashboardLayoutProps) {
+}: {
+  children: ReactNode;
+  nomeUsuario?: string;
+  nomeDoSetor?: string;
+  activeView?: string;
+  setActiveView?: (view: string) => void;
+  totalItems?: number;            
+  itemsPerPage?: number;           
+  onPageChange?: (page: number) => void;
+}) {
   const router = useRouter();
   const [sidebarAberto, setSidebarAberto] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [tipoUsuario, setTipoUsuario] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [notificacoes, setNotificacoes] = useState<string[]>([]);
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [mostrarNotificacoes, setMostrarNotificacoes] = useState(false);
-
+  const [modalAberto, setModalAberto] = useState(false);
+  const [chamadoSelecionado, setChamadoSelecionado] = useState<any>(null);
 
   const fetchUsuario = async () => {
     try {
@@ -120,8 +117,10 @@ export default function DashboardLayout({
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    onPageChange?.(page); 
+    onPageChange?.(page);
   };
+  
+  
   const marcarNotificacaoComoLida = async (id: number) => {
     try {
       await api.post(`/api/chamados/notificacoes/${id}/visualizar/`);
@@ -161,10 +160,10 @@ export default function DashboardLayout({
     }
   };
   
-  const abrirModalChamado = async (chamadoId: number) => {
+  const abrirModalChamadosUsuario = async (chamadoId: number, notificacaoId?: number) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token || !setChamadoSelecionado || !setModalAberto) return;
+      if (!token) return;
   
       const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -172,14 +171,33 @@ export default function DashboardLayout({
   
       setChamadoSelecionado(data);
       setModalAberto(true);
+  
+      if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
     } catch (error) {
-      console.error("Erro ao buscar chamado para abrir modal:", error);
+      console.error("Erro ao abrir modal de chamado do USUÁRIO:", error);
+    }
+  };
+  
+  const abrirModalChamadosAnalista = async (chamadoId: number, notificacaoId?: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+  
+      const { data } = await api.get(`/api/usuarios/chamados/${chamadoId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      setChamadoSelecionado(data);
+      setModalAberto(true);
+  
+      if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
+    } catch (error) {
+      console.error("Erro ao abrir modal de chamado do ANALISTA:", error);
     }
   };
   
   
-
-  const notificacoesNaoLidas = notificacoes.filter(n => !n.visualizado);
+  const notificacoesNaoLidas = notificacoes.filter((n) => !n.visualizado);
 
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
@@ -369,7 +387,11 @@ export default function DashboardLayout({
                     <span>Notificações</span>
                     {notificacoes.length > 0 && (
                       <button
-                        onClick={marcarTodasComoLidas}
+                      onClick={async () => {
+                        await Promise.all(
+                          notificacoesNaoLidas.map(n => marcarNotificacaoComoLida(n.id))
+                        );
+                      }}
                         className="text-xs text-blue-600 hover:underline"
                       >
                         Marcar todas como lidas
@@ -380,55 +402,46 @@ export default function DashboardLayout({
                   {notificacoes.length === 0 ? (
                     <div className="p-4 text-sm">Nenhuma notificação</div>
                   ) : (
-                    notificacoes.map((n, index) => {
-                      let clickTimeout: NodeJS.Timeout | null = null;
-
-                      const handleClick = () => {
-                        if (clickTimeout) {
-                          clearTimeout(clickTimeout);
-                          clickTimeout = null;
-                          abrirModalChamado(n.chamado_id); 
-                        } else {
-                          clickTimeout = setTimeout(() => {
-                            marcarNotificacaoComoLida(n.id);
-                            clickTimeout = null;
-                          }, 300);
-                        }
-                      };
-                      
-
-                      return (
-                        <div
-                          key={index}
-                          onClick={handleClick}
-                          className={`flex items-start gap-2 p-4 text-sm border-b cursor-pointer transition-all ${
-                            n.visualizado
-                              ? "bg-gray-100 text-gray-500"
-                              : "bg-white hover:bg-blue-50 text-gray-800 font-semibold"
-                          }`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center">
-                              <span className="break-words">{n.mensagem}</span>
-                              {!n.visualizado && (
-                                <span className="text-[10px] text-white bg-red-500 px-2 py-0.5 rounded-full ml-2">
-                                  Nova
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-gray-400 mt-1">
-                              {new Date(n.criado_em).toLocaleString("pt-BR", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </div>
+                    notificacoes.map((n, index) => (
+                      <div
+                        key={index}
+                        onClick={async () => {
+                          console.log("Clicou na notificação:", n.chamado_id, n.id);
+                          console.log("Usuario:", perfilUsuario);
+                        
+                          if (perfilUsuario === "analista" || perfilUsuario === "analista_admin") {
+                            await abrirModalChamadosAnalista(n.chamado_id, n.id);
+                          } else {
+                            await abrirModalChamadosUsuario(n.chamado_id, n.id);
+                          }
+                        }}                        
+                        className={`flex items-start gap-2 p-4 text-sm border-b cursor-pointer transition-all ${
+                          n.visualizado
+                            ? "bg-gray-100 text-gray-500"
+                            : "bg-white hover:bg-blue-50 text-gray-800 font-semibold"
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <span className="break-words">{n.mensagem}</span>
+                            {!n.visualizado && (
+                              <span className="text-[10px] text-white bg-red-500 px-2 py-0.5 rounded-full ml-2">
+                                Nova
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-1">
+                            {new Date(n.criado_em).toLocaleString("pt-BR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </div>
                         </div>
-                      );
-                    })
+                      </div>
+                    ))
                   )}
 
                 </motion.div>
@@ -441,30 +454,56 @@ export default function DashboardLayout({
           {activeView === "faq" ? (
             <PerguntasFrequentes />
           ) : (
-            children &&
-          (typeof children === 'object' && 'props' in children
-            ? { ...children, props: { ...children.props, refetchNotificacoes: fetchNotificacoes } }
-            : children)
-          )}
-          {/* PAGINAÇÃO */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8 gap-2">
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    currentPage === index + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
+            <>
+              {typeof children === 'object' && 'props' in children
+                ? React.cloneElement(children, {
+                    ...children.props,
+                    refetchNotificacoes: fetchNotificacoes,
+                  })
+                : children}
+
+              {/* PAGINAÇÃO visível somente fora da FAQ */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8 gap-2">
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handlePageChange(index + 1)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        currentPage === index + 1
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
+
+        {modalAberto && chamadoSelecionado && (
+            <ChamadoModal
+            chamado={chamadoSelecionado}
+            aberto={modalAberto}
+            onClose={() => setModalAberto(false)}
+            onAtender={() => {}}
+            onEncerrar={() => {}}
+            podeAtender={perfilUsuario !== "usuario"}
+            podeEncerrar={perfilUsuario !== "usuario"}
+            solucao={""}
+            comentarios={""}
+            setSolucao={() => {}}
+            setComentarios={() => {}}
+            anexos={null}
+            setAnexos={() => {}}
+            isAtendendo={false}
+            isEncerrando={false}
+            modoAdmin={perfilUsuario !== "usuario"}
+            />
+          )}
       </main>
     </div>
   );

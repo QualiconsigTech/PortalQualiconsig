@@ -4,12 +4,14 @@ import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
 import { AbrirChamadoModal } from "@/components/AbrirChamadoModal";
+import PerguntasFrequentes from "@/components/PerguntasFrequentes";
 import { ChamadoModal } from "@/components/ChamadoModal";
 import { getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { Chamado } from "@/types/Chamado";
 
 export default function ChamadosUsuarios() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [activeView, setActiveView] = useState("meus");
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
@@ -157,10 +159,13 @@ export default function ChamadosUsuarios() {
 
   return (
     <DashboardLayout
+      activeView={activeView} 
+      setActiveView={setActiveView} 
       totalItems={chamados.length} 
       itemsPerPage={itemsPerPage}             
       onPageChange={(page) => setCurrentPage(page)} 
       >
+        {activeView === "faq" && <PerguntasFrequentes />}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
         <button
