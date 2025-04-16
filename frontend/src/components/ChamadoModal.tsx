@@ -53,15 +53,19 @@ export const ChamadoModal = ({
   isAtendendo,
   isEncerrando,
   modoAdmin = false,
+  usarProduto,
+  setUsarProduto,
+  produtoSelecionado,
+  setProdutoSelecionado,
+  quantidadeUsada,
+  setQuantidadeUsada
+
 }: ChamadoModalProps) => {
   const [chatMensagens, setChatMensagens] = useState<any[]>([]);
   const [novaMensagem, setNovaMensagem] = useState("");
   const status = getStatus(chamado);
   const [usuarioLogado, setUsuarioLogado] = useState<{ id: number, tipo: string } | null>(null);
   const [produtos, setProdutos] = useState([]);
-  const [usarProduto, setUsarProduto] = useState(false);
-  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
-  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
 
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
@@ -95,6 +99,15 @@ export const ChamadoModal = ({
       console.error("Erro ao buscar produtos:", error);
     }
   };
+
+  useEffect(() => {
+    if (aberto) {
+      setUsarProduto(false);
+      setProdutoSelecionado(null);
+      setQuantidadeUsada(1);
+    }
+  }, [aberto]);
+  
   
     const buscarComentarios = async () => {
       try {

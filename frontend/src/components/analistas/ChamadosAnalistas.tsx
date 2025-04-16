@@ -113,7 +113,7 @@ export default function ChamadosAnalistas() {
     const token = localStorage.getItem("token");
   
     try {
-      // 🔽 1. Debitar produto do estoque (caso marcado)
+      
       if (usarProduto && produtoSelecionado) {
         await api.post("/api/chamados/produtos/usar/", {
           produto_id: produtoSelecionado,
@@ -123,7 +123,6 @@ export default function ChamadosAnalistas() {
         });
       }
   
-      // 🔽 2. Converter arquivos para base64
       const base64Arquivos = anexos
         ? await Promise.all(
             Array.from(anexos).map(async (file) => {
@@ -133,7 +132,6 @@ export default function ChamadosAnalistas() {
           )
         : [];
   
-      // 🔽 3. Payload e requisição de encerramento
       const payload = {
         solucao,
         comentarios,

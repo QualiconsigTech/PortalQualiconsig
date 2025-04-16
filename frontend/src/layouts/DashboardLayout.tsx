@@ -6,7 +6,7 @@ import { api } from "@/services/api";
 import PerguntasFrequentes from "@/components/PerguntasFrequentes";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChamadoModal } from "@/components/ChamadoModal";
-
+import { Produtos } from "@/components/Produtos";
 
 interface Notificacao {
   id: number;
@@ -44,17 +44,19 @@ export default function DashboardLayout({
   const [mostrarNotificacoes, setMostrarNotificacoes] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<any>(null);
+  const [setorUsuario, setSetorUsuario] = useState("");
 
   const fetchUsuario = async () => {
     try {
       const { data } = await api.get("/api/usuarios/me/");
       setTipoUsuario(data.tipo || "");
       setIsAdmin(data.is_admin || false);
+      setSetorUsuario(data.setor || "");
     } catch (error) {
       console.error("Erro ao buscar dados do usuário", error);
     }
   };
-  
+ 
   const fetchNotificacoes = async () => {
     try {
       const { data } = await api.get("/api/chamados/notificacoes/");
@@ -297,6 +299,7 @@ export default function DashboardLayout({
                 >
                   Meus Chamados
                 </button>                
+                
                 {nomeDoSetor && (
                   <button
                     onClick={() => setActiveView?.("setor")}
@@ -307,8 +310,21 @@ export default function DashboardLayout({
                     {nomeDoSetor}
                   </button>
                 )}
+
+                {/* Só mostra para analistas do setor Suporte */}
+                {setorUsuario === "Suporte" && (
+                  <button
+                    onClick={() => setActiveView?.("produtos")}
+                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeView === "produtos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    Produtos
+                  </button>
+                )}
               </>
             )}
+
              {/* MENU PARA USUÁRIO COMUM */}
              {perfilUsuario === "usuario" && (
                   <>
@@ -451,11 +467,11 @@ export default function DashboardLayout({
         </header>
 
         <div className="p-6">
-          {activeView === "faq" ? (
-            <PerguntasFrequentes />
-          ) : (
+          {activeView === "faq" && <PerguntasFrequentes />}
+          {activeView === "produtos" && <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />} {/* ATUALIZAÇÃO */}
+          {activeView !== "faq" && activeView !== "produtos" && (
             <>
-              {typeof children === 'object' && 'props' in children
+              {typeof children === "object" && "props" in children
                 ? React.cloneElement(children, {
                     ...children.props,
                     refetchNotificacoes: fetchNotificacoes,
