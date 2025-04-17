@@ -29,11 +29,11 @@ interface ChamadoModalProps {
   isEncerrando: boolean;
   modoAdmin?: boolean;
   usarProduto: boolean;
-  setUsarProduto: (value: boolean) => void;
+  setUsarProduto?: (value: boolean) => void;
   produtoSelecionado: number | null;
-  setProdutoSelecionado: (value: number | null) => void;
+  setProdutoSelecionado?: (value: number | null) => void;
   quantidadeUsada: number;
-  setQuantidadeUsada: (value: number) => void;
+  setQuantidadeUsada?: (value: number) => void;
 }
 
 export const ChamadoModal = ({
@@ -102,9 +102,9 @@ export const ChamadoModal = ({
 
   useEffect(() => {
     if (aberto) {
-      setUsarProduto(false);
-      setProdutoSelecionado(null);
-      setQuantidadeUsada(1);
+      if (setUsarProduto) setUsarProduto(false);
+      if (setProdutoSelecionado) setProdutoSelecionado(null);
+      if (setQuantidadeUsada) setQuantidadeUsada(1);
     }
   }, [aberto]);
   
