@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { LogOut, Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/router";
 import { getPerfilUsuario } from "@/utils/chamadoUtils";
@@ -16,25 +16,33 @@ interface Notificacao {
   chamado_id: number;
 }
 
-export default function DashboardLayout({
-  children,
-  nomeUsuario = "Usuário",
-  nomeDoSetor = "Setor",
-  activeView = "meus",
-  setActiveView,
-  totalItems = 0,
-  itemsPerPage = 10,
-  onPageChange,
-}: {
+interface DashboardLayoutProps {
   children: ReactNode;
   nomeUsuario?: string;
   nomeDoSetor?: string;
   activeView?: string;
   setActiveView?: (view: string) => void;
-  totalItems?: number;            
-  itemsPerPage?: number;           
+  totalItems?: number;
+  itemsPerPage?: number;
   onPageChange?: (page: number) => void;
-}) {
+  setChamadoSelecionado?: (chamado: any) => void;
+  setModalAberto?: (aberto: boolean) => void;
+}
+
+export default function DashboardLayout(props: DashboardLayoutProps) {
+  const {
+    children,
+    nomeUsuario = "Usuário",
+    nomeDoSetor = "Setor",
+    activeView = "meus",
+    setActiveView,
+    totalItems = 0,
+    itemsPerPage = 10,
+    onPageChange,
+    setChamadoSelecionado: externalSetChamadoSelecionado,
+    setModalAberto: externalSetModalAberto,
+  } = props;
+
   const router = useRouter();
   const [sidebarAberto, setSidebarAberto] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +53,11 @@ export default function DashboardLayout({
   const [modalAberto, setModalAberto] = useState(false);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<any>(null);
   const [setorUsuario, setSetorUsuario] = useState("");
+  const [produtos, setProdutos] = useState([]);
+  const [usarProduto, setUsarProduto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
+  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
+
 
   const fetchUsuario = async () => {
     try {
@@ -171,8 +184,8 @@ export default function DashboardLayout({
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      setChamadoSelecionado(data);
-      setModalAberto(true);
+      externalSetChamadoSelecionado?.(data);
+      externalSetModalAberto?.(true);
   
       if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
     } catch (error) {
@@ -189,8 +202,8 @@ export default function DashboardLayout({
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      setChamadoSelecionado(data);
-      setModalAberto(true);
+      externalSetChamadoSelecionado?.(data);
+      externalSetModalAberto?.(true);
   
       if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
     } catch (error) {
@@ -471,13 +484,14 @@ export default function DashboardLayout({
           {activeView === "produtos" && <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />} {/* ATUALIZAÇÃO */}
           {activeView !== "faq" && activeView !== "produtos" && (
             <>
-              {typeof children === "object" && "props" in children
-                ? React.cloneElement(children, {
-                    ...children.props,
+              {React.isValidElement(children)
+                ? React.cloneElement(children as React.ReactElement<any>, {
                     refetchNotificacoes: fetchNotificacoes,
                   })
                 : children}
 
+
+                
               {/* PAGINAÇÃO visível somente fora da FAQ */}
               {totalPages > 1 && (
                 <div className="flex justify-center mt-8 gap-2">
@@ -518,6 +532,12 @@ export default function DashboardLayout({
             isAtendendo={false}
             isEncerrando={false}
             modoAdmin={perfilUsuario !== "usuario"}
+            usarProduto={usarProduto}
+            setUsarProduto={setUsarProduto}
+            produtoSelecionado={produtoSelecionado}
+            setProdutoSelecionado={setProdutoSelecionado}
+            quantidadeUsada={quantidadeUsada}
+            setQuantidadeUsada={setQuantidadeUsada}
             />
           )}
       </main>

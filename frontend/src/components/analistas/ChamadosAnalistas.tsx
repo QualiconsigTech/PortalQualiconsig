@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Dispatch, SetStateAction } from "react";
 import { format } from "date-fns";
 import { api } from "@/services/api";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { ChamadoModal } from "@/components/ChamadoModal";
 import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
+
 
 export default function ChamadosAnalistas() {
   const [chamados, setChamados] = useState<Chamado[]>([]);

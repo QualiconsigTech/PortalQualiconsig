@@ -6,8 +6,8 @@ import { format } from "date-fns";
 import { AbrirChamadoModal } from "@/components/AbrirChamadoModal";
 import PerguntasFrequentes from "@/components/PerguntasFrequentes";
 import { ChamadoModal } from "@/components/ChamadoModal";
-import { getStatus, toBase64 } from "@/utils/chamadoUtils";
-import { Chamado } from "@/types/Chamado";
+import { getStatus, toBase64, Chamado } from "@/utils/chamadoUtils";
+
 
 export default function ChamadosUsuarios() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
@@ -30,6 +30,11 @@ export default function ChamadosUsuarios() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
+  const [produtos, setProdutos] = useState([]);
+  const [usarProduto, setUsarProduto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
+  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
+  
 
   const fetchChamados = async () => {
     try {
@@ -104,8 +109,8 @@ export default function ChamadosUsuarios() {
  
   const handleSalvarChamado = async (dados: {
     titulo: string;
-    categoria: string;
-    prioridade: string;
+    categoria: number;
+    prioridade: number;
     setor: number;
     descricao: string;
     anexos: FileList | null;
@@ -268,6 +273,12 @@ export default function ChamadosUsuarios() {
           isAtendendo={false}
           isEncerrando={false}
           modoAdmin={false}
+          usarProduto={usarProduto}
+          setUsarProduto={setUsarProduto}
+          produtoSelecionado={produtoSelecionado}
+          setProdutoSelecionado={setProdutoSelecionado}
+          quantidadeUsada={quantidadeUsada}
+          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
     </DashboardLayout>

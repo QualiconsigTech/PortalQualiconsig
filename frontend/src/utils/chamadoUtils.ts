@@ -1,3 +1,31 @@
+export interface Chamado {
+  id: number;
+  titulo: string;
+  descricao: string;
+  criado_em: string;
+  encerrado_em: string | null;
+  solucao?: string | null;
+  comentarios?: string | null;
+  categoria_nome: string;
+  prioridade_nome: string;
+  setor_nome: string;
+  gravidade: string;
+  arquivos: string;
+  analista: {
+    id: number;
+    nome: string;
+  } | null;
+  usuario: {
+    id: number;
+    nome: string;
+    setor_nome: string;
+  };
+}
+
+
+
+
+
 export const getStatus = (chamado: {
     analista: any;
     encerrado_em: string | null;
