@@ -5,8 +5,8 @@ import { api } from "@/services/api";
 import { format } from "date-fns";
 import { AbrirChamadoModal } from "@/components/AbrirChamadoModal";
 import { ChamadoModal } from "@/components/ChamadoModal"; 
-import { getStatus, toBase64, getNomeAnalista } from "@/utils/chamadoUtils";
-import { Chamado } from "@/types/Chamado";
+import { getStatus, toBase64, getNomeAnalista, Chamado} from "@/utils/chamadoUtils";
+
 
 
 export default function ChamadosUsuariosAdmin() {
@@ -30,6 +30,11 @@ export default function ChamadosUsuariosAdmin() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
+  const [produtos, setProdutos] = useState([]);
+  const [usarProduto, setUsarProduto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
+  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
+  
 
   
   const fetchChamados = async (url: string) => {
@@ -116,8 +121,8 @@ export default function ChamadosUsuariosAdmin() {
  
   const handleSalvarChamado = async (dados: {
     titulo: string;
-    categoria: string;
-    prioridade: string;
+    categoria: number;
+    prioridade: number;
     descricao: string;
     setor: number;
     anexos: FileList | null;
@@ -171,7 +176,6 @@ export default function ChamadosUsuariosAdmin() {
 
   return (
     <DashboardLayout 
-    isUsuarioAdmin 
     activeView={activeView} 
     setActiveView={setActiveView} 
     totalItems={chamados.length} 
@@ -276,6 +280,12 @@ export default function ChamadosUsuariosAdmin() {
           isAtendendo={false}
           isEncerrando={false}
           modoAdmin={false}
+          usarProduto={usarProduto}
+          setUsarProduto={setUsarProduto}
+          produtoSelecionado={produtoSelecionado}
+          setProdutoSelecionado={setProdutoSelecionado}
+          quantidadeUsada={quantidadeUsada}
+          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
     </DashboardLayout>

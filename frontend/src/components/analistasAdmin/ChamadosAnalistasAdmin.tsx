@@ -22,6 +22,10 @@ export default function ChamadosAnalistasAdmin() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [activeView, setActiveView] = useState("todos");
+  const [produtos, setProdutos] = useState([]);
+  const [usarProduto, setUsarProduto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
+  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
 
   const buscarChamados = async (rota: string) => {
       const token = localStorage.getItem("token");
@@ -65,8 +69,7 @@ export default function ChamadosAnalistasAdmin() {
     setCurrentPage(page);
   };
   return (
-    <DashboardLayout 
-    isAdmin 
+    <DashboardLayout  
     activeView={activeView} 
     setActiveView={handleFiltro} 
     totalItems={chamados.length} 
@@ -152,7 +155,13 @@ export default function ChamadosAnalistasAdmin() {
           setAnexos={setAnexos}
           isAtendendo={false}
           isEncerrando={false}
-          modoAdmin={true} 
+          modoAdmin={true}
+          usarProduto={usarProduto}
+          setUsarProduto={setUsarProduto}
+          produtoSelecionado={produtoSelecionado}
+          setProdutoSelecionado={setProdutoSelecionado}
+          quantidadeUsada={quantidadeUsada}
+          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
 

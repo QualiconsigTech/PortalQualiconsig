@@ -1,6 +1,5 @@
 import { format } from "date-fns";
-import { base64ToBlob, getStatus } from "@/utils/chamadoUtils";
-import { Chamado } from "@/types/Chamado"; 
+import { base64ToBlob, getStatus, Chamado } from "@/utils/chamadoUtils";
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
 interface Comentario {
@@ -220,7 +219,7 @@ export const ChamadoModal = ({
               <input
                 type="checkbox"
                 checked={usarProduto}
-                onChange={(e) => setUsarProduto(e.target.checked)}
+                onChange={(e) => setUsarProduto?.(e.target.checked)}
               />
               Utilizei algum produto do estoque?
             </label>
@@ -230,7 +229,7 @@ export const ChamadoModal = ({
                 <select
                   className="w-full p-2 border rounded"
                   value={produtoSelecionado ?? ""}
-                  onChange={(e) => setProdutoSelecionado(Number(e.target.value))}
+                  onChange={(e) => setProdutoSelecionado?.(Number(e.target.value))}
                 >
                   <option value="">Selecione um produto</option>
                   {produtos.map((produto: any) => (
@@ -246,7 +245,7 @@ export const ChamadoModal = ({
                   className="w-full p-2 border rounded"
                   placeholder="Quantidade utilizada"
                   value={quantidadeUsada}
-                  onChange={(e) => setQuantidadeUsada(Number(e.target.value))}
+                  onChange={(e) => setQuantidadeUsada?.(Number(e.target.value))}
                 />
               </>
             )}

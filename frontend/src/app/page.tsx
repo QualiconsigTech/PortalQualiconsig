@@ -84,7 +84,7 @@ const LoginPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              {errors && <p className="text-red-500 text-xs">{errors.password}</p>}
+              {errors && <p className="text-red-500 text-xs">{errors}</p>}
             </div>
           </div>
           <button
