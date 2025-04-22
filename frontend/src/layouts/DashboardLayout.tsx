@@ -184,8 +184,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      externalSetChamadoSelecionado?.(data);
-      externalSetModalAberto?.(true);
+      setChamadoSelecionado(data);
+      setModalAberto(true);
   
       if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
     } catch (error) {
@@ -202,8 +202,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      externalSetChamadoSelecionado?.(data);
-      externalSetModalAberto?.(true);
+      setChamadoSelecionado(data);
+      setModalAberto(true);
   
       if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
     } catch (error) {
