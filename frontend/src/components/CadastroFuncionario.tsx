@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { api } from "@/services/api";
 import { Eye, EyeOff } from "lucide-react";
 
-
 const schema = z.object({
   nome: z.string().min(3, "Nome é obrigatório"),
   email: z.string().email("E-mail inválido"),
@@ -30,7 +29,21 @@ export default function CadastroFuncionario() {
   const [setores, setSetores] = useState<Setor[]>([]);
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [mensagem, setMensagem] = useState("");
-  const perfilUsuario = localStorage.getItem("perfil"); 
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [nomeUsuario, setTipoUsuario] = useState<string>("Usuário");
+
+  const fetchUsuario = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.get("/api/usuarios/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTipoUsuario(response.data.tipo);
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  };
 
   const {
     register,
@@ -68,12 +81,12 @@ export default function CadastroFuncionario() {
       password: data.senha,
       setor: parseInt(data.setor),
       cargo: parseInt(data.cargo),
-      tipo: perfilUsuario === "usuario_admin" ? "usuario" : "analista",
+      tipo: setTipoUsuario,
       is_admin: false,
     };
 
     try {
-      await api.post("/auth/cadastrar/usuario/", payload, { headers });
+      await api.post("/api/auth/cadastrar/usuario/", payload, { headers });
       setMensagem("Funcionário cadastrado com sucesso!");
       reset();
     } catch (error) {
@@ -82,86 +95,104 @@ export default function CadastroFuncionario() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Cadastrar Novo Funcionário
-      </h2>
-  
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
-          <input
-            {...register("nome")}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Digite o nome completo"
-          />
-          {errors.nome && <p className="text-red-500 text-sm mt-1">{errors.nome.message}</p>}
-        </div>
-  
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-          <input
-            {...register("email")}
-            type="email"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="nome@dominio.com"
-          />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-        </div>
-  
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Senha</label>
-          <input
-            type="password"
-            {...register("senha")}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Mínimo 6 caracteres"
-          />
-          {errors.senha && <p className="text-red-500 text-sm mt-1">{errors.senha.message}</p>}
-        </div>
-  
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Setor</label>
-          <select
-            {...register("setor")}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Selecione</option>
-            {setores.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nome}
-              </option>
-            ))}
-          </select>
-          {errors.setor && <p className="text-red-500 text-sm mt-1">{errors.setor.message}</p>}
-        </div>
-  
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Cargo</label>
-          <select
-            {...register("cargo")}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Selecione</option>
-            {cargos.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
-          {errors.cargo && <p className="text-red-500 text-sm mt-1">{errors.cargo.message}</p>}
-        </div>
-  
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          {isSubmitting ? "Cadastrando..." : "Cadastrar"}
-        </button>
-  
-        {mensagem && <p className="text-center mt-2 text-sm text-green-600">{mensagem}</p>}
-      </form>
+    <div className="w-full bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-bold mb-6 text-center text-gray-800">
+    Cadastrar Novo Funcionário
+  </h2>
+
+  <div className="space-y-2">
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
+      <input
+        {...register("nome")}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Digite o nome completo"
+      />
+      {errors.nome && <p className="text-red-500 text-sm mt-1">{errors.nome.message}</p>}
     </div>
+
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+      <input
+        {...register("email")}
+        type="email"
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="nome@dominio.com"
+      />
+      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+    </div>
+
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Senha</label>
+      <div className="relative">
+        <input
+          type={mostrarSenha ? "text" : "password"}
+          {...register("senha")}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Mínimo 6 caracteres"
+        />
+        <button
+          type="button"
+          onClick={() => setMostrarSenha(!mostrarSenha)}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+      {errors.senha && <p className="text-red-500 text-sm mt-1">{errors.senha.message}</p>}
+    </div>
+
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Setor</label>
+      <select
+        {...register("setor")}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">Selecione</option>
+        {setores.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.nome}
+          </option>
+        ))}
+      </select>
+      {errors.setor && <p className="text-red-500 text-sm mt-1">{errors.setor.message}</p>}
+    </div>
+
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Cargo</label>
+      <select
+        {...register("cargo")}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">Selecione</option>
+        {cargos.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.nome}
+          </option>
+        ))}
+      </select>
+      {errors.cargo && <p className="text-red-500 text-sm mt-1">{errors.cargo.message}</p>}
+    </div>
+
+    <button
+      onClick={handleSubmit(onSubmit)}
+      disabled={isSubmitting}
+      className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+    >
+      {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+    </button>
+
+    {mensagem && (
+      <p
+        className={`text-center mt-2 text-sm ${
+          mensagem.includes("sucesso") ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {mensagem}
+      </p>
+    )}
+  </div>
+</div>
+
   );
 }
