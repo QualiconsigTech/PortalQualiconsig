@@ -6,6 +6,7 @@ import json
 from chamados.models import Chamado, Categoria
 from users.models import Setor
 from users.models.prioridade import Prioridade
+from users.models.cargo import Cargo
 
 
 #ANALISTA
@@ -105,3 +106,6 @@ def listar_setores():
 
 def listar_prioridades():
     return Prioridade.objects.all()
+
+def listar_cargos():
+    return Cargo.objects.all()

@@ -1,5 +1,5 @@
 from django.urls import path
-from users.views import PrioridadesListView,CategoriasListView, SetoresListView, ChamadosDoAnalistaView, AtenderChamadoView, EnviarResetSenhaView, ConfirmarResetSenhaView,UsuarioLogadoView,ChamadosAtribuidosView, ChamadosDoSetorView,EncerrarChamadoView, ChamadosAdminView, ChamadosPorSetorAdminView,ChamadosDoUsuarioView
+from users.views import CargoListView, PrioridadesListView,CategoriasListView, SetoresListView, ChamadosDoAnalistaView, AtenderChamadoView, EnviarResetSenhaView, ConfirmarResetSenhaView,UsuarioLogadoView,ChamadosAtribuidosView, ChamadosDoSetorView,EncerrarChamadoView, ChamadosAdminView, ChamadosPorSetorAdminView,ChamadosDoUsuarioView
 
 urlpatterns = [
     ## ANALISTA
@@ -25,4 +25,6 @@ urlpatterns = [
     path("categorias/", CategoriasListView.as_view(), name="categorias-list"),
     path("setores/", SetoresListView.as_view(), name="setores-list"),
     path("prioridades/", PrioridadesListView.as_view(), name="prioridades-list"),
+    path("cargos/", CargoListView.as_view(), name="cargos-list")
+,
 ]
