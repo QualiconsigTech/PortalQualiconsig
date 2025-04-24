@@ -95,12 +95,12 @@ export default function CadastroFuncionario() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
-  <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="w-full bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-bold mb-6 text-center text-gray-800">
     Cadastrar Novo Funcionário
   </h2>
 
-  <div className="space-y-6">
+  <div className="space-y-2">
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-1">Nome</label>
       <input
