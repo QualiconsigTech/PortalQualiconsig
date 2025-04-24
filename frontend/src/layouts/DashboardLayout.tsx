@@ -7,6 +7,7 @@ import PerguntasFrequentes from "@/components/PerguntasFrequentes";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChamadoModal } from "@/components/ChamadoModal";
 import { Produtos } from "@/components/Produtos";
+import CadastroFuncionario from "@/components/CadastroFuncionario";
 
 interface Notificacao {
   id: number;
@@ -271,6 +272,14 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                 >
                   Suporte
                 </button>
+                <button
+                  onClick={() => setActiveView?.("cadastroFuncionario")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "cadastroFuncionario" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Cadastrar Analista
+                </button>
               </>
             )}
             {/* MENU PARA USUÁRIO ADMIN */}
@@ -297,6 +306,14 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                   className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 text-gray-700"
                 >
                   Perguntas Frequentes
+                </button>
+                <button
+                  onClick={() => setActiveView?.("cadastroFuncionario")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "cadastroFuncionario" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Cadastrar Usuário
                 </button>
               </>
             )}
@@ -480,9 +497,13 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
         </header>
 
         <div className="p-6">
-          {activeView === "faq" && <PerguntasFrequentes />}
-          {activeView === "produtos" && <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />} {/* ATUALIZAÇÃO */}
-          {activeView !== "faq" && activeView !== "produtos" && (
+          {activeView === "cadastroFuncionario" ? (
+            <CadastroFuncionario />
+          ) : activeView === "faq" ? (
+            <PerguntasFrequentes />
+          ) : activeView === "produtos" ? (
+            <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />
+          ) : (
             <>
               {React.isValidElement(children)
                 ? React.cloneElement(children as React.ReactElement<any>, {
@@ -490,9 +511,6 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                   })
                 : children}
 
-
-                
-              {/* PAGINAÇÃO visível somente fora da FAQ */}
               {totalPages > 1 && (
                 <div className="flex justify-center mt-8 gap-2">
                   {Array.from({ length: totalPages }).map((_, index) => (
@@ -513,6 +531,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             </>
           )}
         </div>
+
 
         {modalAberto && chamadoSelecionado && (
             <ChamadoModal
