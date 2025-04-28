@@ -30,7 +30,7 @@ export default function CadastroFuncionario() {
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [mensagem, setMensagem] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [nomeUsuario, setTipoUsuario] = useState<string>("Usuário");
+  const [TipoUsuario, setTipoUsuario] = useState<string>("usuário");
 
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
@@ -81,7 +81,7 @@ export default function CadastroFuncionario() {
       password: data.senha,
       setor: parseInt(data.setor),
       cargo: parseInt(data.cargo),
-      tipo: setTipoUsuario,
+      tipo: TipoUsuario,
       is_admin: false,
     };
 

@@ -33,7 +33,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout(props: DashboardLayoutProps) {
   const {
     children,
-    nomeUsuario = "Usuário",
+    nomeUsuario = "teste",
     nomeDoSetor = "Setor",
     activeView = "meus",
     setActiveView,
