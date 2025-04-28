@@ -1,21 +1,11 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import MondayCreateSerializer
-from users.models.usuarios import Usuario
-import logging
-from .utilities import Monday
-
-logger = logging.getLogger(__name__)
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_monday_task(request):
     try:
         data = request.data
         user = request.user
+
+        print(user)
 
         if not isinstance(user, Usuario):
             return Response({"erro": "Usuário não autorizado."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -25,12 +15,14 @@ def create_monday_task(request):
         serializer = MondayCreateSerializer(data=data)
 
         if serializer.is_valid():
-            nome_usuario = user.nome  
+            # Montar o nome personalizado: nome usuário - nome setor - nome chamado
+            nome_usuario = user.nome  # ou user.get_full_name() se existir
             nome_setor = user.setor.nome if hasattr(user, "setor") and user.setor else "Setor não informado"
             nome_chamado = data['task_name']
 
-            task_name_custom = f"{nome_usuario}[{nome_setor}] - {nome_chamado}"
+            task_name_custom = f"{nome_usuario} - {nome_setor} - {nome_chamado}"
 
+            # Enviar para Monday com nome completo
             monday_response = Monday.create_task(task_name_custom)
 
             if monday_response == 200:
@@ -58,4 +50,3 @@ def create_monday_task(request):
     except Exception as e:
         logger.error(f'[INTEGRACOES] Erro inesperado -> {type(e)}: {str(e)}')
         return Response({'message': 'internal error'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
