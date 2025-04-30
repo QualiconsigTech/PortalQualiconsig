@@ -75,7 +75,7 @@ const QLinks: React.FC = () => {
         <div className="border rounded-lg shadow-sm">
           <button
             className="w-full text-left px-4 py-3 font-semibold bg-gray-100 hover:bg-gray-200 transition"
-            onClick={() => toggle(links.length)} // índice após o último link
+            onClick={() => toggle(links.length)}
           >
             Bancos
           </button>

@@ -10,7 +10,7 @@ interface Pergunta {
 export default function PerguntasFrequentes() {
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [aberto, setAberto] = useState<number | null>(null); // mesmo padrão da 'ajuda'
+  const [aberto, setAberto] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchPerguntas() {
