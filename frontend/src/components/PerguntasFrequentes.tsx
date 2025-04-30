@@ -10,6 +10,7 @@ interface Pergunta {
 export default function PerguntasFrequentes() {
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aberto, setAberto] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchPerguntas() {
@@ -26,6 +27,10 @@ export default function PerguntasFrequentes() {
     fetchPerguntas();
   }, []);
 
+  const toggle = (index: number) => {
+    setAberto(aberto === index ? null : index);
+  };
+
   if (loading) {
     return <p>Carregando perguntas...</p>;
   }
@@ -37,12 +42,24 @@ export default function PerguntasFrequentes() {
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4 text-[#041161]">Perguntas Frequentes</h2>
+      <p className="mb-6 text-gray-600">
+        Clique em uma seção para expandir e assistir ao vídeo:
+      </p>
 
-      <div className="space-y-4">
-        {perguntas.map((item) => (
-          <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-lg text-gray-800 mb-2">{item.pergunta}</h3>
-            <p className="text-gray-600">{item.resposta}</p>
+      <div className="space-y-2">
+        {perguntas.map((item, index) => (
+          <div key={item.id} className="border border-gray-300 rounded overflow-hidden">
+            <button
+              onClick={() => toggle(index)}
+              className="w-full px-4 py-3 text-left font-semibold text-[#041161] bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+            >
+              {item.pergunta}
+            </button>
+            {aberto === index && (
+              <div className="px-4 py-2 bg-white text-gray-700 border-t">
+                {item.resposta}
+              </div>
+            )}
           </div>
         ))}
       </div>
