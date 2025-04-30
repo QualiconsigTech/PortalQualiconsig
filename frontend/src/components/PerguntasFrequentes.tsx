@@ -42,6 +42,9 @@ export default function PerguntasFrequentes() {
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4 text-[#041161]">Perguntas Frequentes</h2>
+      <p className="mb-6 text-gray-600">
+        Clique em uma seção para expandir e assistir ao vídeo:
+      </p>
 
       <div className="space-y-2">
         {perguntas.map((item, index) => (
