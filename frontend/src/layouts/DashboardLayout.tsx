@@ -316,6 +316,14 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                 >
                   Cadastrar Usuário
                 </button>
+                <button
+                      onClick={() => setActiveView?.("ajuda")}
+                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeView === "ajuda" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      Ajuda
+                    </button>
               </>
             )}
 
