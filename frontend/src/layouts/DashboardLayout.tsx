@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChamadoModal } from "@/components/ChamadoModal";
 import { Produtos } from "@/components/Produtos";
 import CadastroFuncionario from "@/components/CadastroFuncionario";
+import Ajuda from "@/components/Ajuda";
 
 interface Notificacao {
   id: number;
@@ -374,6 +375,14 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                     >
                       Perguntas Frequentes
                     </button>
+                    <button
+                      onClick={() => setActiveView?.("ajuda")}
+                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeView === "ajuda" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      Ajuda
+                    </button>
                   </>
                 )}
           </nav>
@@ -501,6 +510,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             <CadastroFuncionario />
           ) : activeView === "faq" ? (
             <PerguntasFrequentes />
+          ) : activeView === "ajuda" ? (
+            <Ajuda />
           ) : activeView === "produtos" ? (
             <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />
           ) : (
