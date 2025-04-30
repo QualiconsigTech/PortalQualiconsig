@@ -51,6 +51,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+GITHUB_SECRET = "7cac6770b917dfea81875e1988db247a49b8a98df8ce125899f7f5708bf23882"
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
