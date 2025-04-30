@@ -1,4 +1,5 @@
 import logging
+from integracoes.utilities import Monday
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -35,7 +36,6 @@ def criar_chamado(request):
 
             logger.info(f"[CHAMADO] Chamado criado com sucesso para o usuário ID={usuario.id}")
 
-            
             mensagem_notificacao = f"Seu chamado de  N°{chamado.id} foi aberto com sucesso."
             Notificacao.objects.create(
                 mensagem=mensagem_notificacao,
