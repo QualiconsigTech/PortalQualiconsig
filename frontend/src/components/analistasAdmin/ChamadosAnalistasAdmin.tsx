@@ -26,6 +26,20 @@ export default function ChamadosAnalistasAdmin() {
   const [usarProduto, setUsarProduto] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
+  const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
+
+  const fetchUsuario = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.get("/api/usuarios/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNomeUsuario(response.data.nome);
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  };
 
   const buscarChamados = async (rota: string) => {
       const token = localStorage.getItem("token");
@@ -69,7 +83,8 @@ export default function ChamadosAnalistasAdmin() {
     setCurrentPage(page);
   };
   return (
-    <DashboardLayout  
+    <DashboardLayout
+    nomeUsuario={nomeUsuario}
     activeView={activeView} 
     setActiveView={handleFiltro} 
     totalItems={chamados.length} 

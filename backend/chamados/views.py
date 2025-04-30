@@ -36,6 +36,7 @@ def criar_chamado(request):
 
             logger.info(f"[CHAMADO] Chamado criado com sucesso para o usuário ID={usuario.id}")
 
+            
             mensagem_notificacao = f"Seu chamado de  N°{chamado.id} foi aberto com sucesso."
             Notificacao.objects.create(
                 mensagem=mensagem_notificacao,
