@@ -22,6 +22,7 @@ const Ajuda: React.FC = () => {
   };
 
   return (
+    <div className="bg-white p-6 rounded-lg shadow">
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Central de Ajuda</h1>
       <p className="mb-6 text-gray-600">
@@ -51,6 +52,7 @@ const Ajuda: React.FC = () => {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 };
