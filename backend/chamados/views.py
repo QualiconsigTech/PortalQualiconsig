@@ -36,19 +36,6 @@ def criar_chamado(request):
 
             logger.info(f"[CHAMADO] Chamado criado com sucesso para o usuário ID={usuario.id}")
 
-            nome_usuario = usuario.nome 
-            nome_setor = usuario.setor.nome if hasattr(usuario, "setor") and usuario.setor else "Setor não informado"
-            nome_chamado = chamado.titulo
-
-            task_name = f"{nome_usuario}[{nome_setor}] - {nome_chamado}"
- 
-            monday_status = Monday.create_task(task_name)
-
-            if monday_status == 200:
-                logger.info(f"[MONDAY] Task criada com sucesso no Monday para o chamado {chamado.id}")
-            else:
-                logger.warning(f"[MONDAY] Falha ao criar task no Monday para chamado {chamado.id}")
-
             
             mensagem_notificacao = f"Seu chamado de  N°{chamado.id} foi aberto com sucesso."
             Notificacao.objects.create(
