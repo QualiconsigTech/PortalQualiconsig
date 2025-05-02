@@ -40,8 +40,8 @@ const bancos: LinkItem[] = [
 ];
 
 const Qlinks: React.FC = () => {
-  const [abertoBancos, setAbertoBancos] = useState<boolean>(false);
-  const [abertoForaBancos, setAbertoForaBancos] = useState<boolean>(false);
+  const [abertoBancos, setAbertoBancos] = useState<boolean>(true);
+  const [abertoForaBancos, setAbertoForaBancos] = useState<boolean>(true);
 
   return (
     <div className="p-6">
