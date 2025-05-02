@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from chamados.models.notificacao import Notificacao
 from chamados.serializers import ChamadoDetalhadoSerializer
-from users.serializers import UsuarioLogadoSerializer
-from users.services import listar_cargos, listar_prioridades,listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
+from users.serializers import UsuarioLogadoSerializer, LinkSerializer
+from users.services import listar_todos_os_links, listar_cargos, listar_prioridades,listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
 from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
 from users.models.usuarios import Usuario
 
@@ -175,3 +175,22 @@ class CargoListView(APIView):
         cargos = listar_cargos()
         data = [{"id": cargos.id, "nome": cargos.nome} for cargos in cargos]
         return Response(data)
+
+#Links
+class LinksCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        serializer = LinkSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LinksView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        links = listar_todos_os_links()
+        serializer = LinkSerializer(links, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
