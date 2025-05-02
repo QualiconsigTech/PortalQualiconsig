@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from users.models.usuarios import Usuario
+from users.models.links import links
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -16,3 +17,8 @@ class UsuarioLogadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ['id', 'nome', 'email', 'tipo', 'setor', 'cargo', 'is_admin', 'deletado']
+
+class LinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = links
+        fields = ['titulo', 'url','tipo', 'logo']

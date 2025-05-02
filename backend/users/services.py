@@ -7,6 +7,8 @@ from chamados.models import Chamado, Categoria
 from users.models import Setor
 from users.models.prioridade import Prioridade
 from users.models.cargo import Cargo
+from users.models.links import links
+
 
 
 #ANALISTA
@@ -93,6 +95,10 @@ def listar_chamados_do_setor(usuario):
         raise PermissionDenied("Apenas usuários administradores podem acessar essa informação.")
 
     return Chamado.objects.filter(usuario__setor=usuario.setor)
+
+#Links
+def listar_todos_os_links():
+    return links.objects.all()
 
 #LISTAGEM 
 def obter_dados_do_usuario(usuario):
