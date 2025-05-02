@@ -53,6 +53,7 @@ const Qlinks: React.FC = () => {
     console.log("linksBancos atualizados:", linksBancos);
   }, [linksBancos]);
   return (
+    <div className="bg-white p-6 rounded-lg shadow">
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">QLinks</h1>
       <p className="mb-6 text-gray-600">Acesse rapidamente os sistemas:</p>
@@ -133,6 +134,7 @@ const Qlinks: React.FC = () => {
         </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
