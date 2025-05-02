@@ -21,4 +21,4 @@ class UsuarioLogadoSerializer(serializers.ModelSerializer):
 class LinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = links
-        fields = ['titulo', 'url','tipo']
+        fields = ['titulo', 'url','tipo', 'logo']
