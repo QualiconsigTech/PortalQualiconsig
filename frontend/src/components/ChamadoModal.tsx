@@ -65,6 +65,8 @@ export const ChamadoModal = ({
   const status = getStatus(chamado);
   const [usuarioLogado, setUsuarioLogado] = useState<{ id: number, tipo: string } | null>(null);
   const [produtos, setProdutos] = useState([]);
+  const [erroSolucao, setErroSolucao] = useState(false);
+
 
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
@@ -101,6 +103,7 @@ export const ChamadoModal = ({
 
   useEffect(() => {
     if (aberto) {
+      setErroSolucao(false);
       if (setUsarProduto) setUsarProduto(false);
       if (setProdutoSelecionado) setProdutoSelecionado(null);
       if (setQuantidadeUsada) setQuantidadeUsada(1);
@@ -209,8 +212,20 @@ export const ChamadoModal = ({
 
         <div className="mb-4">
           <label className="block font-semibold mb-1">Solução:</label>
-          <textarea value={solucao} onChange={(e) => setSolucao(e.target.value)} readOnly={status.texto === "Encerrado"} className="w-full border rounded p-2 bg-gray-100" />
+          <textarea
+            value={solucao}
+            onChange={(e) => {
+              setSolucao(e.target.value);
+              setErroSolucao(false);
+            }}
+            readOnly={status.texto === "Encerrado"}
+            className={`w-full border rounded p-2 ${erroSolucao ? "border-red-500 bg-red-50" : "bg-gray-100"}`}
+          />
+          {erroSolucao && (
+            <p className="text-sm text-red-500 mt-1">Este campo é obrigatório para encerrar o chamado.</p>
+          )}
         </div>
+
 
         {/* Uso de Produto */}
         {usuarioLogado?.tipo === "analista" && (
@@ -351,15 +366,19 @@ export const ChamadoModal = ({
               {isAtendendo ? "Atendendo..." : "Atender"}
             </button>
           )}
-          {podeEncerrar && (
-            <button
-              onClick={onEncerrar}
-              disabled={isEncerrando || isAtendendo}
-              className={`px-6 py-2 rounded text-white ${isEncerrando ? "bg-red-400" : "bg-red-600 hover:bg-red-700"}`}
-            >
-              {isEncerrando ? "Encerrando..." : "Encerrar"}
-            </button>
-          )}
+         <button
+          onClick={() => {
+            if (!solucao.trim()) {
+              setErroSolucao(true);
+              return;
+            }
+            onEncerrar();
+          }}
+          disabled={isEncerrando || isAtendendo}
+          className={`px-6 py-2 rounded text-white ${isEncerrando ? "bg-red-400" : "bg-red-600 hover:bg-red-700"}`}
+        >
+          {isEncerrando ? "Encerrando..." : "Encerrar"}
+        </button>
         </div>
       </div>
     </div>
