@@ -10,6 +10,7 @@ import { Produtos } from "@/components/Produtos";
 import CadastroFuncionario from "@/components/CadastroFuncionario";
 import Ajuda from "@/components/Ajuda";
 import Qlinks from "@/components/Qlinks";
+import { Chamado } from "@/utils/chamadoUtils";
 
 
 interface Notificacao {
@@ -29,8 +30,8 @@ interface DashboardLayoutProps {
   totalItems?: number;
   itemsPerPage?: number;
   onPageChange?: (page: number) => void;
-  setChamadoSelecionado?: (chamado: any) => void;
-  setModalAberto?: (aberto: boolean) => void;
+  setChamadoSelecionado?: (chamado: Chamado | null) => void;
+  setModalAberto?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function DashboardLayout(props: DashboardLayoutProps) {

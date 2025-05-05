@@ -6,7 +6,6 @@ import { ChamadoModal } from "@/components/ChamadoModal";
 import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
 
-
 export default function ChamadosAnalistas() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +13,7 @@ export default function ChamadosAnalistas() {
   const [modalAberto, setModalAberto] = useState(false);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
   const [solucao, setSolucao] = useState("");
+  const [erroSolucao, setErroSolucao] = useState(false);  // Adicionando a flag para erro
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [isAtendendo, setIsAtendendo] = useState(false);
@@ -32,8 +32,6 @@ export default function ChamadosAnalistas() {
   const [usarProduto, setUsarProduto] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
-  
-
 
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
@@ -58,7 +56,7 @@ export default function ChamadosAnalistas() {
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-           const ordenado = [...response.data].sort((a, b) => {
+      const ordenado = [...response.data].sort((a, b) => {
         const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
         return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
       });
@@ -104,16 +102,19 @@ export default function ChamadosAnalistas() {
   };
 
   const encerrarChamado = async () => {
-    if (!chamadoSelecionado || !solucao.trim()) {
+    if (!solucao.trim()) {
+      setErroSolucao(true);  // Ativa o erro
+      setToastMensagem("Campo obrigatório");
+      setShowToast(true);
       return;
     }
-    
+
+    setErroSolucao(false);  // Reseta o erro
   
     setIsEncerrando(true);
     const token = localStorage.getItem("token");
   
     try {
-      
       if (usarProduto && produtoSelecionado) {
         await api.post("/api/chamados/produtos/usar/", {
           produto_id: produtoSelecionado,
@@ -138,7 +139,7 @@ export default function ChamadosAnalistas() {
         arquivos: JSON.stringify(base64Arquivos),
       };
   
-      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
+      await api.post(`/api/usuarios/chamados/${chamadoSelecionado!.id}/encerrar/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -155,11 +156,11 @@ export default function ChamadosAnalistas() {
       setIsEncerrando(false);
     }
   };
-  
 
-    const changePage = (page: number) => {
+  const changePage = (page: number) => {
     setCurrentPage(page);
   };
+
   return (
     <DashboardLayout
       nomeUsuario={nomeUsuario}
@@ -226,7 +227,6 @@ export default function ChamadosAnalistas() {
                         <TableOfContents size={20} />
                       </button>
                     </td>
-
                   </tr>
                 );
               })
@@ -234,6 +234,7 @@ export default function ChamadosAnalistas() {
           </tbody>
         </table>
       </section>
+
       {showToast && (
         <div
           className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg cursor-pointer z-50 animate-slide-up"
@@ -242,8 +243,6 @@ export default function ChamadosAnalistas() {
           {toastMensagem}
         </div>
       )}
-
-
 
       {modalAberto && chamadoSelecionado && (
         <ChamadoModal
@@ -268,6 +267,7 @@ export default function ChamadosAnalistas() {
           setProdutoSelecionado={setProdutoSelecionado}
           quantidadeUsada={quantidadeUsada}
           setQuantidadeUsada={setQuantidadeUsada}
+          erroSolucao={erroSolucao}  // Passando a flag de erro para o modal
         />
       )}
     </DashboardLayout>
