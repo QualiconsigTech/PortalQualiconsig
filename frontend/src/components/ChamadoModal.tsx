@@ -195,7 +195,7 @@ export const ChamadoModal = ({
           <div><strong>Status:</strong> {status.texto}</div>
           <div><strong>Usuário:</strong> {chamado.usuario.nome || "não informado"}</div>
           <div><strong>Prioridade:</strong> {chamado.prioridade_nome}</div>
-          <div><strong>Gravidade:</strong> {chamado.gravidade}</div>
+          <div><strong>Analista Atribuído:</strong> {chamado.analista?.nome || "Não Atribuido"} </div>
           
           {modoAdmin && (
             <>
@@ -357,7 +357,7 @@ export const ChamadoModal = ({
         </div>
 
         <div className="flex justify-end gap-2">
-          {podeAtender && (
+          {usuarioLogado?.tipo === "analista" && podeAtender && (
             <button
               onClick={onAtender}
               disabled={isAtendendo || isEncerrando}
