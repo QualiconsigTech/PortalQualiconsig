@@ -36,6 +36,7 @@ export default function ChamadosUsuariosAdmin() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
+  const [isEncerrando, setIsEncerrando] = useState(false);
   const handleTokenError = (error: any) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("token");
@@ -83,6 +84,45 @@ export default function ChamadosUsuariosAdmin() {
       handleTokenError(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const encerrarChamado = async () => {
+    if (!chamadoSelecionado || !solucao.trim()) return;
+  
+    setIsEncerrando(true);
+    const token = localStorage.getItem("token");
+  
+    try {
+      const base64Arquivos = anexos
+        ? await Promise.all(
+            Array.from(anexos).map(async (file) => {
+              const conteudo = await toBase64(file);
+              return { nome: file.name, conteudo };
+            })
+          )
+        : [];
+  
+      const payload = {
+        solucao,
+        comentarios,
+        arquivos: JSON.stringify(base64Arquivos),
+      };
+  
+      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      setToastMensagem("Chamado encerrado com sucesso.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1000);
+      setModalAberto(false);
+  
+    } catch (err) {
+      setToastMensagem("Erro ao encerrar o chamado.");
+      setShowToast(true);
+    } finally {
+      setIsEncerrando(false);
     }
   };
 
@@ -317,9 +357,9 @@ export default function ChamadosUsuariosAdmin() {
           aberto={modalAberto}
           onClose={() => setModalAberto(false)}
           onAtender={() => {}}
-          onEncerrar={() => {}}
+          onEncerrar={encerrarChamado}
           podeAtender={false}
-          podeEncerrar={false}
+          podeEncerrar={["Aberto", "Em Atendimento"].includes(getStatus(chamadoSelecionado).texto)}
           solucao={solucao}
           comentarios={comentarios}
           setSolucao={setSolucao}
@@ -327,7 +367,7 @@ export default function ChamadosUsuariosAdmin() {
           anexos={anexos}
           setAnexos={setAnexos}
           isAtendendo={false}
-          isEncerrando={false}
+          isEncerrando={isEncerrando}
           modoAdmin={false}
           usarProduto={usarProduto}
           setUsarProduto={setUsarProduto}

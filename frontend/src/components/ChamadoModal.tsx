@@ -143,6 +143,21 @@ export const ChamadoModal = ({
         console.error("Erro ao enviar comentário", error);
       }
     };
+
+    const podeMostrarBotaoEncerrar = () => {
+      if (status.texto === "Encerrado") return false;
+    
+      if (usuarioLogado?.tipo === "analista" && podeEncerrar) return true;
+    
+      if (
+        usuarioLogado?.tipo === "usuario" &&
+        ["Aberto", "Em Atendimento"].includes(status.texto)
+      )
+        return true;
+    
+      return false;
+    };
+    
     
 
     const podeComentar = (chamado: Chamado) => {
@@ -196,13 +211,6 @@ export const ChamadoModal = ({
           <div><strong>Usuário:</strong> {chamado.usuario.nome || "não informado"}</div>
           <div><strong>Prioridade:</strong> {chamado.prioridade_nome}</div>
           <div><strong>Analista Atribuído:</strong> {chamado.analista?.nome || "Não Atribuido"} </div>
-          
-          {modoAdmin && (
-            <>
-              <div><strong>Analista Atribuído:</strong> {chamado.analista?.nome || "Não informado"}</div>
-              <div><strong>Usuário Atribuído:</strong> {chamado.usuario?.nome || "Não informado"}</div>
-            </>
-          )}
         </div>      
 
         <div className="mb-4">
@@ -366,19 +374,27 @@ export const ChamadoModal = ({
               {isAtendendo ? "Atendendo..." : "Atender"}
             </button>
           )}
-         <button
-          onClick={() => {
-            if (!solucao.trim()) {
-              setErroSolucao(true);
-              return;
-            }
-            onEncerrar();
-          }}
-          disabled={isEncerrando || isAtendendo}
-          className={`px-6 py-2 rounded text-white ${isEncerrando ? "bg-red-400" : "bg-red-600 hover:bg-red-700"}`}
-        >
-          {isEncerrando ? "Encerrando..." : "Encerrar"}
-        </button>
+          
+          {podeMostrarBotaoEncerrar() && (
+            <button
+              onClick={() => {
+                if (!solucao.trim()) {
+                  setErroSolucao(true);
+                  return;
+                }
+
+                onEncerrar();
+              }}
+              disabled={isEncerrando || isAtendendo}
+              className={`px-6 py-2 rounded text-white ${
+                isEncerrando ? "bg-red-400" : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              {isEncerrando ? "Encerrando..." : "Encerrar"}
+            </button>
+          )}
+
+
         </div>
       </div>
     </div>
