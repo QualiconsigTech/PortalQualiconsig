@@ -36,9 +36,9 @@ export default function ChamadosAnalistas() {
 
 
   const fetchUsuario = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token ausente");
       const response = await api.get("/api/usuarios/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -46,15 +46,18 @@ export default function ChamadosAnalistas() {
       setNomeDoSetor(response.data.setor);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
   };
 
   const fetchChamados = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    setLoading(true);
-    let url = activeView === "meus" ? "/api/usuarios/chamados/atribuidos/" : "/api/usuarios/chamados/";
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token ausente");
+      setLoading(true);
+      const url = activeView === "meus" ? "/api/usuarios/chamados/atribuidos/" : "/api/usuarios/chamados/";
+      
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -82,8 +85,9 @@ export default function ChamadosAnalistas() {
   const atenderChamado = async () => {
     if (!chamadoSelecionado) return;
     setIsAtendendo(true);
-    const token = localStorage.getItem("token");
+    
     try {
+      const token = localStorage.getItem("token");
       await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/atender/`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -113,7 +117,7 @@ export default function ChamadosAnalistas() {
     const token = localStorage.getItem("token");
   
     try {
-      
+      const token = localStorage.getItem("token");
       if (usarProduto && produtoSelecionado) {
         await api.post("/api/chamados/produtos/usar/", {
           produto_id: produtoSelecionado,

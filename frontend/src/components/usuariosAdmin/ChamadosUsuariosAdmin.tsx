@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
@@ -35,7 +36,12 @@ export default function ChamadosUsuariosAdmin() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
-
+  const handleTokenError = (error: any) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+  };
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -46,6 +52,7 @@ export default function ChamadosUsuariosAdmin() {
       setNomeUsuario(response.data.nome);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
+      handleTokenError(error);
     }
   };
     
@@ -59,6 +66,10 @@ export default function ChamadosUsuariosAdmin() {
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!Array.isArray(response.data)) {
+        setErro("Dados inválidos retornados pela API.");
+        return;
+      }
 
       const ordenado = [...response.data].sort((a, b) => {
         const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
@@ -69,6 +80,7 @@ export default function ChamadosUsuariosAdmin() {
       } catch (error) {
       console.error("Erro ao buscar chamados", error);
       setErro("Erro ao buscar chamados");
+      handleTokenError(error);
     } finally {
       setLoading(false);
     }
@@ -84,6 +96,7 @@ export default function ChamadosUsuariosAdmin() {
       setCategorias(response.data);
     } catch (error) {
       console.error("Erro ao buscar categorias", error);
+      handleTokenError(error);
     }
   };
   
@@ -97,6 +110,7 @@ export default function ChamadosUsuariosAdmin() {
       setSetores(response.data);
     } catch (error) {
       console.error("Erro ao buscar setores", error);
+      handleTokenError(error);
     }
   };
   const fetchPrioridades = async () => { 
@@ -109,25 +123,37 @@ export default function ChamadosUsuariosAdmin() {
         setPrioridades(response.data);
       } catch (error) {
         console.error("Erro ao buscar prioridades", error);
+        handleTokenError(error);
       }
     };
   
   useEffect(() => {
-    fetchChamados("/api/usuarios/chamados/meus/");
-    fetchCategorias();
-    fetchSetores();
-    fetchPrioridades();
+    const loadAll = async () => {
+      await Promise.all([
+        fetchUsuario(),
+        fetchChamados("/api/usuarios/chamados/meus/"),
+        fetchCategorias(),
+        fetchSetores(),
+        fetchPrioridades(),
+      ]);
+    };
+    loadAll();
   }, []);
   
 
   useEffect(() => {
     if (activeView === "meus") {
       fetchChamados("/api/usuarios/chamados/meus/");
-    }
-    if (activeView === "analistas") {
+    } else if (activeView === "analistas") {
       fetchChamados("/api/usuarios/chamados/setor/");
     }
   }, [activeView]);
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
   
 
  
@@ -176,6 +202,7 @@ export default function ChamadosUsuariosAdmin() {
       setToastMensagem("Erro ao abrir chamado.");
       setShowToast(true); 
       console.error(error);
+      handleTokenError(error);
     }
   };
   
@@ -266,6 +293,15 @@ export default function ChamadosUsuariosAdmin() {
             </tbody>
           </table>
         </section>
+        {showToast && (
+        <div
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg cursor-pointer z-50 animate-slide-up"
+          onClick={() => setShowToast(false)}
+        >
+          {toastMensagem}
+        </div>
+      )}
+
       <AbrirChamadoModal
         aberto={abrirModalAberto}
         onClose={() => setAbrirModalAberto(false)}

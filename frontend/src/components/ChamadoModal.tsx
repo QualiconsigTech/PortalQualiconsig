@@ -229,7 +229,7 @@ export const ChamadoModal = ({
 
         {/* Uso de Produto */}
         {usuarioLogado?.tipo === "analista" && (
-  <       div className="mb-4 space-y-2">
+        <div className="mb-4 space-y-2">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"

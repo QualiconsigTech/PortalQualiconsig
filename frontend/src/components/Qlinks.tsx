@@ -8,7 +8,6 @@ interface LinkItem {
   url: string;
   tipo: string;
   logo?: string; 
-  
 }
 
 const Qlinks: React.FC = () => {
