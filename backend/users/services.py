@@ -44,9 +44,6 @@ def filtra_chamados_atribuidos(usuario):
 def encerrar_chamado(chamado_id, usuario, dados=None):
     chamado = Chamado.objects.get(id=chamado_id)
 
-    if chamado.analista != usuario:
-        raise PermissionError("Você não tem permissão para encerrar este chamado.")
-
     if chamado.encerrado_em:
         raise ValueError("Chamado já encerrado.")
 
