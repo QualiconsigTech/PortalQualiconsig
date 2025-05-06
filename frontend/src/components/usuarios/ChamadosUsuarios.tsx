@@ -35,10 +35,19 @@ export default function ChamadosUsuarios() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
-
+  const handleTokenError = (error: any) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+  };
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      console.warn("Token ausente. Redirecionando para login.");
+      window.location.href = "/login";
+      return;
+    }
     try {
       const response = await api.get("/api/usuarios/me", {
         headers: { Authorization: `Bearer ${token}` },
@@ -46,6 +55,7 @@ export default function ChamadosUsuarios() {
       setNomeUsuario(response.data.nome);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
+      handleTokenError(error);
     }
   };
   
@@ -60,6 +70,10 @@ export default function ChamadosUsuarios() {
       const response = await api.get("/api/usuarios/chamados/meus/", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!Array.isArray(response.data)) {
+        setErro("Dados inválidos retornados pela API.");
+        return;
+      }
 
       const ordenado = [...response.data].sort((a, b) => {
         const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
@@ -70,6 +84,7 @@ export default function ChamadosUsuarios() {
     } catch (error) {
       console.error("Erro ao buscar chamados", error);
       setErro("Erro ao buscar chamados");
+      handleTokenError(error);
     } finally {
       setLoading(false);
     }
@@ -85,6 +100,7 @@ export default function ChamadosUsuarios() {
       setCategorias(response.data);
     } catch (error) {
       console.error("Erro ao buscar categorias", error);
+      handleTokenError(error);
     }
   };
 
@@ -98,6 +114,7 @@ export default function ChamadosUsuarios() {
         setSetores(response.data);
       } catch (error) {
         console.error("Erro ao buscar setores", error);
+        handleTokenError(error);
       }
     };
     const fetchPrioridades = async () => { 
@@ -110,15 +127,28 @@ export default function ChamadosUsuarios() {
         setPrioridades(response.data);
       } catch (error) {
         console.error("Erro ao buscar prioridades", error);
+        handleTokenError(error);
       }
     };
 
   useEffect(() => {
-    fetchChamados();
-    fetchCategorias();
-    fetchSetores();
-    fetchPrioridades();
+    const loadAll = async () => {
+      await Promise.all([
+        fetchUsuario(),
+        fetchChamados(),
+        fetchCategorias(),
+        fetchSetores(),
+        fetchPrioridades(),
+      ]);
+    };
+    loadAll();
   }, []);
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
  
   const handleSalvarChamado = async (dados: {
@@ -157,15 +187,13 @@ export default function ChamadosUsuarios() {
 
       setToastMensagem("Chamado aberto com sucesso!");
       setShowToast(true); 
-      setTimeout(() => {
-        setShowToast(false);
-      }, 1000);
       setAbrirModalAberto(false);
       fetchChamados();
     } catch (error) {
       setToastMensagem("Erro ao abrir chamado.");
       setShowToast(true); 
       console.error(error);
+      handleTokenError(error);
     }
   };
 
@@ -204,6 +232,7 @@ export default function ChamadosUsuarios() {
               <th className="py-2">Título</th>
               <th className="py-2">Status</th>
               <th className="py-2">Prioridade</th>
+              <th className="py-2">Analista Atribuido</th>
               <th className="py-2">Data</th>
               <th className="py-2">Ações</th>
             </tr>
@@ -234,6 +263,7 @@ export default function ChamadosUsuarios() {
                     <td className="py-2">{chamado.titulo}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
                     <td className="py-2 text-orange-500">{chamado.prioridade_nome || "--"}</td>
+                    <td className="py-2">{chamado.analista ? chamado.analista.nome : "Não atribuído"}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
                       <button

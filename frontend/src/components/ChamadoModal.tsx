@@ -229,7 +229,7 @@ export const ChamadoModal = ({
 
         {/* Uso de Produto */}
         {usuarioLogado?.tipo === "analista" && (
-  <       div className="mb-4 space-y-2">
+        <div className="mb-4 space-y-2">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -357,7 +357,7 @@ export const ChamadoModal = ({
         </div>
 
         <div className="flex justify-end gap-2">
-          {podeAtender && (
+        {usuarioLogado?.tipo === "analista" && podeAtender && (
             <button
               onClick={onAtender}
               disabled={isAtendendo || isEncerrando}

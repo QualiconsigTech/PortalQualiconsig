@@ -14,6 +14,7 @@ export interface Chamado {
   analista: {
     id: number;
     nome: string;
+    setor_nome?: string;
   } | null;
   usuario: {
     id: number;
