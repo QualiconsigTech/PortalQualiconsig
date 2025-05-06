@@ -62,7 +62,10 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const [usarProduto, setUsarProduto] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
+  const [solucao, setSolucao] = useState("");
 
+
+  
 
   const fetchUsuario = async () => {
     try {
@@ -131,6 +134,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
     };
   }, [mostrarNotificacoes]);
   
+  
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -190,6 +194,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       });
   
       setChamadoSelecionado(data);
+      setSolucao(data.solucao || "");
       setModalAberto(true);
   
       if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
@@ -208,6 +213,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       });
   
       setChamadoSelecionado(data);
+      setSolucao(data.solucao || ""); 
       setModalAberto(true);
   
       if (notificacaoId) await marcarNotificacaoComoLida(notificacaoId);
@@ -218,7 +224,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   
   
   const notificacoesNaoLidas = notificacoes.filter((n) => !n.visualizado);
-
+  
+  
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
       {/* Sidebar */}
@@ -505,10 +512,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                     notificacoes.map((n, index) => (
                       <div
                         key={index}
-                        onClick={async () => {
-                          console.log("Clicou na notificação:", n.chamado_id, n.id);
-                          console.log("Usuario:", perfilUsuario);
-                        
+                        onClick={async () => {                        
                           if (perfilUsuario === "analista" || perfilUsuario === "analista_admin") {
                             await abrirModalChamadosAnalista(n.chamado_id, n.id);
                           } else {
@@ -592,17 +596,20 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
 
 
         {modalAberto && chamadoSelecionado && (
-            <ChamadoModal
+          <ChamadoModal
             chamado={chamadoSelecionado}
             aberto={modalAberto}
             onClose={() => setModalAberto(false)}
             onAtender={() => {}}
             onEncerrar={() => {}}
             podeAtender={perfilUsuario !== "usuario"}
-            podeEncerrar={perfilUsuario !== "usuario"}
-            solucao={""}
+            podeEncerrar={
+              perfilUsuario !== "usuario" &&
+              chamadoSelecionado.status !== "Encerrado"
+            }
+            solucao={solucao}
             comentarios={""}
-            setSolucao={() => {}}
+            setSolucao={setSolucao}
             setComentarios={() => {}}
             anexos={null}
             setAnexos={() => {}}
@@ -615,8 +622,9 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             setProdutoSelecionado={setProdutoSelecionado}
             quantidadeUsada={quantidadeUsada}
             setQuantidadeUsada={setQuantidadeUsada}
-            />
-          )}
+          />
+        )}
+
       </main>
     </div>
   );

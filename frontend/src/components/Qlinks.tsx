@@ -49,7 +49,6 @@ const Qlinks: React.FC = () => {
   }, []); 
   
   useEffect(() => {
-    console.log("linksBancos atualizados:", linksBancos);
   }, [linksBancos]);
   return (
     <div className="bg-white p-6 rounded-lg shadow">
