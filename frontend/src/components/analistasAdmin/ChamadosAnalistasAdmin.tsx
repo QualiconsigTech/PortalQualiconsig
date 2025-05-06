@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { format } from "date-fns";
 import { api } from "@/services/api";
 import { TableOfContents } from "lucide-react";
@@ -7,6 +8,8 @@ import { ChamadoModal } from "@/components/ChamadoModal";
 import { Chamado, getStatus } from "@/utils/chamadoUtils";
 
 export default function ChamadosAnalistasAdmin() {
+  const router = useRouter();
+  
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -27,23 +30,30 @@ export default function ChamadosAnalistasAdmin() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
-
+  const redirecionarParaLogin = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) return redirecionarParaLogin();
     try {
       const response = await api.get("/api/usuarios/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNomeUsuario(response.data.nome);
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        redirecionarParaLogin();
+      } else {
+        console.error("Erro ao buscar dados do usuário:", error);
+      }
     }
   };
 
   const buscarChamados = async (rota: string) => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) return redirecionarParaLogin();
       setLoading(true);
       try {
         const response = await api.get(rota, {
@@ -55,14 +65,19 @@ export default function ChamadosAnalistasAdmin() {
       });
 
       setChamados(ordenado);
-    } catch (err) {
-      setErro("Erro ao carregar chamados.");
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        redirecionarParaLogin();
+      } else {
+        setErro("Erro ao carregar chamados.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    fetchUsuario();
     handleFiltro("todos");
   }, []);
   const handleFiltro = (filtro: string) => {

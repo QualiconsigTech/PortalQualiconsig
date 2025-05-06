@@ -11,6 +11,9 @@ const schema = z.object({
   senha: z.string().min(6, "Mínimo 6 caracteres"),
   setor: z.string().nonempty("Selecione um setor"),
   cargo: z.string().nonempty("Selecione um cargo"),
+  tipo: z.enum(["usuario", "analista"], {
+    errorMap: () => ({ message: "Selecione o tipo de usuário" }),
+  }),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -30,21 +33,7 @@ export default function CadastroFuncionario() {
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [mensagem, setMensagem] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [TipoUsuario, setTipoUsuario] = useState<string>("usuário");
-
-  const fetchUsuario = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      const response = await api.get("/api/usuarios/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTipoUsuario(response.data.tipo);
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
-    }
-  };
-
+ 
   const {
     register,
     handleSubmit,
@@ -59,13 +48,16 @@ export default function CadastroFuncionario() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [setoresRes, cargosRes] = await Promise.all([
-        api.get("/api/usuarios/setores/", { headers }),
-        api.get("/api/usuarios/cargos/", { headers }),
-      ]);
-
-      setSetores(setoresRes.data);
-      setCargos(cargosRes.data);
+      try {
+        const [setoresRes, cargosRes] = await Promise.all([
+          api.get("/api/usuarios/setores/", { headers }),
+          api.get("/api/usuarios/cargos/", { headers }),
+        ]);
+        setSetores(setoresRes.data);
+        setCargos(cargosRes.data);
+      } catch (error) {
+        console.error("Erro ao carregar setores ou cargos:", error);
+      }
     };
 
     fetchDados();
@@ -81,7 +73,7 @@ export default function CadastroFuncionario() {
       password: data.senha,
       setor: parseInt(data.setor),
       cargo: parseInt(data.cargo),
-      tipo: TipoUsuario,
+      tipo: data.tipo,
       is_admin: false,
     };
 
@@ -91,6 +83,7 @@ export default function CadastroFuncionario() {
       reset();
     } catch (error) {
       setMensagem("Erro ao cadastrar funcionário.");
+      console.error(error);
     }
   };
 
@@ -173,6 +166,18 @@ export default function CadastroFuncionario() {
       </select>
       {errors.cargo && <p className="text-red-500 text-sm mt-1">{errors.cargo.message}</p>}
     </div>
+    <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Usuário</label>
+          <select
+            {...register("tipo")}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Selecione</option>
+            <option value="usuario">Usuário</option>
+            <option value="analista">Analista</option>
+          </select>
+          {errors.tipo && <p className="text-red-500 text-sm mt-1">{errors.tipo.message}</p>}
+        </div>
 
     <button
       onClick={handleSubmit(onSubmit)}
