@@ -12,9 +12,11 @@ class ChamadoSerializer(serializers.ModelSerializer):
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
     prioridade_nome = serializers.CharField(source='prioridade.nome', read_only=True)
+    atribuido_nome = serializers.CharField(source='atendido_por.nome', read_only=True)
+    setor_nome = serializers.CharField(source='atendido_por.setor.nome', read_only=True)
     class Meta:
         model = Chamado
-        fields = '__all__'
+        fields = ['id', 'titulo', 'status', 'prioridade', 'data_criacao', 'atribuido_nome', 'setor_nome']
         read_only_fields = ['usuario', 'analista', 'criado_em', 'editado_em', 'encerrado_em']
 
 class ChamadoResumoSerializer(serializers.ModelSerializer):
