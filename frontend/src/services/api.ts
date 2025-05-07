@@ -25,17 +25,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Trate erros específicos aqui
     if (error.response && error.response.status === 401) {
       // Token expirado ou inválido
       localStorage.removeItem('token');
-      // Redirecionar para login se necessário
-      window.location.href = '/login';
+      // Dispara evento para que o layout trate
+      window.dispatchEvent(new Event('tokenExpired'));
     }
-    
+
     return Promise.reject(error);
   }
 );
+
+
 
 // Serviços específicos para chamados
 export const chamadosService = {
