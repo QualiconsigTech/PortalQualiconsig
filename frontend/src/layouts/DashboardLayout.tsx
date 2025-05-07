@@ -11,6 +11,7 @@ import CadastroFuncionario from "@/components/CadastroFuncionario";
 import Ajuda from "@/components/Ajuda";
 import Qlinks from "@/components/Qlinks";
 import { Chamado } from "@/utils/chamadoUtils";
+import Dashboard from "@/components/dashboard";
 
 
 interface Notificacao {
@@ -299,6 +300,14 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                 >
                   Qlinks
                 </button>
+                <button
+                  onClick={() => setActiveView?.("dashboard")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Dashboards
+                </button>
               </>
             )}
             {/* MENU PARA USUÁRIO ADMIN */}
@@ -341,7 +350,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                       }`}
                     >
                       Ajuda
-                    </button>
+                </button>
                 <button
                       onClick={() => setActiveView?.("Qlinks")}
                       className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -349,7 +358,15 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                       }`}
                     >
                       Qlinks
-                    </button>
+                </button>
+                <button
+                  onClick={() => setActiveView?.("dashboard")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Dashboards
+                </button>
               </>
             )}
 
@@ -565,6 +582,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             <Ajuda />
           ) : activeView === "produtos" ? (
             <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />
+          ) : activeView === "dashboard" ? (
+            <Dashboard />
           ) : (
             <>
               {React.isValidElement(children)
