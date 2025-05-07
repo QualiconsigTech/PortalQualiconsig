@@ -303,7 +303,9 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                 <button
                   onClick={() => setActiveView?.("dashboard")}
                   className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                    activeView === "dashboard"
+                      ? "bg-blue-100 text-blue-700"
+                      : "hover:bg-gray-100 text-gray-700"
                   }`}
                 >
                   Dashboards
@@ -360,13 +362,15 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                       Qlinks
                 </button>
                 <button
-                  onClick={() => setActiveView?.("dashboard")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Dashboards
-                </button>
+                onClick={() => setActiveView?.("dashboard")}
+                className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeView === "dashboard"
+                    ? "bg-blue-100 text-blue-700"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                Dashboards
+              </button>
               </>
             )}
 
