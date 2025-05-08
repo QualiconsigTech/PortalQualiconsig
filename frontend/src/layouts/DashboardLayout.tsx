@@ -11,7 +11,7 @@ import CadastroFuncionario from "@/components/CadastroFuncionario";
 import Ajuda from "@/components/Ajuda";
 import Qlinks from "@/components/Qlinks";
 import { Chamado } from "@/utils/chamadoUtils";
-
+import Dashboard from "@/components/dashboard";
 
 interface Notificacao {
   id: number;
@@ -63,9 +63,20 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [solucao, setSolucao] = useState("");
+  const [tokenExpirado, setTokenExpirado] = useState(false);
 
+  useEffect(() => {
+    const handleTokenExpired = () => setTokenExpirado(true);
+    window.addEventListener("tokenExpired", handleTokenExpired);
+    return () => window.removeEventListener("tokenExpired", handleTokenExpired);
+  }, []);
 
-  
+  useEffect(() => {
+    fetchUsuario();
+    fetchNotificacoes();
+    const interval = setInterval(fetchNotificacoes, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchUsuario = async () => {
     try {
@@ -77,20 +88,30 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       console.error("Erro ao buscar dados do usuário", error);
     }
   };
- 
+
   const fetchNotificacoes = async () => {
     try {
       const { data } = await api.get("/api/chamados/notificacoes/");
       setNotificacoes(data);
-    } catch (error) {
-      console.error("Erro ao buscar notificações", error);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        // Impede erro não tratado
+        const evento = new Event("tokenExpired");
+        window.dispatchEvent(evento);
+      } else {
+        console.error("Erro ao buscar notificações", error);
+      }
     }
   };
+
+  
+
 
     useEffect(() => {
     fetchUsuario();
     fetchNotificacoes();
   
+
     const interval = setInterval(fetchNotificacoes, 5000); 
   
     return () => clearInterval(interval); 
@@ -299,6 +320,14 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                 >
                   Qlinks
                 </button>
+                <button
+                  onClick={() => setActiveView?.("dashboard")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Dashboards
+                </button>
               </>
             )}
             {/* MENU PARA USUÁRIO ADMIN */}
@@ -341,7 +370,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                       }`}
                     >
                       Ajuda
-                    </button>
+                </button>
                 <button
                       onClick={() => setActiveView?.("Qlinks")}
                       className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -349,7 +378,15 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                       }`}
                     >
                       Qlinks
-                    </button>
+                </button>
+                <button
+                  onClick={() => setActiveView?.("dashboard")}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  Dashboards
+                </button>
               </>
             )}
 
@@ -565,6 +602,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             <Ajuda />
           ) : activeView === "produtos" ? (
             <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />
+          ) : activeView === "dashboard" ? (
+            <Dashboard />
           ) : (
             <>
               {React.isValidElement(children)
@@ -624,6 +663,26 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             setQuantidadeUsada={setQuantidadeUsada}
           />
         )}
+       
+        {tokenExpirado && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+    <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+      <h2 className="text-lg font-semibold mb-4">Tempo de acesso expirado</h2>
+      <p className="text-sm text-gray-600 mb-6">
+        Sua sessão foi encerrada. Por favor, clique em OK para fazer login novamente.
+      </p>
+      <button
+        onClick={() => {
+          setTokenExpirado(false);
+          window.location.href = '/login';
+        }}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
 
       </main>
     </div>
