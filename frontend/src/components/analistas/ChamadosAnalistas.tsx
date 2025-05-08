@@ -21,6 +21,7 @@ export default function ChamadosAnalistas() {
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const [nomeDoSetor, setNomeDoSetor] = useState<string>("Setor");
   const [activeView, setActiveView] = useState("meus");
+  const [perfilUsuario, setPerfilUsuario] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -45,7 +46,7 @@ const fetchUsuario = async () => {
 
     setNomeUsuario(response.data.nome);
     setNomeDoSetor(response.data.setor);
-    setUsuarioAutenticado(true); // <-- chave para carregar os chamados
+    setPerfilUsuario(response.data.tipo);
   } catch (error) {
     console.error("Erro ao buscar dados do usuário:", error);
     localStorage.removeItem("token");
@@ -59,8 +60,12 @@ const fetchUsuario = async () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token ausente");
       setLoading(true);
-      const url = activeView === "meus" ? "/api/usuarios/chamados/atribuidos/" : "/api/usuarios/chamados/";
-      
+      let url = "/api/usuarios/chamados/";
+      if (perfilUsuario === "analista" || perfilUsuario === "analista_admin") {
+        url = activeView === "meus"
+          ? "/api/usuarios/chamados/atribuidos/"
+          : "/api/usuarios/chamados/";
+      }
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -82,10 +87,10 @@ const fetchUsuario = async () => {
   }, []);
 
   useEffect(() => {
-    if (usuarioAutenticado) {
+    if (perfilUsuario) {
       fetchChamados();
     }
-  }, [usuarioAutenticado, activeView]);
+  }, [perfilUsuario, activeView]);
   
 
   const atenderChamado = async () => {

@@ -62,12 +62,12 @@ export default function ChamadosUsuarios() {
   
 
   const fetchChamados = async () => {
-    try {
+    
       const token = localStorage.getItem("token");
       if (!token) return;
       setLoading(true);
       setErro(null);
-
+      try {
       const response = await api.get("/api/usuarios/chamados/meus/", {
         headers: { Authorization: `Bearer ${token}` },
       });

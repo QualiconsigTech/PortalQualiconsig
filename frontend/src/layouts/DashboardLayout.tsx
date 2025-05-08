@@ -65,6 +65,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const [solucao, setSolucao] = useState("");
   const [tokenExpirado, setTokenExpirado] = useState(false);
 
+
   useEffect(() => {
     const handleTokenExpired = () => setTokenExpirado(true);
     window.addEventListener("tokenExpired", handleTokenExpired);
@@ -116,7 +117,6 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   
     return () => clearInterval(interval); 
   }, []);
-  
   const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
 
   const handleLogout = () => {
@@ -669,23 +669,23 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
         )}
        
         {tokenExpirado && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-    <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
-      <h2 className="text-lg font-semibold mb-4">Tempo de acesso expirado</h2>
-      <p className="text-sm text-gray-600 mb-6">
-        Sua sessão foi encerrada. Por favor, clique em OK para fazer login novamente.
-      </p>
-      <button
-        onClick={() => {
-          setTokenExpirado(false);
-          window.location.href = '/login';
-        }}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        OK
-      </button>
-    </div>
-  </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+            <h2 className="text-lg font-semibold mb-4">Tempo de acesso expirado</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Sua sessão foi encerrada. Por favor, clique em OK para fazer login novamente.
+            </p>
+            <button
+              onClick={() => {
+                setTokenExpirado(false);
+                window.location.href = '/login';
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              OK
+            </button>
+          </div>
+        </div>
 )}
 
       </main>
