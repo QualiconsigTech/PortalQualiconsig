@@ -53,3 +53,13 @@ def get_top_setor(inicio, fim):
         .order_by("-total")
         .first()
     )
+
+def get_evolucao_chamados(inicio, fim):
+    return (
+        Chamado.objects
+        .filter(criado_em__range=[inicio, fim])
+        .extra({'data': "DATE(criado_em)"})
+        .values('data')
+        .annotate(total=Count('id'))
+        .order_by('data')
+    )
