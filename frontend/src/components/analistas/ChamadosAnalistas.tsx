@@ -32,24 +32,27 @@ export default function ChamadosAnalistas() {
   const [usarProduto, setUsarProduto] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
-  
+  const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
 
+const fetchUsuario = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token ausente");
 
-  const fetchUsuario = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token ausente");
-      const response = await api.get("/api/usuarios/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNomeUsuario(response.data.nome);
-      setNomeDoSetor(response.data.setor);
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
-      localStorage.removeItem("token");
-      window.location.href = "/login";
-    }
-  };
+    const response = await api.get("/api/usuarios/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setNomeUsuario(response.data.nome);
+    setNomeDoSetor(response.data.setor);
+    setUsuarioAutenticado(true); // <-- chave para carregar os chamados
+  } catch (error) {
+    console.error("Erro ao buscar dados do usuário:", error);
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  }
+};
+
 
   const fetchChamados = async () => {
     try {
@@ -79,8 +82,11 @@ export default function ChamadosAnalistas() {
   }, []);
 
   useEffect(() => {
-    fetchChamados();
-  }, [activeView]);
+    if (usuarioAutenticado) {
+      fetchChamados();
+    }
+  }, [usuarioAutenticado, activeView]);
+  
 
   const atenderChamado = async () => {
     if (!chamadoSelecionado) return;
