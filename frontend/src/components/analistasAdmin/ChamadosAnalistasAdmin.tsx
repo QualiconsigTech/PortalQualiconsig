@@ -30,6 +30,7 @@ export default function ChamadosAnalistasAdmin() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
+  const [perfilUsuario, setPerfilUsuario] = useState<string>("");
   const redirecionarParaLogin = () => {
     localStorage.removeItem("token");
     router.push("/login");
@@ -42,6 +43,7 @@ export default function ChamadosAnalistasAdmin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNomeUsuario(response.data.nome);
+      setPerfilUsuario(response.data.tipo);
     } catch (error: any) {
       if (error?.response?.status === 401) {
         redirecionarParaLogin();
@@ -88,6 +90,8 @@ export default function ChamadosAnalistasAdmin() {
       buscarChamados(`/api/usuarios/chamados/admin/${filtro}/`);
     }
   };
+
+  console.log("perfil aqui:",perfilUsuario)
 
   const exibirMensagem = (texto: string) => {
     setMensagem(texto);

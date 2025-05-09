@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import {LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,} from 'recharts';
-
+import { format } from 'date-fns';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 type Setor = {
   setor__nome: string;
   total: number;
@@ -15,7 +17,12 @@ type Categoria = {
 
 const Dashboard = () => {
   const [periodo, setPeriodo] = useState('mensal');
+  const [dataInicio, setDataInicio] = useState<Date | null>(null);
+  const [dataFim, setDataFim] = useState<Date | null>(null);
   const [totalChamados, setTotalChamados] = useState(0);
+  const [chamadosAbertos, setChamadosAbertos] = useState(0);
+  const [chamadosEmAtendimento, setChamadosEmAtendimento] = useState(0);
+  const [chamadosEncerrados, setChamadosEncerrados] = useState(0);
   const [chamadosPorSetor, setChamadosPorSetor] = useState<Setor[]>([]);
   const [topUsuario, setTopUsuario] = useState<any>(null);
   const [topSetor, setTopSetor] = useState<any>(null);
@@ -24,12 +31,20 @@ const Dashboard = () => {
   const [visualizacao, setVisualizacao] = useState<'todos' | 'dados' | 'graficos'>('todos');
 
 
-  function getInicioEFimDoPeriodo(periodo: string): { inicio: string; fim: string } {
+  function getInicioEFimDoPeriodo(periodo: string): { inicio?: string; fim?: string } {
+    if (periodo === 'personalizado' && dataInicio && dataFim) {
+      return {
+        inicio: format(dataInicio, 'yyyy-MM-dd'),
+        fim: format(dataFim, 'yyyy-MM-dd'),
+      };
+    }
     const hoje = new Date();
     const fim = hoje.toISOString().split('T')[0];
     const data = new Date(hoje);
 
     switch (periodo) {
+      case 'diario':
+        return { inicio: fim, fim };
       case 'semanal':
         data.setDate(data.getDate() - 7);
         break;
@@ -55,23 +70,37 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const { inicio, fim } = getInicioEFimDoPeriodo(periodo);
+        const params: any = {};
+        if (inicio && fim) {
+          params.data_inicio = inicio;
+          params.data_fim = fim;
+        }
 
-        const totalRes = await api.get('/api/dashboard/chamados-total/', { params: { inicio, fim } });
+        const totalRes = await api.get('/api/dashboard/chamados-total/', { params });
         setTotalChamados(totalRes.data.total_chamados || 0);
 
-        const setorRes = await api.get('/api/dashboard/chamados-por-setor/', { params: { inicio, fim } });
+        const abertosRes = await api.get('/api/dashboard/chamados-abertos/', { params });
+        setChamadosAbertos(abertosRes.data.total_abertos || 0);
+
+        const atendimentoRes = await api.get('/api/dashboard/chamados-em-atendimento/', { params });
+        setChamadosEmAtendimento(atendimentoRes.data.total_em_atendimento || 0);
+
+        const encerradosRes = await api.get('/api/dashboard/chamados-encerrados/', { params });
+        setChamadosEncerrados(encerradosRes.data.total_encerrados || 0);
+
+        const setorRes = await api.get('/api/dashboard/chamados-por-setor/', { params });
         setChamadosPorSetor(setorRes.data.chamados_por_setor || []);
 
-        const usuarioRes = await api.get('/api/dashboard/top-usuario/', { params: { inicio, fim } });
+        const usuarioRes = await api.get('/api/dashboard/top-usuario/', { params });
         setTopUsuario(usuarioRes.data.top_usuario || null);
 
-        const setorTopRes = await api.get('/api/dashboard/top-setor/', { params: { inicio, fim } });
+        const setorTopRes = await api.get('/api/dashboard/top-setor/', { params });
         setTopSetor(setorTopRes.data.top_setor || null);
 
-        const evolucaoRes = await api.get('/api/dashboard/evolucao-chamados/', { params: { inicio, fim } });
+        const evolucaoRes = await api.get('/api/dashboard/evolucao-chamados/', { params });
         setEvolucaoChamados(evolucaoRes.data || []);
 
-        const categoriaRes = await api.get('/api/dashboard/chamados-por-categoria/', { params: { inicio, fim } });
+        const categoriaRes = await api.get('/api/dashboard/chamados-por-categoria/', { params });
         setCategoriaChamados(categoriaRes.data || []);
       } catch (error) {
         console.error('Erro ao carregar métricas do dashboard:', error);
@@ -79,8 +108,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [periodo]);
-
+  }, [periodo, dataInicio, dataFim]);
   return (
     <>
       <div className="p-4">
@@ -102,11 +130,38 @@ const Dashboard = () => {
             value={periodo}
             onChange={(e) => setPeriodo(e.target.value)}
           >
-            <option value="mensal">Mensal</option>
+            <option value="diario">Diário</option>
             <option value="semanal">Semanal</option>
+            <option value="mensal">Mensal</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="semestral">Semestral</option>
             <option value="anual">Anual</option>
+            <option value="personalizado">Personalizado</option>
           </select>
+          </div>
+          {periodo === 'personalizado' && (
+        <div className="flex gap-2 items-center mb-4">
+          <DatePicker
+            selected={dataInicio}
+            onChange={(date) => setDataInicio(date)}
+            selectsStart
+            startDate={dataInicio}
+            endDate={dataFim}
+            placeholderText="Data Início"
+            className="border rounded px-2 py-1"
+          />
+          <DatePicker
+            selected={dataFim}
+            onChange={(date) => setDataFim(date)}
+            selectsEnd
+            startDate={dataInicio}
+            endDate={dataFim}
+            minDate={dataInicio ?? undefined}
+            placeholderText="Data Fim"
+            className="border rounded px-2 py-1"
+          />
         </div>
+      )}
   
         {/* DADOS */}
         {(visualizacao === 'todos' || visualizacao === 'dados') && (
@@ -116,7 +171,22 @@ const Dashboard = () => {
                 <h3 className="text-sm text-gray-600">Total de chamados</h3>
                 <p className="text-3xl font-bold text-blue-600">{totalChamados}</p>
               </div>
-  
+
+              <div className="bg-white rounded-xl shadow p-4">
+              <h3 className="text-sm text-gray-600">Chamados em aberto</h3>
+              <p className="text-3xl font-bold text-yellow-500">{chamadosAbertos}</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow p-4">
+              <h3 className="text-sm text-gray-600">Em atendimento</h3>
+              <p className="text-3xl font-bold text-orange-500">{chamadosEmAtendimento}</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow p-4">
+              <h3 className="text-sm text-gray-600">Encerrados</h3>
+              <p className="text-3xl font-bold text-green-600">{chamadosEncerrados}</p>
+            </div>
+
               <div className="bg-white rounded-xl shadow p-4">
                 <h3 className="text-sm text-gray-600">Setor com mais chamados</h3>
                 <p className="text-lg font-medium">{topSetor?.setor__nome || '---'}</p>

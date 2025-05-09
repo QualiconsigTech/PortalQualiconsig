@@ -36,6 +36,7 @@ export default function ChamadosUsuarios() {
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const [isEncerrando, setIsEncerrando] = useState(false);
+  const [perfilUsuario, setPerfilUsuario] = useState<string>("");
   const handleTokenError = (error: any) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("token");
@@ -54,12 +55,14 @@ export default function ChamadosUsuarios() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNomeUsuario(response.data.nome);
+      setPerfilUsuario(response.data.tipo);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
       handleTokenError(error);
     }
   };
   
+
 
   const fetchChamados = async () => {
     

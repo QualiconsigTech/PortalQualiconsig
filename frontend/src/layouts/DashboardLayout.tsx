@@ -390,7 +390,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                 }`}
               >
                 Dashboards
-              </button>
+              </button> 
               </>
             )}
 

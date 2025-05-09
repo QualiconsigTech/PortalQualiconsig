@@ -91,6 +91,8 @@ const fetchUsuario = async () => {
       fetchChamados();
     }
   }, [perfilUsuario, activeView]);
+
+  console.log("perfil aqui:",perfilUsuario)
   
 
   const atenderChamado = async () => {
