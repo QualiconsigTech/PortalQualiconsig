@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from django.utils.timezone import now, timedelta
 from chamados.models import Chamado
 from django.db.models import Count
@@ -7,22 +7,34 @@ def calcular_periodo(periodo=None, data_inicio=None, data_fim=None):
     hoje = now().date()
 
     if data_inicio and data_fim:
-        return datetime.fromisoformat(data_inicio).date(), datetime.fromisoformat(data_fim).date()
+        inicio = datetime.fromisoformat(data_inicio)
+        fim = datetime.fromisoformat(data_fim)
+        inicio = datetime.combine(inicio.date(), time.min)
+        fim = datetime.combine(fim.date(), time.max)
+        return inicio, fim
 
     if periodo == "diario":
-        return hoje, hoje
+        inicio = datetime.combine(hoje, time.min)
+        fim = datetime.combine(hoje, time.max)
     elif periodo == "semanal":
-        return hoje - timedelta(days=7), hoje
+        inicio = datetime.combine(hoje - timedelta(days=7), time.min)
+        fim = datetime.combine(hoje, time.max)
     elif periodo == "mensal":
-        return hoje.replace(day=1), hoje
+        inicio = datetime.combine(hoje.replace(day=1), time.min)
+        fim = datetime.combine(hoje, time.max)
     elif periodo == "trimestral":
-        return hoje - timedelta(days=90), hoje
+        inicio = datetime.combine(hoje - timedelta(days=90), time.min)
+        fim = datetime.combine(hoje, time.max)
     elif periodo == "semestral":
-        return hoje - timedelta(days=180), hoje
+        inicio = datetime.combine(hoje - timedelta(days=180), time.min)
+        fim = datetime.combine(hoje, time.max)
     elif periodo == "anual":
-        return hoje.replace(month=1, day=1), hoje
+        inicio = datetime.combine(hoje.replace(month=1, day=1), time.min)
+        fim = datetime.combine(hoje, time.max)
+    else:
+        return None, None
 
-    return None, None
+    return inicio, fim
 
 
 def get_chamados_total(inicio, fim, usuario=None):
