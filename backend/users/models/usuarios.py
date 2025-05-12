@@ -28,6 +28,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE)
     deletado = models.BooleanField(default=False)
     tipo = models.CharField(max_length=20, choices=TIPOS_USUARIO, default='usuario')
+    ultimo_acesso = models.DateTimeField(null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
