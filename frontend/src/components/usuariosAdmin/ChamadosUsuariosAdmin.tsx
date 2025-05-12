@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
