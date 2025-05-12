@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.timezone import now
 
 from users.models.usuarios import Usuario
 from .serializers import UsuarioSerializer
@@ -35,10 +36,16 @@ def login(request):
     usuario = Usuario.objects.filter(email=email).first()
     if usuario and usuario.check_password(senha):
         logger.info(f"[AUTH] Login bem-sucedido para o usuário ID={usuario.id}")
+        primeiro_login = usuario.ultimo_acesso is None
+
+        usuario.ultimo_acesso = now()
+        usuario.save()
+
         token = generate_token(usuario)
         return Response({
             'token': token,
-            'id': usuario.id
+            'id': usuario.id,
+            'primeiro_login': primeiro_login  # <-- envia essa flag ao frontend
         }, status=status.HTTP_200_OK)
 
     logger.warning(f"[AUTH] Tentativa de login falhou para o e-mail: {email}")
@@ -76,6 +83,25 @@ def atualizar_usuario_analista(request, tipo, id):
     
     logger.warning(f"[AUTH] Erro na validação ao atualizar {tipo} ID={id}: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def alterar_senha(request):
+    nova_senha = request.data.get('nova_senha')
+    confirmar_senha = request.data.get('confirmar_senha')
+
+    if not nova_senha or not confirmar_senha:
+        return Response({'erro': 'Preencha todos os campos.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if nova_senha != confirmar_senha:
+        return Response({'erro': 'As senhas não coincidem.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    usuario = request.user
+    usuario.set_password(nova_senha)
+    usuario.save()
+
+    return Response({'mensagem': 'Senha alterada com sucesso.'}, status=status.HTTP_200_OK)
+
 
 
 @api_view(['DELETE'])
