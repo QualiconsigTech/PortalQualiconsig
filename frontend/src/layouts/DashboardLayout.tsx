@@ -22,7 +22,7 @@ interface Notificacao {
 }
 
 interface DashboardLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
   nomeUsuario?: string;
   nomeDoSetor?: string;
   activeView?: string;
@@ -64,6 +64,12 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [solucao, setSolucao] = useState("");
   const [tokenExpirado, setTokenExpirado] = useState(false);
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
+  const toggleMenu = (menu: string) => {
+    setMenuAberto((prev) => (prev === menu ? null : menu));
+  };
+
+  
 
   useEffect(() => {
     const handleTokenExpired = () => setTokenExpirado(true);
@@ -118,6 +124,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   }, []);
   
   const perfilUsuario = getPerfilUsuario({ tipo: tipoUsuario, is_admin: isAdmin });
+  
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -250,245 +257,79 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   return (
     <div className="flex min-h-screen bg-[#f9f9fb]">
       {/* Sidebar */}
-      <aside
-        className={`bg-white shadow flex flex-col overflow-hidden transition-all duration-300 ${
-          sidebarAberto ? "w-64" : "w-0 md:w-20"
-        }`}
-      >
-        <div className="flex items-center justify-between px-4 pt-4">
-          {sidebarAberto && (
-            <h1 className="text-xl font-bold text-[#041161] whitespace-nowrap">Portal Qualiconsig</h1>
+      <aside className={`bg-white shadow flex flex-col transition-all duration-300 ${sidebarAberto ? "w-64" : "w-0 md:w-20"}`}>
+      <div className="flex items-center justify-between px-4 pt-4">
+        {sidebarAberto && (
+          <h1 className="text-xl font-bold text-[#041161] whitespace-nowrap">Portal Qualiconsig</h1>
+        )}
+        <button onClick={() => setSidebarAberto(!sidebarAberto)} className="text-gray-600 hover:text-gray-900">
+          {sidebarAberto ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        </button>
+      </div>
+
+      {sidebarAberto && (
+        <div className="flex-1 flex flex-col px-6 mt-8">
+          <p className="text-sm text-black-500 font-semibold mb-4">MENU</p>
+
+          {/* Chamados */}
+          <div>
+            <button onClick={() => toggleMenu("chamados")} className="w-full text-left px-2 py-2 font-semibold hover:bg-gray-100 rounded transition">
+              Chamados
+            </button>
+            {menuAberto === "chamados" && (
+              <div className="ml-4 mt-1 space-y-1">
+                <button onClick={() => setActiveView?.("meus")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Meus Chamados</button>
+                {(perfilUsuario === "usuario_admin" || perfilUsuario === "analista_admin") && (
+                  <button onClick={() => setActiveView?.("analistas")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "analistas" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Analistas</button>
+                )}
+                {perfilUsuario === "analista" && setorUsuario === "Suporte" && (
+                  <button onClick={() => setActiveView?.("produtos")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "produtos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Produtos</button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Úteis */}
+          {(perfilUsuario === "usuario" || perfilUsuario === "usuario_admin" || perfilUsuario === "analista_admin") && (
+            <div>
+              <button onClick={() => toggleMenu("uteis")} className="w-full text-left px-2 py-2 font-semibold hover:bg-gray-100 rounded transition mt-4">
+                Úteis
+              </button>
+              {menuAberto === "uteis" && (
+                <div className="ml-4 mt-1 space-y-1">
+                  <button onClick={() => setActiveView?.("faq")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "faq" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Perguntas Frequentes</button>
+                  <button onClick={() => setActiveView?.("ajuda")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "ajuda" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Ajuda</button>
+                  <button onClick={() => setActiveView?.("Qlinks")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "Qlinks" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Qlinks</button>
+                </div>
+              )}
+            </div>
           )}
-          <button onClick={() => setSidebarAberto(!sidebarAberto)} className="text-gray-600 hover:text-gray-900">
-            {sidebarAberto ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-          </button>
+
+          {/* Gerenciamento */}
+          {(perfilUsuario === "usuario_admin" || perfilUsuario === "analista_admin") && (
+            <div>
+              <button onClick={() => toggleMenu("config")} className="w-full text-left px-2 py-2 font-semibold hover:bg-gray-100 rounded transition mt-4">
+                Gerenciamento
+              </button>
+              {menuAberto === "config" && (
+                <div className="ml-4 mt-1 space-y-1">
+                  <button onClick={() => setActiveView?.("cadastroFuncionario")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "cadastroFuncionario" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Cadastrar Usuário</button>
+                  <button onClick={() => setActiveView?.("dashboard")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "dashboard" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Dashboards</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Logout */}
+          <div className="mt-auto pt-4 border-t">
+            <button onClick={handleLogout} className="w-full flex items-center gap-2 text-sm text-gray-700 hover:text-red-500 transition-colors">
+              <LogOut size={18} /> SAIR
+            </button>
+          </div>
         </div>
-        {sidebarAberto && (
+      )}
+    </aside>
 
-        <div className="flex-1 flex flex-col items-center px-6 mt-12">
-          <p className="text-sm text-black-500 font-semibold mb-2">MENU</p>
-
-          <nav className="space-y-2">
-            {/* MENU PARA ANALISTA ADMIN */}
-            {perfilUsuario === "analista_admin" && (
-              <>
-                <button
-                  onClick={() => setActiveView?.("todos")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "todos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Todos Chamados
-                </button>
-                <button
-                  onClick={() => setActiveView?.("desenvolvimento")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "desenvolvimento" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Desenvolvimento
-                </button>
-                <button
-                  onClick={() => setActiveView?.("dados")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "dados" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Dados
-                </button>
-                <button
-                  onClick={() => setActiveView?.("suporte")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "suporte" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Suporte
-                </button>
-                <button
-                  onClick={() => setActiveView?.("cadastroFuncionario")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "cadastroFuncionario" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Cadastrar Analista
-                </button>
-                <button
-                  onClick={() => setActiveView?.("Qlinks")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "Qlinks" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Qlinks
-                </button>
-                <button
-                  onClick={() => setActiveView?.("dashboard")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Dashboards
-                </button>
-              </>
-            )}
-            {/* MENU PARA USUÁRIO ADMIN */}
-            {perfilUsuario === "usuario_admin" && (
-              <>
-                <button
-                  onClick={() => setActiveView?.("meus")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Meus Chamados
-                </button>
-                <button
-                  onClick={() => setActiveView?.("analistas")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "analistas" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Analistas
-                </button>
-                <button
-                  onClick={() => setActiveView?.("faq")}
-                  className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 text-gray-700"
-                >
-                  Perguntas Frequentes
-                </button>
-                <button
-                  onClick={() => setActiveView?.("cadastroFuncionario")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "cadastroFuncionario" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Cadastrar Usuário
-                </button>
-                <button
-                      onClick={() => setActiveView?.("ajuda")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "ajuda" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Ajuda
-                </button>
-                <button
-                      onClick={() => setActiveView?.("Qlinks")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "Qlinks" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Qlinks
-                </button>
-                <button
-                  onClick={() => setActiveView?.("dashboard")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Dashboards
-                </button>
-              </>
-            )}
-
-            {/* MENU PARA ANALISTA COMUM */}
-            {perfilUsuario === "analista" && (
-              <>
-                <button
-                  onClick={() => setActiveView?.("meus")}
-                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  Meus Chamados
-                </button>
-                <button
-                      onClick={() => setActiveView?.("Qlinks")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeView === "Qlinks" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                  }`}
-                    >
-                  Qlinks
-                </button>                
-                
-                {nomeDoSetor && (
-                  <button
-                    onClick={() => setActiveView?.("setor")}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeView === "setor" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {nomeDoSetor}
-                  </button>
-                  
-                )}
-
-                {/* Só mostra para analistas do setor Suporte */}
-                {setorUsuario === "Suporte" && (
-                  <button
-                    onClick={() => setActiveView?.("produtos")}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeView === "produtos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    Produtos
-                  </button>
-                  
-                )}
-              </>
-            )}
-
-             {/* MENU PARA USUÁRIO COMUM */}
-             {perfilUsuario === "usuario" && (
-                  <>
-                    <button
-                      onClick={() => setActiveView?.("meus")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Meus Chamados
-                    </button>
-                    <button
-                      onClick={() => setActiveView?.("faq")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "faq" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Perguntas Frequentes
-                    </button>
-                    <button
-                      onClick={() => setActiveView?.("ajuda")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "ajuda" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Ajuda
-                    </button>
-                    <button
-                      onClick={() => setActiveView?.("Qlinks")}
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeView === "Qlinks" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      Qlinks
-                    </button>
-                  </>
-                )}
-          </nav>
-        </div>
-        )}
-
-        {sidebarAberto && (
-        <div className="px-6 py-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 text-sm text-gray-700 hover:text-red-500 transition-colors"
-            >
-           <LogOut size={18} /> SAIR
-          </button>
-        </div>
-        )}
-      </aside>
 
       <main className="flex-1 transition-all duration-300">
         <header className="bg-[#00247A] text-white px-6 py-4 flex justify-between items-center shadow-md">
