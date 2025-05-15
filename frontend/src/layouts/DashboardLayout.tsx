@@ -236,7 +236,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       const token = localStorage.getItem("token");
       if (!token) return;
   
-      const { data } = await api.get(`/api/usuarios/chamados/${chamadoId}/`, {
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -279,6 +279,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             {menuAberto === "chamados" && (
               <div className="ml-4 mt-1 space-y-1">
                 <button onClick={() => setActiveView?.("meus")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "meus" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Meus Chamados</button>
+                <button onClick={() => setActiveView?.("setor")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "setor" ? "bg-blue-100 font-semibold" : "hover:bg-gray-100"}`}>Chamados do Setor</button>
+
                 {(perfilUsuario === "usuario_admin" || perfilUsuario === "analista_admin") && (
                   <button onClick={() => setActiveView?.("analistas")} className={`w-full text-left px-4 py-2 text-sm rounded-lg ${activeView === "analistas" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"}`}>Analistas</button>
                 )}

@@ -33,6 +33,8 @@ export default function ChamadosAnalistas() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
+  const [chamadosSetor, setChamadosSetor] = useState<Chamado[]>([]);
+
 
 const fetchUsuario = async () => {
   try {
@@ -69,6 +71,9 @@ const fetchUsuario = async () => {
         return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
       });
 
+           
+      
+
       setChamados(ordenado);
     } catch (err) {
       setErro("Erro ao carregar chamados.");
@@ -77,15 +82,44 @@ const fetchUsuario = async () => {
     }
   };
 
+
+  const fetchChamadosSetor = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token ausente");
+  
+      const response = await api.get("/api/chamados/setor/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const ordenado = [...response.data].sort((a, b) => {
+        const statusOrder = { Aberto: 1, "Em Atendimento": 2, Encerrado: 3 };
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
+      });
+  
+      setChamados(ordenado);
+    } catch (err) {
+      setErro("Erro ao carregar chamados do setor.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
   useEffect(() => {
     fetchUsuario();
   }, []);
 
   useEffect(() => {
     if (usuarioAutenticado) {
-      fetchChamados();
+      if (activeView === "meus") {
+        fetchChamados();
+      } else if (activeView === "setor") {
+        fetchChamadosSetor();
+      }
     }
   }, [usuarioAutenticado, activeView]);
+  
   
 
   const atenderChamado = async () => {
