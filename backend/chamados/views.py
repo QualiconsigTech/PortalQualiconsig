@@ -88,9 +88,14 @@ def detalhes_chamado(request, chamado_id):
     try:
         chamado = Chamado.objects.get(id=chamado_id)
 
-        if chamado.usuario != request.user and not request.user.is_admin:
+        if not (
+            chamado.usuario == request.user or 
+            request.user.is_admin or
+            (request.user.tipo == "analista" and chamado.setor == request.user.setor)
+        ):
             logger.warning(f"[CHAMADO] Acesso negado para o chamado ID={chamado_id} por usuário ID={request.user.id}")
             return Response({'erro': 'Você não tem permissão para ver este chamado.'}, status=status.HTTP_403_FORBIDDEN)
+
 
         serializer = ChamadoDetalhadoSerializer(chamado)
         return Response(serializer.data)
@@ -121,6 +126,8 @@ def atualizar_chamado(request, chamado_id):
     
     logger.warning(f"[CHAMADO] Erros de validação ao atualizar chamado ID={chamado_id}: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 @api_view(['DELETE'])

@@ -14,7 +14,7 @@ atualizar_chamado,
 deletar_chamado,
 marcar_todas_notificacoes_lidas,
 produtos_view,
-usar_produto
+usar_produto,
 )
 
 urlpatterns = [
