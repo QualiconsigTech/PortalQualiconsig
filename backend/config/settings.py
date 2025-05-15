@@ -19,23 +19,28 @@ CORS_ALLOWED_ORIGINS = [
 
 # Apps instalados
 INSTALLED_APPS = [
+    # Django padrão
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Bibliotecas externas
     'rest_framework',
     'rest_framework_simplejwt',
-
-    # CORS
     'corsheaders',
 
     # Apps do projeto
-    'users',
-    'chamados',
-    'integracoes',
+    'apps.users',
+    'apps.chamados',
+    'apps.integracoes',
+    'apps.dashboard',
+    'apps.financeiro',
+    'apps.permissoes',
 ]
+
 
 MIDDLEWARE = [
     # CORS
@@ -75,7 +80,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # tempo para expirar sessão
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5), 
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
