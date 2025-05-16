@@ -3,6 +3,7 @@ from decouple import config
 from datetime import timedelta
 
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-6a^op!1=yf)9l9$0ldwqxjf)ohz2e!i11%9sbcmj93kgrl#bc%'
@@ -30,6 +31,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'drf_yasg',
+
 
 
     'apps.usuarios',
@@ -38,6 +41,8 @@ INSTALLED_APPS = [
     'apps.dashboard',
     'apps.financeiro',
     'apps.permissoes',
+    'apps.core',
+
 ]
 
 
@@ -125,18 +130,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-}
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Qualiconsig API',
-    'DESCRIPTION': 'Documentação completa da API dos módulos: usuários, chamados, integrações e mais.',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 LOGGING = {

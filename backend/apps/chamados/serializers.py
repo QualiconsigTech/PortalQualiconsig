@@ -4,7 +4,7 @@ from apps.chamados.models.perguntas import PerguntaFrequente
 from apps.usuarios.serializers import UsuarioSerializer
 from apps.chamados.models.comentario import ComentarioChamado
 from apps.chamados.models.notificacao import Notificacao
-from apps.chamados.models import Produto
+from apps.usuarios.models import Usuario
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
@@ -55,10 +55,22 @@ class NotificacaoSerializer(serializers.ModelSerializer):
         fields = ['id', 'mensagem', 'visualizado', 'criado_em', 'chamado_id'] 
 
 
-class ProdutoSerializer(serializers.ModelSerializer):
+class UsuarioSerializer(serializers.ModelSerializer):
+    setor_nome = serializers.CharField(source='setor.nome', read_only=True)
     class Meta:
-        model = Produto
-        fields = ['id', 'nome', 'quantidade']
+        model = Usuario
+        fields = ['id', 'nome', 'email', 'setor_nome']
+
+
+class UsuarioLogadoSerializer(serializers.ModelSerializer):
+    setor = serializers.StringRelatedField()
+    cargo = serializers.StringRelatedField()
+
+    class Meta:
+        model = Usuario
+        fields = ['id', 'nome', 'email', 'tipo', 'setor', 'cargo', 'is_admin', 'deletado']
+
+
 
 
 

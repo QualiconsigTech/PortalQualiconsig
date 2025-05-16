@@ -15,7 +15,6 @@ class Chamado(models.Model):
     editado_em = models.DateTimeField(auto_now=True)
     encerrado_em = models.DateTimeField(null=True, blank=True)
     solucao = models.TextField(blank=True, null=True)
-    comentarios = models.TextField(blank=True, null=True)
     arquivos = models.JSONField(null=True, blank=True)
 
     def __str__(self):

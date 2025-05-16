@@ -1,9 +1,13 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager, Group, Permission
 from django.db import models
-from .cargo import Cargo
-from .setor import Setor
+from core.models.setor import Setor
+from core.models.cargo import Cargo
+from core.models.grupo import Grupo 
 
-TIPOS_USUARIO = (('usuario', 'Usuário Comum'),('analista', 'Analista'),)
+TIPOS_USUARIO = (
+    ('usuario', 'Usuário Comum'),
+    ('analista', 'Analista'),
+)
 
 class UsuarioManager(BaseUserManager):
     def create_user(self, email, senha=None, **extra_fields):
@@ -24,20 +28,20 @@ class UsuarioManager(BaseUserManager):
 class Usuario(AbstractBaseUser, PermissionsMixin):
     nome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE)
-    setor = models.ForeignKey(Setor, on_delete=models.CASCADE)
-    deletado = models.BooleanField(default=False)
+    grupo = models.ForeignKey(Grupo, on_delete=models.PROTECT, related_name="usuarios")
+    setor = models.ForeignKey(Setor, on_delete=models.PROTECT, related_name="usuarios")
+    cargo = models.ForeignKey(Cargo, on_delete=models.PROTECT, related_name="usuarios")
     tipo = models.CharField(max_length=20, choices=TIPOS_USUARIO, default='usuario')
-
-    is_active = models.BooleanField(default=True)
+    
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
-    groups = models.ManyToManyField(Group,related_name='usuario_set',blank=True)
-    user_permissions = models.ManyToManyField(Permission,related_name='usuario_set',blank=True)
+    groups = models.ManyToManyField(Group, related_name='usuario_set', blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name='usuario_set', blank=True)
+    deletado = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nome', 'cargo', 'setor', 'tipo']
+    REQUIRED_FIELDS = ['nome', 'grupo', 'setor', 'cargo', 'tipo']
 
     objects = UsuarioManager()
 

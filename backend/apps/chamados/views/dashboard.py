@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from apps.dashboard.service import *
+from apps.chamados.services.dashboard import *
 from apps.chamados.models import Chamado
 from django.db.models import Count
 

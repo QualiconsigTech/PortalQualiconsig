@@ -1,24 +1,25 @@
 from rest_framework import serializers
-from apps.usuarios.models.usuarios import Usuario
-from apps.usuarios.models.links import links
-
+from core.models import Grupo, Setor, Cargo
+from apps.usuarios.models import Usuario
 
 class UsuarioSerializer(serializers.ModelSerializer):
-    setor_nome = serializers.CharField(source='setor.nome', read_only=True)
-    class Meta:
-        model = Usuario
-        fields = ['id', 'nome', 'email', 'setor_nome']
-
-
-class UsuarioLogadoSerializer(serializers.ModelSerializer):
-    setor = serializers.StringRelatedField()
-    cargo = serializers.StringRelatedField()
+    grupo = serializers.SlugRelatedField(slug_field="nome", queryset=Grupo.objects.all())
+    setor = serializers.SlugRelatedField(slug_field="nome", queryset=Setor.objects.all())
+    cargo = serializers.SlugRelatedField(slug_field="nome", queryset=Cargo.objects.all())
 
     class Meta:
         model = Usuario
-        fields = ['id', 'nome', 'email', 'tipo', 'setor', 'cargo', 'is_admin', 'deletado']
-
-class LinkSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = links
-        fields = ['titulo', 'url','tipo', 'logo']
+        fields = [
+            "id",
+            "nome",
+            "email",
+            "grupo",
+            "setor",
+            "cargo",
+            "tipo",
+            "is_active",
+            "is_staff",
+            "is_admin",
+            "last_login"
+        ]
+        read_only_fields = ["id", "last_login"]
