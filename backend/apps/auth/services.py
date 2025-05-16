@@ -1,8 +1,10 @@
 import logging
-from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
+from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.usuarios.models.usuarios import Usuario
 from .serializers import UsuarioSerializer
+from django.utils.timezone import now
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +28,32 @@ def autenticar_usuario(email, senha):
     usuario = Usuario.objects.filter(email=email).first()
     if usuario and usuario.check_password(senha):
         logger.info(f"[AUTH] Login bem-sucedido para o usuário ID={usuario.id}")
+        primeiro_login = usuario.ultimo_acesso is None
+        usuario.ultimo_acesso = now()
+        usuario.save()
+
         token = gerar_token(usuario)
         return {
             'token': token,
-            'id': usuario.id
+            'id': usuario.id,
+            'primeiro_login': primeiro_login
         }
     logger.warning(f"[AUTH] Tentativa de login falhou para o e-mail: {email}")
     raise AuthenticationFailed("Usuário e/ou senha incorreto(s)")
+
+def alterar_senha_usuario(usuario: Usuario, nova_senha: str, confirmar_senha: str):
+    if not nova_senha or not confirmar_senha:
+        raise ValidationError({'erro': 'Preencha todos os campos.'})
+
+    if nova_senha != confirmar_senha:
+        raise ValidationError({'erro': 'As senhas não coincidem.'})
+
+    usuario.set_password(nova_senha)
+    usuario.save()
+
+    return {
+        'mensagem': 'Senha alterada com sucesso.',
+    }, None, status.HTTP_200_OK
 
 def atualizar_usuario(tipo, id, dados, user):
     if tipo not in ['usuario', 'analista']:

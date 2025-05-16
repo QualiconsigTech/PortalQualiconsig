@@ -7,6 +7,7 @@ from rest_framework.exceptions import APIException, PermissionDenied
 from apps.auth.services import *
 from apps.usuarios.models.usuarios import Usuario
 
+
 logger = logging.getLogger(__name__)
 
 class CadastrarUsuarioView(APIView):
@@ -56,3 +57,21 @@ class DeletarUsuarioView(APIView):
             return Response({'erro': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AlterarSenhaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        try:
+            nova_senha = request.data.get('nova_senha')
+            confirmar_senha = request.data.get('confirmar_senha')
+
+            data, errors, status_code = alterar_senha_usuario(request.user, nova_senha, confirmar_senha)
+
+            if errors:
+                return Response(errors, status=status_code)
+            return Response(data, status=status_code)
+
+        except ValidationError as e:
+            return Response({'erro': str(e.detail)}, status=e.status_code)
