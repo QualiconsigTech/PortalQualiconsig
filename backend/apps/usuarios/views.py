@@ -2,12 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from chamados.models.notificacao import Notificacao
-from chamados.serializers import ChamadoDetalhadoSerializer
-from users.serializers import UsuarioLogadoSerializer, LinkSerializer
-from users.services import listar_todos_os_links, listar_cargos, listar_prioridades,listar_categorias, listar_setores, filtrar_chamados_por_analista, atender_chamado, obter_dados_do_usuario,filtra_chamados_atribuidos, encerrar_chamado, listar_chamados_admin, listar_chamados_do_usuario, listar_chamados_do_setor
-from users.utils import gerar_token_email, enviar_email_reset_senha, validar_token_email
-from users.models.usuarios import Usuario
+from apps.chamados.models.notificacao import Notificacao
+from apps.chamados.serializers import ChamadoDetalhadoSerializer
+from apps.usuarios.serializers import UsuarioLogadoSerializer, LinkSerializer
+from apps.usuarios.services import *
+from apps.usuarios.utils import *
+from apps.usuarios.models.usuarios import Usuario
 
 #ANALISTA COMUM
 class ChamadosDoAnalistaView(APIView):

@@ -1,5 +1,5 @@
 from django.db import models
-from users.models.usuarios import Usuario
+from apps.usuarios.models.usuarios import Usuario
 
 
 class MondayCreate(models.Model):

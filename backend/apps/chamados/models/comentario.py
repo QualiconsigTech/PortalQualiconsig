@@ -1,6 +1,7 @@
 from django.db import models
-from users.models.usuarios import Usuario
-from chamados.models.chamados import Chamado
+from apps.usuarios.models.usuarios import Usuario
+from apps.chamados.models.chamados import Chamado
+
 
 class ComentarioChamado(models.Model):
     chamado = models.ForeignKey(Chamado, on_delete=models.CASCADE, related_name="comentarios_chamado")

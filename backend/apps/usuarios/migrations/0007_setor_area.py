@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0006_area'),
+        ('usuarios', '0006_area'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='setor',
             name='area',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='setores', to='users.area'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='setores', to='usuarios.area'),
         ),
     ]

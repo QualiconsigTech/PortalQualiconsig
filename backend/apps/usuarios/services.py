@@ -1,14 +1,13 @@
 import logging
-from chamados.models import Chamado
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied
 import json
-from chamados.models import Chamado, Categoria
-from users.models import Setor
-from users.models.prioridade import Prioridade
-from users.models.cargo import Cargo
-from users.models.links import links
+from apps.chamados.models import Chamado, Categoria
+from apps.usuarios.models import Setor
+from apps.usuarios.models.prioridade import Prioridade
+from apps.usuarios.models.cargo import Cargo
+from apps.usuarios.models.links import links
 
 logger = logging.getLogger(__name__)
 

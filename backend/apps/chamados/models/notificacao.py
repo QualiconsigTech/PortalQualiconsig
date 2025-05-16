@@ -1,6 +1,6 @@
 from django.db import models
-from users.models import Usuario
-from chamados.models import Chamado
+from apps.usuarios.models import Usuario
+from apps.chamados.models import Chamado
 
 class Notificacao(models.Model):
     usuario_destino = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="notificacoes")

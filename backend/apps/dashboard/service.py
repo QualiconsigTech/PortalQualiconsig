@@ -1,6 +1,6 @@
 from datetime import datetime, time
 from django.utils.timezone import now, timedelta
-from chamados.models import Chamado
+from apps.chamados.models import Chamado
 from django.db.models import Count
 
 def calcular_periodo(periodo=None, data_inicio=None, data_fim=None):

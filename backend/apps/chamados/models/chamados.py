@@ -1,6 +1,5 @@
 from django.db import models
-from users.models.usuarios import Usuario, Setor
-from users.models.prioridade import Prioridade
+from apps.usuarios.models import Usuario, Setor, Prioridade
 from .categoria import Categoria
 
 class Chamado(models.Model):

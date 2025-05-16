@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import APIException, PermissionDenied
 from apps.auth.services import *
-from users.models.usuarios import Usuario
+from apps.usuarios.models.usuarios import Usuario
 
 logger = logging.getLogger(__name__)
 

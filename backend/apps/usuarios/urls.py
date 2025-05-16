@@ -1,5 +1,5 @@
 from django.urls import path
-from users.views import LinksCreateView ,LinksView, CargoListView, PrioridadesListView,CategoriasListView, SetoresListView, ChamadosDoAnalistaView, AtenderChamadoView, EnviarResetSenhaView, ConfirmarResetSenhaView,UsuarioLogadoView,ChamadosAtribuidosView, ChamadosDoSetorView,EncerrarChamadoView, ChamadosAdminView, ChamadosPorSetorAdminView,ChamadosDoUsuarioView
+from apps.usuarios.views import *
 
 urlpatterns = [
     ## ANALISTA

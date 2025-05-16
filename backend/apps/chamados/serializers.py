@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from chamados.models.chamados import Chamado
-from chamados.models.perguntas import PerguntaFrequente
-from users.serializers import UsuarioSerializer
-from chamados.models.comentario import ComentarioChamado
-from chamados.models.notificacao import Notificacao
-from chamados.models import Produto
+from apps.chamados.models.chamados import Chamado
+from apps.chamados.models.perguntas import PerguntaFrequente
+from apps.usuarios.serializers import UsuarioSerializer
+from apps.chamados.models.comentario import ComentarioChamado
+from apps.chamados.models.notificacao import Notificacao
+from apps.chamados.models import Produto
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)

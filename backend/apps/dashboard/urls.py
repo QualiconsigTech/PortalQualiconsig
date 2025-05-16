@@ -1,6 +1,5 @@
 from django.urls import path
-from dashboard.views import (ChamadosAbertosViews,ChamadosEmAtendimentoViews,ChamadosEncerradosViews,ChamadosTotalViews, ChamadosPorSetorViews,TopUsuarioViews, TopSetorViews, EvolucaoChamadosViews, ChamadosPorCategoriaView)
-from . import views
+from apps.dashboard.views import *
 
 urlpatterns = [
     path("chamados-total/", ChamadosTotalViews.as_view()),

@@ -17,9 +17,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# Apps instalados
 INSTALLED_APPS = [
-    # Django padrão
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -27,13 +26,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Bibliotecas externas
+
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
 
-    # Apps do projeto
-    'apps.users',
+
+    'apps.usuarios',
     'apps.chamados',
     'apps.integracoes',
     'apps.dashboard',
@@ -43,7 +42,6 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
-    # CORS
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 
@@ -84,8 +82,6 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
-
-# Banco de dados PostgreSQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -121,17 +117,26 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'users.Usuario'
+AUTH_USER_MODEL = 'usuarios.Usuario'
 
-# Corrige problemas com modelos customizados
+
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Qualiconsig API',
+    'DESCRIPTION': 'Documentação completa da API dos módulos: usuários, chamados, integrações e mais.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 LOGGING = {

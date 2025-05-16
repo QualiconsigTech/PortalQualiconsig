@@ -1,7 +1,7 @@
 import logging
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
-from users.models.usuarios import Usuario
+from apps.usuarios.models.usuarios import Usuario
 from .serializers import UsuarioSerializer
 
 logger = logging.getLogger(__name__)

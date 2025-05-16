@@ -1,5 +1,5 @@
 from django.urls import path
-from chamados.views import *
+from apps.chamados.views import *
 
 urlpatterns = [
     path('criar/', CriarChamadoView.as_view()),

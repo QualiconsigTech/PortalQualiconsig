@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from users.models.usuarios import Usuario
+from apps.usuarios.models.usuarios import Usuario
 import re
 
 def validar_email(email):

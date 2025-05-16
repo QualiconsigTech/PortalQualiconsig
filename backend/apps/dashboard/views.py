@@ -1,19 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from dashboard.service import (
-    calcular_periodo,
-    get_chamados_total,
-    get_chamados_por_setor,
-    get_top_usuario,
-    get_top_setor,
-    get_evolucao_chamados,
-    get_chamados_abertos,
-    get_chamados_em_atendimento,
-    get_chamados_encerrados
-)
-from rest_framework.decorators import api_view
-from chamados.models import Chamado
+from apps.dashboard.service import *
+from apps.chamados.models import Chamado
 from django.db.models import Count
 
 

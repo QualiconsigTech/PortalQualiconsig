@@ -1,8 +1,8 @@
 import logging
 from rest_framework import status
-from integracoes.serializers import MondayCreateSerializer
-from users.models.usuarios import Usuario
-from integracoes.utilities import Monday
+from apps.integracoes.serializers import MondayCreateSerializer
+from apps.usuarios.models.usuarios import Usuario
+from apps.integracoes.utilities import Monday
 
 logger = logging.getLogger(__name__)
 

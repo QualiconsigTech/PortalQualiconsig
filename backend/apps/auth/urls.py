@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from auth.views import *
+from apps.auth.views import *
 
 urlpatterns = [
     path('cadastrar/usuario/', CadastrarUsuarioView.as_view(), name='cadastrar-usuario'),

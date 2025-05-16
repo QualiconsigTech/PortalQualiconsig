@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from users.models.usuarios import Usuario
-from users.models.links import links
+from apps.usuarios.models.usuarios import Usuario
+from apps.usuarios.models.links import links
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
