@@ -8,13 +8,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('chamados', '0011_perguntafrequente'),
-        ('users', '0008_prioridade'),
+        ('usuarios', '0008_prioridade'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='chamado',
             name='prioridade',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='users.prioridade'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='usuarios.prioridade'),
         ),
     ]

@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('chamados', '0003_remove_chamado_analista'),
-        ('users', '0004_alter_analista_groups_and_more'),
+        ('usuarios', '0004_alter_analista_groups_and_more'),
     ]
 
     operations = [

@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('chamados', '0001_initial'),
-        ('users', '0001_initial'),
+        ('usuarios', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='chamado',
             name='analista',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='users.analista'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='usuarios.analista'),
         ),
         migrations.AddField(
             model_name='chamado',

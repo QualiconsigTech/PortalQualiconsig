@@ -8,14 +8,14 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('chamados', '0003_remove_chamado_analista'),
-        ('users', '0005_usuario_tipo_delete_analista'),
+        ('usuarios', '0005_usuario_tipo_delete_analista'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='chamado',
             name='setor',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='users.setor'),
+            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='usuarios.setor'),
             preserve_default=False,
         ),
     ]

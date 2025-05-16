@@ -47,10 +47,14 @@ class ChamadosAtribuidosView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        chamados = filtra_chamados_atribuidos(request.user)
-        serializer = ChamadoDetalhadoSerializer(chamados, many=True)
-        return Response(serializer.data)
-    
+        try:
+            chamados = filtra_chamados_atribuidos(request.user)
+            serializer = ChamadoDetalhadoSerializer(chamados, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response ({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class EncerrarChamadoView(APIView):
     permission_classes = [IsAuthenticated]
 

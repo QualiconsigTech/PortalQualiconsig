@@ -43,7 +43,7 @@ def atender_chamado(usuario, chamado_id):
 def filtra_chamados_atribuidos(usuario):
     if usuario.tipo != 'analista':
         logger.warning(f"[SERVICE] Usuário ID={usuario.id} tentou acessar chamados atribuídos sem ser analista.")
-        return Chamado.objects.none
+        return Chamado.objects.none()
     
     return Chamado.objects.filter(analista=usuario)
 

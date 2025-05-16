@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(max_length=254)),
                 ('senha', models.CharField(max_length=128)),
                 ('deletado', models.BooleanField(default=False)),
-                ('setor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.setor')),
+                ('setor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='usuarios.setor')),
             ],
         ),
         migrations.CreateModel(
@@ -54,8 +54,8 @@ class Migration(migrations.Migration):
                 ('is_staff', models.BooleanField(default=False)),
                 ('groups', models.ManyToManyField(blank=True, related_name='usuario_set', to='auth.group')),
                 ('user_permissions', models.ManyToManyField(blank=True, related_name='usuario_set', to='auth.permission')),
-                ('cargo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.cargo')),
-                ('setor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.setor')),
+                ('cargo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='usuarios.cargo')),
+                ('setor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='usuarios.setor')),
             ],
             options={
                 'abstract': False,
