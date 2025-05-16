@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'apps.usuarios',
     'apps.chamados',
     'apps.integracoes',
-    'apps.dashboard',
     'apps.financeiro',
     'apps.permissoes',
     'apps.core',

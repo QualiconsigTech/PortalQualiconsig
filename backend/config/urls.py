@@ -25,5 +25,4 @@ urlpatterns = [
     path('api/chamados/', include('apps.chamados.urls')),
     path('api/integracoes/', include('apps.integracoes.urls')),
     path("webhook/github/", github_webhook),
-    path("api/dashboard/", include("apps.dashboard.urls")),
 ]

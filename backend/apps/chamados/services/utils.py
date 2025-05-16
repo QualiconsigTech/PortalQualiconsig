@@ -1,6 +1,6 @@
 import logging
 from apps.chamados.models import Categoria
-from backend.apps.chamados.models.prioridade import Prioridade
+from apps.chamados.models.prioridade import Prioridade
 from django.core.mail import send_mail
 from django.conf import settings
 

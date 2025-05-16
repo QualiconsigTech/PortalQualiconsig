@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import Grupo, Setor, Cargo
+from apps.core.models import Grupo, Setor, Cargo
 from apps.usuarios.models import Usuario
 
 class UsuarioSerializer(serializers.ModelSerializer):

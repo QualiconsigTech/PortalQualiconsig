@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
 from apps.usuarios.models.usuarios import Usuario
 import re
 

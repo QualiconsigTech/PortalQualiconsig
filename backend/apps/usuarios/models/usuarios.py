@@ -1,8 +1,9 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager, Group, Permission
 from django.db import models
-from core.models.setor import Setor
-from core.models.cargo import Cargo
-from core.models.grupo import Grupo 
+from apps.core.models.setor import Setor
+from apps.core.models.cargo import Cargo
+from apps.core.models.grupo import Grupo 
+
 
 TIPOS_USUARIO = (
     ('usuario', 'Usuário Comum'),
@@ -32,7 +33,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     setor = models.ForeignKey(Setor, on_delete=models.PROTECT, related_name="usuarios")
     cargo = models.ForeignKey(Cargo, on_delete=models.PROTECT, related_name="usuarios")
     tipo = models.CharField(max_length=20, choices=TIPOS_USUARIO, default='usuario')
-    
+
+    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
