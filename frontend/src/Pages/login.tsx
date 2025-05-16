@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
         window.location.href = '/alterar-senha';
         return;
       }
-      
+
       const meResponse = await axios.get('http://localhost:8000/api/usuarios/me', {
         headers: {
           Authorization: `Bearer ${response.data.token.access}`
@@ -34,6 +34,9 @@ const LoginPage: React.FC = () => {
       });
 
       const userData = meResponse.data;
+
+      // 👇 Salvando tipo no localStorage
+      localStorage.setItem("tipo", userData.tipo);
 
       if (userData.is_admin) {
         if (userData.tipo === "usuario") {
@@ -48,7 +51,7 @@ const LoginPage: React.FC = () => {
           window.location.href = '/analistas';
         }
       }
-      
+
     } catch (e: any) {
       console.error(e);
       setError(e.response?.data?.detail ?? "Erro desconhecido");

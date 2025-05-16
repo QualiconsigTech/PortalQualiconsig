@@ -88,7 +88,7 @@ const fetchUsuario = async () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token ausente");
   
-      const response = await api.get("/api/chamados/setor/", {
+      const response = await api.get("/api/usuarios/chamados/setor/", {
         headers: { Authorization: `Bearer ${token}` },
       });
   
