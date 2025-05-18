@@ -15,7 +15,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['id', 'nome', 'email', 'password', 'cargo', 'setor', 'deletado', 'is_admin', 'tipo']
+        fields = ['id', 'nome', 'email', 'password', 'cargo', 'setor', 'grupo', 'deletado', 'is_admin', 'tipo']
 
     def validate_email(self, value):
         if not validar_email(value):

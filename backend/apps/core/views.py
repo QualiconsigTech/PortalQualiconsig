@@ -4,23 +4,23 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from .models.grupo import Grupo
 from .models.setor import Setor
 from .models.cargo import Cargo
 from .services import listar_todos_os_links
-from .serializers import SetorSerializer, CargoSerializer, LinkSerializer
+from .serializers import SetorSerializer, CargoSerializer, LinkSerializer, GrupoSerializer
 
 
 class SetorViewSet(ModelViewSet):
     queryset = Setor.objects.all()
     serializer_class = SetorSerializer
-    permission_classes = [IsAuthenticated]
+
 
 class CargoViewSet(ModelViewSet):
     queryset = Cargo.objects.all()
     serializer_class = CargoSerializer
-    permission_classes = [IsAuthenticated]
 
-#Links
+
 class LinksCreateView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -38,3 +38,8 @@ class LinksView(APIView):
         links = listar_todos_os_links()
         serializer = LinkSerializer(links, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class GrupoViewSet(ModelViewSet):
+    queryset = Grupo.objects.all()
+    serializer_class = GrupoSerializer

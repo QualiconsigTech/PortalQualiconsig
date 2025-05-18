@@ -5,6 +5,7 @@ from .views import *
 router = DefaultRouter()
 router.register(r'setores', SetorViewSet, basename='setor')
 router.register(r'cargos', CargoViewSet, basename='cargo')
+router.register(r'grupos', GrupoViewSet, basename='grupo')
 
 urlpatterns = [
     path('', include(router.urls)),
