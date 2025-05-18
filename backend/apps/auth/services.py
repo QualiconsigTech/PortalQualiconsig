@@ -76,3 +76,7 @@ def deletar_usuario(tipo, id, user):
     usuario.save()
     logger.info(f"[AUTH] {tipo.capitalize()} ID={id} marcado como deletado por admin ID={user.id}")
     return {'mensagem': f'{tipo.capitalize()} deletado com sucesso.'}
+
+def obter_dados_do_usuario(usuario):
+    logger.info(f"[SERVICE] Obtendo dados do usuário ID={usuario.id}")
+    return usuario 

@@ -12,7 +12,3 @@ def listar_chamados_do_usuario(usuario):
     
     logger.info(f"[SERVICE] Listando chamados do usuário ID={usuario.id}")
     return Chamado.objects.filter(usuario=usuario)
-
-def obter_dados_do_usuario(usuario):
-    logger.info(f"[SERVICE] Obtendo dados do usuário ID={usuario.id}")
-    return usuario 

@@ -4,8 +4,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import APIException, PermissionDenied
-from apps.auth.services import *
 from apps.usuarios.models.usuarios import Usuario
+from apps.auth.serializers import *
+from apps.auth.services import *
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +57,11 @@ class DeletarUsuarioView(APIView):
             return Response({'erro': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class UsuarioLogadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        usuario = obter_dados_do_usuario(request.user)
+        serializer = UsuarioLogadoSerializer(usuario)
+        return Response(serializer.data)

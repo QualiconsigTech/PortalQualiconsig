@@ -3,9 +3,12 @@ from apps.core.models import Grupo, Setor, Cargo
 from apps.usuarios.models import Usuario
 
 class UsuarioSerializer(serializers.ModelSerializer):
-    grupo = serializers.SlugRelatedField(slug_field="nome", queryset=Grupo.objects.all())
-    setor = serializers.SlugRelatedField(slug_field="nome", queryset=Setor.objects.all())
-    cargo = serializers.SlugRelatedField(slug_field="nome", queryset=Cargo.objects.all())
+    grupos = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Grupo.objects.all()
+    )
+    setor = serializers.PrimaryKeyRelatedField(queryset=Setor.objects.all())
+    cargo = serializers.PrimaryKeyRelatedField(queryset=Cargo.objects.all())
 
     class Meta:
         model = Usuario
@@ -13,7 +16,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "id",
             "nome",
             "email",
-            "grupo",
+            "grupos",
             "setor",
             "cargo",
             "tipo",
@@ -23,3 +26,4 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "last_login"
         ]
         read_only_fields = ["id", "last_login"]
+

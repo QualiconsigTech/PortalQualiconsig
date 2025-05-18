@@ -1,9 +1,8 @@
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager, Group, Permission
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from apps.core.models.setor import Setor
 from apps.core.models.cargo import Cargo
-from apps.core.models.grupo import Grupo 
-
+from apps.core.models.grupo import Grupo
 
 TIPOS_USUARIO = (
     ('usuario', 'Usuário Comum'),
@@ -22,14 +21,13 @@ class UsuarioManager(BaseUserManager):
 
     def create_superuser(self, email, senha=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_admin', True)
         return self.create_user(email, senha, **extra_fields)
 
-
-class Usuario(AbstractBaseUser, PermissionsMixin):
+class Usuario(AbstractBaseUser):
     nome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    grupo = models.ForeignKey(Grupo, on_delete=models.PROTECT, related_name="usuarios")
+    grupos = models.ManyToManyField(Grupo, related_name="usuarios", blank=True)
     setor = models.ForeignKey(Setor, on_delete=models.PROTECT, related_name="usuarios")
     cargo = models.ForeignKey(Cargo, on_delete=models.PROTECT, related_name="usuarios")
     tipo = models.CharField(max_length=20, choices=TIPOS_USUARIO, default='usuario')
@@ -37,13 +35,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
-
-    groups = models.ManyToManyField(Group, related_name='usuario_set', blank=True)
-    user_permissions = models.ManyToManyField(Permission, related_name='usuario_set', blank=True)
     deletado = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nome', 'grupo', 'setor', 'cargo', 'tipo']
+    REQUIRED_FIELDS = ['nome', 'setor', 'cargo', 'tipo']
 
     objects = UsuarioManager()
 

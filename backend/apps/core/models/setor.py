@@ -1,8 +1,9 @@
 from django.db import models
+from apps.core.models.grupo import Grupo
 
 class Setor(models.Model):
     nome = models.CharField(max_length=100)
-    grupo = models.ForeignKey('auth.Group', on_delete=models.CASCADE, related_name='setores')
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='setores')
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:

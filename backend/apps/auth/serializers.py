@@ -15,7 +15,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['id', 'nome', 'email', 'password', 'cargo', 'setor', 'grupo', 'deletado', 'is_admin', 'tipo']
+        fields = ['id', 'nome', 'email', 'password', 'cargo', 'setor', 'grupos', 'deletado', 'is_admin', 'tipo']
 
     def validate_email(self, value):
         if not validar_email(value):
@@ -32,9 +32,29 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        grupos_data = validated_data.pop('grupos', [])  
         password = validated_data.pop('password')
+
         user = Usuario(**validated_data)
         user.set_password(password)
         user.save()
+
+        user.grupos.set(grupos_data) 
+
         return user
+    
+class UsuarioLogadoSerializer(serializers.ModelSerializer):
+    setor = serializers.CharField(source="setor.nome")
+    cargo = serializers.StringRelatedField()
+    grupos = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field="nome"
+    )
+
+    class Meta:
+        model = Usuario
+        fields = ['id', 'nome', 'email', 'tipo', 'setor', 'cargo', 'grupos', 'is_admin', 'deletado']
+
+
 

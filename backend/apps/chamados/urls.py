@@ -5,7 +5,6 @@ from apps.chamados.views.analista import *
 from apps.chamados.views.comentarios import *
 from apps.chamados.views.faq import *
 from apps.chamados.views.notificacoes import *
-from apps.chamados.views.usuario import *
 from apps.chamados.views.utils import *
 from apps.chamados.views.dashboard import *
 
@@ -43,24 +42,23 @@ urlpatterns = [
     path('analista/admin/<str:setor_nome>/', ChamadosPorSetorAdminView.as_view(), name='chamados-admin-setor'),
 
     ## USUARIOS
-     path('meus/', ChamadosDoUsuarioView.as_view(), name='chamados-do-usuario'),
+     path('meus/', ChamadosDoSetorView.as_view(), name='chamados-do-usuario'),
 
     ## USUARIO ADMIN
     path('setor/', ChamadosDoSetorView.as_view(), name='chamados-do-setor'),
-    path('me/', UsuarioLogadoView.as_view(), name='usuario-logado'),
 
     ## LISTAGEM
     path("categorias/", CategoriasListView.as_view(), name="categorias-list"),
     path("prioridades/", PrioridadesListView.as_view(), name="prioridades-list"),
 
     ## DASHBOARD
-    path("chamados-total/", ChamadosTotalViews.as_view()),
-    path("chamados-por-setor/", ChamadosPorSetorViews.as_view()),
-    path("top-usuario/", TopUsuarioViews.as_view()),
-    path("top-setor/", TopSetorViews.as_view()),
-    path("evolucao-chamados/", EvolucaoChamadosViews.as_view()),
-    path("chamados-por-categoria/", ChamadosPorCategoriaView.as_view()),
-    path("chamados-abertos/", ChamadosAbertosViews.as_view()),
-    path("chamados-em-atendimento/", ChamadosEmAtendimentoViews.as_view()),
-    path("chamados-encerrados/", ChamadosEncerradosViews.as_view()),
+    path("dashboard/chamados-total/", ChamadosTotalViews.as_view()),
+    path("dashboard/chamados-por-setor/", ChamadosPorSetorViews.as_view()),
+    path("dashboard/top-usuario/", TopUsuarioViews.as_view()),
+    path("dashboard/top-setor/", TopSetorViews.as_view()),
+    path("dashboard/evolucao-chamados/", EvolucaoChamadosViews.as_view()),
+    path("dashboard/chamados-por-categoria/", ChamadosPorCategoriaView.as_view()),
+    path("dashboard/chamados-abertos/", ChamadosAbertosViews.as_view()),
+    path("dashboard/chamados-em-atendimento/", ChamadosEmAtendimentoViews.as_view()),
+    path("dashboard/chamados-encerrados/", ChamadosEncerradosViews.as_view()),
 ]
