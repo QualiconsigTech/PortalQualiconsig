@@ -1,22 +1,22 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { LogOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import FinanceiroHome from "@/components/financeiro/FinanceiroHome";
+import TecnologiaHome from "@/components/tecnologia/TecnologiaHome";
+import ComercialHome from "@/components/comercial/ComercialHome";
 
 
-interface TelaInicialProps {}
 
-export const TelaInicial = ({}: TelaInicialProps) => {
-  const router = useRouter();
+
+interface TelaInicialProps {
+  nomeUsuario?: string;
+}
+
+export default function TelaInicial(props: TelaInicialProps) {
+
+  const {nomeUsuario = "Usuario",} = props;
   const [grupos, setGrupos] = useState<string[]>([]);
   const [grupoSelecionado, setGrupoSelecionado] = useState<string>("");
-
-  const secoes: Record<string, string> = {
-    Tecnologia: "/tecnologia",
-    Comercial: "/comercial",
-    Financeiro: "/financeiro",
-    Marketing: "/marketing",
-    Diretoria: "/diretoria",
-  };
+  const [sidebarAberto, setSidebarAberto] = useState(true);
 
   useEffect(() => {
     const storageGrupos = localStorage.getItem("grupos");
@@ -31,31 +31,58 @@ export const TelaInicial = ({}: TelaInicialProps) => {
     }
   }, []);
 
-  const handleAcesso = () => {
-    const rota = secoes[grupoSelecionado];
-    if (rota) {
-      router.push(rota);
-    } else {
-      alert(`Nenhuma rota configurada para o grupo: ${grupoSelecionado}`);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
+    localStorage.removeItem("grupos");
+    window.location.href = "/login";
+  };
+
+  const renderConteudo = () => {
+    switch (grupoSelecionado) {
+      case "Tecnologia":
+        return <TecnologiaHome />;
+      case "Financeiro":
+        return <FinanceiroHome />;
+      case "Comercial":
+        return <ComercialHome />;
+      default:
+        return (
+          <div className="p-8">
+            <h1 className="text-2xl font-bold text-[#041161] mb-2">
+              Bem-vindo ao Portal Qualiconsig
+            </h1>
+            <p className="text-gray-600">Selecione uma área no menu lateral para começar.</p>
+          </div>
+        );
     }
   };
-  const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("refresh");
-  localStorage.removeItem("user");
-  localStorage.removeItem("grupos");
-  window.location.href = "/login";
-};
-
 
   return (
-    <div className="flex min-h-screen bg-[#f9f9fb]">
-      {/* Sidebar */}
-      <aside className="bg-white shadow w-64 p-4 flex flex-col justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-[#041161] mb-6">Portal Qualiconsig</h2>
+  <div className="flex min-h-screen bg-[#f9f9fb]">
+    {/* Sidebar */}
+    <aside
+      className={`bg-white shadow flex flex-col overflow-hidden transition-all duration-300 ${
+        sidebarAberto ? "w-64" : "w-0 md:w-20"
+      }`}
+    >
+      <div className="flex items-center justify-between px-4 pt-4">
+        {sidebarAberto && (
+          <h1 className="text-xl font-bold text-[#041161] whitespace-nowrap">Portal Qualiconsig</h1>
+        )}
+        <button
+          onClick={() => setSidebarAberto(!sidebarAberto)}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          {sidebarAberto ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        </button>
+      </div>
+
+      {sidebarAberto && (
+        <div className="flex-1 flex flex-col items-center px-6 mt-12">
           <p className="text-sm text-black-500 font-semibold mb-2">MENU</p>
-          <nav className="space-y-2">
+          <nav className="space-y-2 w-full">
             {grupos.map((grupo) => (
               <button
                 key={grupo}
@@ -71,42 +98,36 @@ export const TelaInicial = ({}: TelaInicialProps) => {
             ))}
           </nav>
         </div>
-        <div>
+      )}
+
+      {sidebarAberto && (
+        <div className="px-6 py-4 border-t border-gray-200">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:text-red-600 transition-colors"
+            className="w-full flex items-center gap-2 text-sm text-gray-700 hover:text-red-500 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
-            SAIR
+            <LogOut size={18} /> SAIR
           </button>
         </div>
-      </aside>
+      )}
+    </aside>
 
-      {/* Área principal */}
-      <main className="flex-1">
-        <header className="bg-[#00247A] text-white px-6 py-4 flex justify-between items-center shadow-md">
+    {/* Área principal */}
+    <main className="flex-1 transition-all duration-300">
+      <header className="bg-[#00247A] text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div className="flex items-center gap-3">
           <img
             src="/images/Qualiconsig-Logo-branco-1-1024x341.png"
             alt="Logo Qualiconsig"
-            className="h-10"
+            className="h-15"
           />
-          <p className="text-white">Olá, teste</p>
-        </header>
-
-        <div className="p-8">
-          <h1 className="text-2xl font-bold text-[#041161] mb-2">
-            Bem-vindo ao Portal Qualiconsig
-          </h1>
-          <p className="text-gray-600 mb-6">Selecione a seção que deseja acessar:</p>
-
-          <button
-            onClick={handleAcesso}
-            className="bg-[#00247A] text-white px-8 py-3 rounded-md hover:bg-[#001b5e] font-semibold"
-          >
-            Acessar {grupoSelecionado}
-          </button>
         </div>
-      </main>
-    </div>
-  );
-};
+        <p className="text-white">Olá, {nomeUsuario}</p>
+      </header>
+
+      {/* Conteúdo dinâmico */}
+      {renderConteudo()}
+    </main>
+  </div>
+);
+}
