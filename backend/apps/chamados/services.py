@@ -37,8 +37,6 @@ def listar_historico_chamados(usuario_id):
 
 def detalhes_chamado(chamado_id, usuario):
     chamado = get_object_or_404(Chamado, id=chamado_id)
-    if chamado.usuario != usuario and not usuario.is_admin:
-        return None, status.HTTP_403_FORBIDDEN
     serializer = ChamadoDetalhadoSerializer(chamado)
     return serializer.data, status.HTTP_200_OK
 

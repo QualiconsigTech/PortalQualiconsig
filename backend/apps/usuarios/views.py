@@ -8,6 +8,7 @@ from apps.usuarios.serializers import UsuarioLogadoSerializer, LinkSerializer
 from apps.usuarios.services import *
 from apps.usuarios.utils import *
 from apps.usuarios.models.usuarios import Usuario
+from django.utils import timezone
 
 #ANALISTA COMUM
 class ChamadosDoAnalistaView(APIView):
@@ -96,6 +97,31 @@ class ChamadosDoUsuarioView(APIView):
         chamados = listar_chamados_do_usuario(request.user)
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
+
+class CancelarChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        try:
+            chamado = get_object_or_404(Chamado, id=chamado_id)
+
+            # Verifica se o chamado já foi atribuído
+            if chamado.analista:
+                return Response(
+                    {"erro": "Chamado já atribuído, não pode ser cancelado."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            chamado.solucao = request.data.get("solucao", "")
+            chamado.encerrado_em = timezone.now()
+            chamado.save()
+
+            return Response(
+                {"mensagem": f"Chamado '{chamado.titulo}' cancelado com sucesso."}
+            )
+
+        except Exception as e:
+            return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 #USUARIOS ADMIN
 class ChamadosDoSetorView(APIView):

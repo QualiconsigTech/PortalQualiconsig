@@ -14,8 +14,8 @@ urlpatterns = [
 
     ## USUARIOS
      path('chamados/meus/', ChamadosDoUsuarioView.as_view(), name='chamados-do-usuario'),
-
-    ## USUARIO ADMIN
+    
+        ## USUARIO ADMIN
     path('chamados/setor/', ChamadosDoSetorView.as_view(), name='chamados-do-setor'),
     path('me/', UsuarioLogadoView.as_view(), name='usuario-logado'),
     path('reset-password/', EnviarResetSenhaView.as_view(), name='enviar-reset-senha'),
