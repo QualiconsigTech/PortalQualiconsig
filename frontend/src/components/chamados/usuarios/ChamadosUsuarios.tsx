@@ -67,7 +67,7 @@ export default function ChamadosUsuarios() {
       setLoading(true);
       setErro(null);
       try {
-      const response = await api.get("/api/chamados/meus/", {
+      const response = await api.get("/api/chamados/usuario/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!Array.isArray(response.data)) {

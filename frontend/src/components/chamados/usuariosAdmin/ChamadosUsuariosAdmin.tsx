@@ -180,7 +180,7 @@ export default function ChamadosUsuariosAdmin() {
     if (activeView === "meus") {
       fetchChamados("/api/chamados/meus/");
     } else if (activeView === "analistas") {
-      fetchChamados("/api/chamados/setor/");
+      fetchChamados("/api/core/setores/");
     }
   }, [activeView]);
   useEffect(() => {
