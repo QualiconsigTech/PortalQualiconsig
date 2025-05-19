@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/auth/', include('apps.auth.urls')),
     path('api/usuarios/', include('apps.usuarios.urls')),
     path('api/chamados/', include('apps.chamados.urls')),
+    path('api/financeiro/', include('apps.financeiro.urls')),
     path('api/integracoes/', include('apps.integracoes.urls')),
     path("webhook/github/", github_webhook),
 ]
