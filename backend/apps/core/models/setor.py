@@ -12,4 +12,4 @@ class Setor(models.Model):
         verbose_name_plural = 'Setores'
 
     def __str__(self):
-        return f'{self.nome} ({self.grupo.name})'
+        return f'{self.nome} ({self.grupo.nome})'
