@@ -7,6 +7,7 @@ from apps.chamados.views.faq import *
 from apps.chamados.views.notificacoes import *
 from apps.chamados.views.utils import *
 from apps.chamados.views.dashboard import *
+from apps.chamados.views.usuario import *
 
 urlpatterns = [
     ## CHAMADOS
@@ -43,9 +44,8 @@ urlpatterns = [
 
     ## USUARIOS
      path('meus/', ChamadosDoSetorView.as_view(), name='chamados-do-usuario'),
+     path('usuario/', ChamadosDoUsuarioView.as_view(), name='chamados-do-usuario'),
 
-    ## USUARIO ADMIN
-    path('setor/', ChamadosDoSetorView.as_view(), name='chamados-do-setor'),
 
     ## LISTAGEM
     path("categorias/", CategoriasListView.as_view(), name="categorias-list"),

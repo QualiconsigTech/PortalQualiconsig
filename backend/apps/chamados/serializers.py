@@ -52,7 +52,7 @@ class NotificacaoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notificacao
-        fields = ['id', 'mensagem', 'visualizado', 'criado_em', 'chamado'] 
+        fields = ['id', 'mensagem', 'visualizado', 'criado_em', 'chamado_id'] 
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
