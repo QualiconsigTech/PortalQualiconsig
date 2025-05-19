@@ -12,6 +12,8 @@ import Ajuda from "@/components/Ajuda";
 import Qlinks from "@/components/Qlinks";
 import { Chamado } from "@/utils/chamadoUtils";
 import Dashboard from "@/components/dashboard";
+import { toBase64 } from "@/utils/chamadoUtils";
+
 
 interface Notificacao {
   id: number;
@@ -64,6 +66,9 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [solucao, setSolucao] = useState("");
   const [tokenExpirado, setTokenExpirado] = useState(false);
+  const [anexos, setAnexos] = useState<FileList | null>(null);
+  const [comentarios, setComentarios] = useState("");
+  const [isEncerrando, setIsEncerrando] = useState(false);
 
 
   useEffect(() => {
@@ -223,13 +228,53 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       console.error("Erro ao abrir modal de chamado do USUÁRIO:", error);
     }
   };
+
+  const encerrarChamado = async () => {
+    if (!chamadoSelecionado || !solucao.trim()) {
+      alert("Solução é obrigatória.");
+      return;
+    }
+  
+    setIsEncerrando(true);
+    const token = localStorage.getItem("token");
+  
+    try {
+      const base64Arquivos = anexos
+        ? await Promise.all(
+            Array.from(anexos).map(async (file) => ({
+              nome: file.name,
+              conteudo: await toBase64(file)
+            }))
+          )
+        : [];
+  
+      const payload = {
+        solucao,
+        comentarios,
+        arquivos: JSON.stringify(base64Arquivos),
+      };
+  
+      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      alert("Chamado encerrado com sucesso.");
+      setModalAberto(false);
+    } catch (err) {
+      console.error("Erro ao encerrar chamado:", err);
+      alert("Erro ao encerrar chamado.");
+    } finally {
+      setIsEncerrando(false);
+    }
+  };
+  
   
   const abrirModalChamadosAnalista = async (chamadoId: number, notificacaoId?: number) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
   
-      const { data } = await api.get(`/api/usuarios/chamados/${chamadoId}/`, {
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -644,7 +689,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             aberto={modalAberto}
             onClose={() => setModalAberto(false)}
             onAtender={() => {}}
-            onEncerrar={() => {}}
+            onEncerrar={encerrarChamado}
             podeAtender={perfilUsuario !== "usuario"}
             podeEncerrar={
               perfilUsuario !== "usuario" &&

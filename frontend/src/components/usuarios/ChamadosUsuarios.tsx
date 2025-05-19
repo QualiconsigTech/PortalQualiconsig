@@ -369,6 +369,7 @@ export default function ChamadosUsuarios() {
           setProdutoSelecionado={setProdutoSelecionado}
           quantidadeUsada={quantidadeUsada}
           setQuantidadeUsada={setQuantidadeUsada}
+          atualizarListaChamados={fetchChamados}
         />
       )}
     </DashboardLayout>

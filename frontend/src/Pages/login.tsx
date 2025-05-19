@@ -36,6 +36,11 @@ const LoginPage: React.FC = () => {
 
       const userData = meResponse.data;
 
+      // Armazena tipo e admin no localStorage
+      localStorage.setItem("tipo", userData.tipo); // "usuario" ou "analista"
+      localStorage.setItem("is_admin", userData.is_admin); // true ou false
+
+    
       if (userData.is_admin) {
         if (userData.tipo === "usuario") {
           window.location.href = '/usuarioadmin';

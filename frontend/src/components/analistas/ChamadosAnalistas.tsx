@@ -34,6 +34,7 @@ export default function ChamadosAnalistas() {
   const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
+  
 
 const fetchUsuario = async () => {
   try {
@@ -121,53 +122,31 @@ const fetchUsuario = async () => {
   };
 
   const encerrarChamado = async () => {
-    if (!chamadoSelecionado || !solucao.trim()) {
-      return;
-    }
-    
-  
+    if (!chamadoSelecionado || !solucao.trim()) return;
     setIsEncerrando(true);
+  
     const token = localStorage.getItem("token");
   
+    const payload = {
+      solucao,
+      comentarios,
+      arquivos: anexos ? JSON.stringify(await Promise.all(
+        Array.from(anexos).map(async (file) => ({
+          nome: file.name,
+          conteudo: await toBase64(file)
+        }))
+      )) : "[]"
+    };
+  
     try {
-      const token = localStorage.getItem("token");
-      if (usarProduto && produtoSelecionado) {
-        await api.post("/api/chamados/produtos/usar/", {
-          produto_id: produtoSelecionado,
-          quantidade: quantidadeUsada,
-        }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-  
-      const base64Arquivos = anexos
-        ? await Promise.all(
-            Array.from(anexos).map(async (file) => {
-              const conteudo = await toBase64(file);
-              return { nome: file.name, conteudo };
-            })
-          )
-        : [];
-  
-      const payload = {
-        solucao,
-        comentarios,
-        arquivos: JSON.stringify(base64Arquivos),
-      };
-  
       await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
-  
-      setToastMensagem("Chamado encerrado com sucesso.");
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 1000);
-      fetchChamados();
+      alert("Chamado encerrado com sucesso.");
       setModalAberto(false);
-  
     } catch (err) {
-      setToastMensagem("Erro ao encerrar o chamado.");
-      setShowToast(true);
+      console.error("Erro ao encerrar chamado:", err);
+      alert("Erro ao encerrar chamado.");
     } finally {
       setIsEncerrando(false);
     }
@@ -285,6 +264,7 @@ const fetchUsuario = async () => {
           setProdutoSelecionado={setProdutoSelecionado}
           quantidadeUsada={quantidadeUsada}
           setQuantidadeUsada={setQuantidadeUsada}
+          atualizarListaChamados={fetchChamados}
         />
       )}
     </DashboardLayout>
