@@ -166,11 +166,11 @@ const Relatorios: React.FC = () => {
     setLoading(true);
     try {
       const url = file.name.toLowerCase().includes("repasse")
-      ? "http://localhost:8000/api/relatorios/upload-repasse-cessao/"
+      ? "http://localhost:8000/api/financeiro/upload-repasse-cessao/"
       : file.name.toLowerCase().includes("fatura")
-      ? "http://localhost:8000/api/relatorios/upload-fatura-comissao/"
+      ? "http://localhost:8000/api/financeiro/upload-fatura-comissao/"
       : file.name.toLowerCase().includes("seguro")
-      ? "http://localhost:8000/api/relatorios/upload-seguro-cartao/"
+      ? "http://localhost:8000/api/financeiro/upload-seguro-cartao/"
       : "";
 
 
@@ -195,14 +195,14 @@ const Relatorios: React.FC = () => {
     setGerando(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/relatorios/gerar-relatorio-final/", {
+      const response = await fetch("http://localhost:8000/api/financeiro/gerar-relatorio-final/", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error(await response.text());
 
-      const downloadResponse = await fetch("http://localhost:8000/api/relatorios/download-relatorio-final/", {
+      const downloadResponse = await fetch("http://localhost:8000/api/financeiro/download-relatorio-final/", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
