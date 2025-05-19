@@ -50,8 +50,8 @@ export default function CadastroFuncionario() {
 
       try {
         const [setoresRes, cargosRes] = await Promise.all([
-          api.get("/api/usuarios/setores/", { headers }),
-          api.get("/api/usuarios/cargos/", { headers }),
+          api.get("/api/core/setores/", { headers }),
+          api.get("/api/core/cargos/", { headers }),
         ]);
         setSetores(setoresRes.data);
         setCargos(cargosRes.data);

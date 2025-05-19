@@ -25,7 +25,7 @@ const Qlinks: React.FC = () => {
       if (!token) return;
   
       try {
-        const response = await api.get("/api/usuarios/links/", {
+        const response = await api.get("/api/core/links/", {
           headers: { Authorization: `Bearer ${token}` },
         });
   

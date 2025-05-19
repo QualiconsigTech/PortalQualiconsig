@@ -1,52 +1,53 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Mail, Eye, EyeOff, Lock } from 'lucide-react';
-import axios from 'axios';
+import React, { useState } from "react";
+import { Mail, Eye, EyeOff, Lock } from "lucide-react";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setError] = useState('');
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/login/', {
-        email: email,
-        password: password
+       const response = await axios.post("http://localhost:8000/api/auth/login/", {
+        email,
+        password,
       });
 
-      localStorage.setItem('token', response.data.token.access);
-      localStorage.setItem('refresh', response.data.token.refresh);
+      const accessToken = response.data.token.access;
+      const refreshToken = response.data.token.refresh;
 
-      
-      const meResponse = await axios.get('http://localhost:8000/api/usuarios/me', {
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("refresh", refreshToken);
+
+      const meResponse = await axios.get("http://localhost:8000/api/auth/me/", {
         headers: {
-          Authorization: `Bearer ${response.data.token.access}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       const userData = meResponse.data;
 
-      if (userData.is_admin) {
-        if (userData.tipo === "usuario") {
-          window.location.href = '/usuarioadmin';
-        } else if (userData.tipo === "analista") {
-          window.location.href = '/analistasadmin';
-        }
-      } else {
-        if (userData.tipo === "usuario") {
-          window.location.href = '/usuario';
-        } else if (userData.tipo === "analista") {
-          window.location.href = '/analistas';
-        }
-      }
-      
+      console.log("[LOGIN] Dados do usuário:", userData);
+
+      const grupos = Array.isArray(userData.grupos) ? userData.grupos : [];
+
+      console.log("[LOGIN] Grupos recebidos:", grupos);
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("grupos", JSON.stringify(grupos));
+
+      router.push("/tela-inicial");
     } catch (e: any) {
-      console.error(e);
+      console.error("[LOGIN] Erro:", e);
       setError(e.response?.data?.detail ?? "Erro desconhecido");
     }
   };
@@ -71,12 +72,13 @@ const LoginPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className={`block w-full pl-10 pr-3 py-2 border ${
-                  errors ? 'border-red-500' : 'border-gray-300'
+                  errors ? "border-red-500" : "border-gray-300"
                 } rounded-md shadow-sm focus:ring-[#00247A] focus:border-[#00247A] bg-white text-[#010203]`}
                 placeholder="Digite seu email"
               />
             </div>
           </div>
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-[#010203]">
               Senha
@@ -92,7 +94,7 @@ const LoginPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className={`block w-full pl-10 pr-10 py-2 border ${
-                  errors ? 'border-red-500' : 'border-gray-300'
+                  errors ? "border-red-500" : "border-gray-300"
                 } rounded-md shadow-sm focus:ring-[#00247A] focus:border-[#00247A] bg-white text-[#010203]`}
                 placeholder="Sua senha"
               />
@@ -105,12 +107,14 @@ const LoginPage: React.FC = () => {
             </div>
             {errors && <p className="text-red-500 text-xs">{errors}</p>}
           </div>
+
           <button
             type="submit"
             className="w-full text-white py-2 rounded-md bg-[#00247A] hover:bg-[#001b5e]"
           >
             Entrar
           </button>
+
           <div className="text-center">
             {errors && <span className="text-red-500 text-sm">{errors}</span>}
           </div>

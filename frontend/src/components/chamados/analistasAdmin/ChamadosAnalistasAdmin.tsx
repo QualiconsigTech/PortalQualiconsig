@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { api } from "@/services/api";
 import { TableOfContents } from "lucide-react";
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { ChamadoModal } from "@/components/ChamadoModal";
+import { ChamadoModal } from "@/components/chamados/ChamadoModal";
 import { Chamado, getStatus } from "@/utils/chamadoUtils";
 
 export default function ChamadosAnalistasAdmin() {
@@ -25,10 +25,6 @@ export default function ChamadosAnalistasAdmin() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [activeView, setActiveView] = useState("todos");
-  const [produtos, setProdutos] = useState([]);
-  const [usarProduto, setUsarProduto] = useState(false);
-  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
-  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const [perfilUsuario, setPerfilUsuario] = useState<string>("");
   const redirecionarParaLogin = () => {
@@ -39,7 +35,7 @@ export default function ChamadosAnalistasAdmin() {
     const token = localStorage.getItem("token");
     if (!token) return redirecionarParaLogin();
     try {
-      const response = await api.get("/api/usuarios/me", {
+      const response = await api.get("/api/auth/me/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNomeUsuario(response.data.nome);
@@ -80,18 +76,21 @@ export default function ChamadosAnalistasAdmin() {
 
   useEffect(() => {
     fetchUsuario();
-    handleFiltro("todos");
   }, []);
+
+  useEffect(() => {
+    if (activeView) {
+      const rota =
+        activeView === "todos"
+          ? "/api/chamados/analista/admin/"
+          : `/api/chamados/analista/admin/${activeView}/`;
+      buscarChamados(rota);
+    }
+  }, [activeView]);
+
   const handleFiltro = (filtro: string) => {
     setActiveView(filtro);
-    if (filtro === "todos") {
-      buscarChamados("/api/usuarios/chamados/admin/");
-    } else {
-      buscarChamados(`/api/usuarios/chamados/admin/${filtro}/`);
-    }
   };
-
-  console.log("perfil aqui:",perfilUsuario)
 
   const exibirMensagem = (texto: string) => {
     setMensagem(texto);
@@ -190,12 +189,6 @@ export default function ChamadosAnalistasAdmin() {
           isAtendendo={false}
           isEncerrando={false}
           modoAdmin={true}
-          usarProduto={usarProduto}
-          setUsarProduto={setUsarProduto}
-          produtoSelecionado={produtoSelecionado}
-          setProdutoSelecionado={setProdutoSelecionado}
-          quantidadeUsada={quantidadeUsada}
-          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
 

@@ -3,18 +3,18 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
-import { AbrirChamadoModal } from "@/components/AbrirChamadoModal";
-import PerguntasFrequentes from "@/components/PerguntasFrequentes";
-import { ChamadoModal } from "@/components/ChamadoModal";
-import { getStatus, toBase64, Chamado } from "@/utils/chamadoUtils";
+import { AbrirChamadoModal } from "@/components/chamados/AbrirChamadoModal";
+import { ChamadoModal } from "@/components/chamados/ChamadoModal"; 
+import { getStatus, toBase64, getNomeAnalista, Chamado} from "@/utils/chamadoUtils";
 
 
-export default function ChamadosUsuarios() {
+
+export default function ChamadosUsuariosAdmin() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
-  const [activeView, setActiveView] = useState("meus");
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
+  const [activeView, setActiveView] = useState("meus");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
@@ -23,20 +23,15 @@ export default function ChamadosUsuarios() {
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [categorias, setCategorias] = useState([]);
-  const [setores, setSetores] = useState<{ id: number; nome: string; area_id: number }[]>([]);
+  const [setores, setSetores] = useState([]);
   const [prioridades, setPrioridades] = useState<{ id: number; nome: string }[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
-  const [produtos, setProdutos] = useState([]);
-  const [usarProduto, setUsarProduto] = useState(false);
-  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
-  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const [isEncerrando, setIsEncerrando] = useState(false);
-  const [perfilUsuario, setPerfilUsuario] = useState<string>("");
   const handleTokenError = (error: any) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("token");
@@ -45,33 +40,26 @@ export default function ChamadosUsuarios() {
   };
   const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      console.warn("Token ausente. Redirecionando para login.");
-      window.location.href = "/login";
-      return;
-    }
+    if (!token) return;
     try {
-      const response = await api.get("/api/usuarios/me", {
+      const response = await api.get("/api/auth/me/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNomeUsuario(response.data.nome);
-      setPerfilUsuario(response.data.tipo);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
       handleTokenError(error);
     }
   };
-  
-
-
-  const fetchChamados = async () => {
     
+  const fetchChamados = async (url: string) => {
+    try {
       const token = localStorage.getItem("token");
       if (!token) return;
       setLoading(true);
       setErro(null);
-      try {
-      const response = await api.get("/api/usuarios/chamados/meus/", {
+  
+      const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!Array.isArray(response.data)) {
@@ -85,7 +73,7 @@ export default function ChamadosUsuarios() {
       });
 
       setChamados(ordenado);
-    } catch (error) {
+      } catch (error) {
       console.error("Erro ao buscar chamados", error);
       setErro("Erro ao buscar chamados");
       handleTokenError(error);
@@ -116,14 +104,13 @@ export default function ChamadosUsuarios() {
         arquivos: JSON.stringify(base64Arquivos),
       };
   
-      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
+      await api.post(`/api/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
       setToastMensagem("Chamado encerrado com sucesso.");
       setShowToast(true);
       setTimeout(() => setShowToast(false), 1000);
-      fetchChamados();
       setModalAberto(false);
   
     } catch (err) {
@@ -133,13 +120,12 @@ export default function ChamadosUsuarios() {
       setIsEncerrando(false);
     }
   };
-  
 
   const fetchCategorias = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const response = await api.get("/api/usuarios/categorias/", {
+      const response = await api.get("/api/chamados/categorias/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCategorias(response.data);
@@ -148,25 +134,25 @@ export default function ChamadosUsuarios() {
       handleTokenError(error);
     }
   };
-
-    const fetchSetores = async () => {
+  
+  const fetchSetores = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await api.get("/api/core/setores/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSetores(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar setores", error);
+      handleTokenError(error);
+    }
+  };
+  const fetchPrioridades = async () => { 
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const response = await api.get("/api/usuarios/setores/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSetores(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar setores", error);
-        handleTokenError(error);
-      }
-    };
-    const fetchPrioridades = async () => { 
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      try {
-        const response = await api.get("/api/usuarios/prioridades/", {
+        const response = await api.get("/api/chamados/prioridades/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setPrioridades(response.data);
@@ -175,12 +161,12 @@ export default function ChamadosUsuarios() {
         handleTokenError(error);
       }
     };
-
+  
   useEffect(() => {
     const loadAll = async () => {
       await Promise.all([
         fetchUsuario(),
-        fetchChamados(),
+        fetchChamados("/api/chamados/meus/"),
         fetchCategorias(),
         fetchSetores(),
         fetchPrioridades(),
@@ -188,20 +174,30 @@ export default function ChamadosUsuarios() {
     };
     loadAll();
   }, []);
+  
+
+  useEffect(() => {
+    if (activeView === "meus") {
+      fetchChamados("/api/chamados/meus/");
+    } else if (activeView === "analistas") {
+      fetchChamados("/api/chamados/setor/");
+    }
+  }, [activeView]);
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => setShowToast(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+  
 
  
   const handleSalvarChamado = async (dados: {
     titulo: string;
     categoria: number;
     prioridade: number;
-    setor: number;
     descricao: string;
+    setor: number;
     anexos: FileList | null;
   }) => {
     try {
@@ -232,8 +228,11 @@ export default function ChamadosUsuarios() {
 
       setToastMensagem("Chamado aberto com sucesso!");
       setShowToast(true); 
+      setTimeout(() => {
+        setShowToast(false);
+      }, 1000);
       setAbrirModalAberto(false);
-      fetchChamados();
+      fetchChamados("/api/chamados/meus/");
     } catch (error) {
       setToastMensagem("Erro ao abrir chamado.");
       setShowToast(true); 
@@ -241,7 +240,7 @@ export default function ChamadosUsuarios() {
       handleTokenError(error);
     }
   };
-
+  
   const abrirModalChamado = (chamado: Chamado) => {
     setChamadoSelecionado(chamado);
     setSolucao(chamado.solucao || "");
@@ -250,15 +249,15 @@ export default function ChamadosUsuarios() {
   };
 
   return (
-    <DashboardLayout
-      nomeUsuario={nomeUsuario}
-      activeView={activeView} 
-      setActiveView={setActiveView} 
-      totalItems={chamados.length} 
-      itemsPerPage={itemsPerPage}             
-      onPageChange={(page) => setCurrentPage(page)} 
-      >
-        {activeView === "faq" && <PerguntasFrequentes />}
+    <DashboardLayout 
+    nomeUsuario={nomeUsuario}
+    activeView={activeView} 
+    setActiveView={setActiveView} 
+    totalItems={chamados.length} 
+    itemsPerPage={itemsPerPage}             
+    onPageChange={(page) => setCurrentPage(page)} 
+    >
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
         <button
@@ -273,61 +272,63 @@ export default function ChamadosUsuarios() {
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
             <tr>
-              <th className="py-2">Nº Chamado</th>
+              <th className="py-2">N° Chamado</th>
               <th className="py-2">Título</th>
               <th className="py-2">Status</th>
               <th className="py-2">Prioridade</th>
-              <th className="py-2">Analista Atribuido</th>
+              <th className="py-2">Atribuído</th>
+              <th className="py-2">Setor</th>
               <th className="py-2">Data</th>
               <th className="py-2">Ações</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="text-center py-6">Carregando chamados...</td>
-              </tr>
-            ) : erro ? (
-              <tr>
-                <td colSpan={6} className="text-center text-red-500 py-6">{erro}</td>
-              </tr>
-            ) : paginatedChamados.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td>
-              </tr>
-            ) : (
-              paginatedChamados.map((chamado) => {
-                const status = getStatus(chamado);
-                return (
-                  <tr
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-6">Carregando chamados...</td>
+                </tr>
+              ) : erro ? (
+                <tr>
+                  <td colSpan={8} className="text-center text-red-500 py-6">{erro}</td>
+                </tr>
+              ) : paginatedChamados.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center text-gray-500 py-6">Nenhum chamado encontrado.</td>
+                </tr>
+              ) : (
+                paginatedChamados.map((chamado) => {
+                  const status = getStatus(chamado);
+                  return (
+                    <tr
                     key={chamado.id}
                     className="border-t hover:bg-gray-50 cursor-pointer"
                     onDoubleClick={() => abrirModalChamado(chamado)}
                   >
-                    <td className="py-2">{chamado.id}</td>
-                    <td className="py-2">{chamado.titulo}</td>
-                    <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
-                    <td className="py-2 text-orange-500">{chamado.prioridade_nome || "--"}</td>
-                    <td className="py-2">{chamado.analista ? chamado.analista.nome : "Não atribuído"}</td>
-                    <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
-                    <td className="py-2">
-                      <button
-                        className="text-gray-700 hover:text-blue-900 transition-colors"
-                        title="Visualizar detalhes"
-                        onClick={() => abrirModalChamado(chamado)}
-                      >
-                        <TableOfContents size={20} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </section>
-
-      {showToast && (
+                      <td className="py-2">{chamado.id}</td>
+                      <td className="py-2">{chamado.titulo}</td>
+                      <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
+                      <td className="py-2 text-orange-500">{chamado.prioridade_nome || "--"}</td>
+                      <td className="py-2">{getNomeAnalista(chamado)}</td>
+                      <td className="py-2">{chamado.setor_nome || "--"}</td>
+                      <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
+                      <td className="py-2">
+                        
+                        <button
+                          className="text-gray-700 hover:text-blue-900 transition-colors"
+                          title="Visualizar detalhes"
+                          onClick={() => abrirModalChamado(chamado)}
+                          >
+                          <TableOfContents size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </section>
+        {showToast && (
         <div
           className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg cursor-pointer z-50 animate-slide-up"
           onClick={() => setShowToast(false)}
@@ -344,8 +345,8 @@ export default function ChamadosUsuarios() {
         setores={setores}
         prioridades={prioridades}
       />
-
-      {chamadoSelecionado && (
+       
+       {chamadoSelecionado && (
         <ChamadoModal
           chamado={chamadoSelecionado}
           aberto={modalAberto}
@@ -363,12 +364,6 @@ export default function ChamadosUsuarios() {
           isAtendendo={false}
           isEncerrando={isEncerrando}
           modoAdmin={false}
-          usarProduto={usarProduto}
-          setUsarProduto={setUsarProduto}
-          produtoSelecionado={produtoSelecionado}
-          setProdutoSelecionado={setProdutoSelecionado}
-          quantidadeUsada={quantidadeUsada}
-          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
     </DashboardLayout>

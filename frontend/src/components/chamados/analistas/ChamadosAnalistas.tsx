@@ -2,7 +2,7 @@ import { useEffect, useState, Dispatch, SetStateAction } from "react";
 import { format } from "date-fns";
 import { api } from "@/services/api";
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { ChamadoModal } from "@/components/ChamadoModal";
+import { ChamadoModal } from "@/components/chamados/ChamadoModal";
 import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
 
@@ -29,10 +29,6 @@ export default function ChamadosAnalistas() {
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
-  const [produtos, setProdutos] = useState([]);
-  const [usarProduto, setUsarProduto] = useState(false);
-  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
-  const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
 
 const fetchUsuario = async () => {
@@ -40,7 +36,7 @@ const fetchUsuario = async () => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Token ausente");
 
-    const response = await api.get("/api/usuarios/me", {
+    const response = await api.get("/api/auth/me/", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -60,11 +56,11 @@ const fetchUsuario = async () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token ausente");
       setLoading(true);
-      let url = "/api/usuarios/chamados/";
+      let url = "/api/chamados/analista/";
       if (perfilUsuario === "analista" || perfilUsuario === "analista_admin") {
         url = activeView === "meus"
-          ? "/api/usuarios/chamados/atribuidos/"
-          : "/api/usuarios/chamados/";
+          ? "/api/chamados/atribuidos/"
+          : "/api/chamados/analista/";
       }
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -101,7 +97,7 @@ const fetchUsuario = async () => {
     
     try {
       const token = localStorage.getItem("token");
-      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/atender/`, {}, {
+      await api.post(`/api/chamados/${chamadoSelecionado.id}/atender/`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -131,15 +127,6 @@ const fetchUsuario = async () => {
   
     try {
       const token = localStorage.getItem("token");
-      if (usarProduto && produtoSelecionado) {
-        await api.post("/api/chamados/produtos/usar/", {
-          produto_id: produtoSelecionado,
-          quantidade: quantidadeUsada,
-        }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-  
       const base64Arquivos = anexos
         ? await Promise.all(
             Array.from(anexos).map(async (file) => {
@@ -155,7 +142,7 @@ const fetchUsuario = async () => {
         arquivos: JSON.stringify(base64Arquivos),
       };
   
-      await api.post(`/api/usuarios/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
+      await api.post(`/api/chamados/${chamadoSelecionado.id}/encerrar/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -279,12 +266,6 @@ const fetchUsuario = async () => {
           setAnexos={setAnexos}
           isEncerrando={isEncerrando}
           isAtendendo={isAtendendo}
-          usarProduto={usarProduto}
-          setUsarProduto={setUsarProduto}
-          produtoSelecionado={produtoSelecionado}
-          setProdutoSelecionado={setProdutoSelecionado}
-          quantidadeUsada={quantidadeUsada}
-          setQuantidadeUsada={setQuantidadeUsada}
         />
       )}
     </DashboardLayout>

@@ -80,31 +80,31 @@ const Dashboard = () => {
           params.data_fim = fim;
         }
 
-        const totalRes = await api.get('/api/dashboard/chamados-total/', { params });
+        const totalRes = await api.get('/api/chamados/dashboard/chamados-total/', { params });
         setTotalChamados(totalRes.data.total_chamados || 0);
 
-        const abertosRes = await api.get('/api/dashboard/chamados-abertos/', { params });
+        const abertosRes = await api.get('/api/chamados/dashboard/chamados-abertos/', { params });
         setChamadosAbertos(abertosRes.data.total_abertos || 0);
 
-        const atendimentoRes = await api.get('/api/dashboard/chamados-em-atendimento/', { params });
+        const atendimentoRes = await api.get('/api/chamados/dashboard/chamados-em-atendimento/', { params });
         setChamadosEmAtendimento(atendimentoRes.data.total_em_atendimento || 0);
 
-        const encerradosRes = await api.get('/api/dashboard/chamados-encerrados/', { params });
+        const encerradosRes = await api.get('/api/chamados/dashboard/chamados-encerrados/', { params });
         setChamadosEncerrados(encerradosRes.data.total_encerrados || 0);
 
-        const setorRes = await api.get('/api/dashboard/chamados-por-setor/', { params });
+        const setorRes = await api.get('/api/chamados/dashboard/chamados-por-setor/', { params });
         setChamadosPorSetor(setorRes.data.chamados_por_setor || []);
 
-        const usuarioRes = await api.get('/api/dashboard/top-usuario/', { params });
+        const usuarioRes = await api.get('/api/chamados/dashboard/top-usuario/', { params });
         setTopUsuario(usuarioRes.data.top_usuario || null);
 
-        const setorTopRes = await api.get('/api/dashboard/top-setor/', { params });
+        const setorTopRes = await api.get('/api/chamados/dashboard/top-setor/', { params });
         setTopSetor(setorTopRes.data.top_setor || null);
 
-        const evolucaoRes = await api.get('/api/dashboard/evolucao-chamados/', { params });
+        const evolucaoRes = await api.get('/api/chamados/dashboard/evolucao-chamados/', { params });
         setEvolucaoChamados(evolucaoRes.data || []);
 
-        const categoriaRes = await api.get('/api/dashboard/chamados-por-categoria/', { params });
+        const categoriaRes = await api.get('/api/chamados/dashboard/chamados-por-categoria/', { params });
         setCategoriaChamados(categoriaRes.data || []);
       } catch (error) {
         console.error('Erro ao carregar métricas do dashboard:', error);

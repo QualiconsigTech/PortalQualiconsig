@@ -27,12 +27,6 @@ interface ChamadoModalProps {
   isAtendendo: boolean;
   isEncerrando: boolean;
   modoAdmin?: boolean;
-  usarProduto: boolean;
-  setUsarProduto?: (value: boolean) => void;
-  produtoSelecionado: number | null;
-  setProdutoSelecionado?: (value: number | null) => void;
-  quantidadeUsada: number;
-  setQuantidadeUsada?: (value: number) => void;
 }
 
 export const ChamadoModal = ({
@@ -52,19 +46,12 @@ export const ChamadoModal = ({
   isAtendendo,
   isEncerrando,
   modoAdmin = false,
-  usarProduto,
-  setUsarProduto,
-  produtoSelecionado,
-  setProdutoSelecionado,
-  quantidadeUsada,
-  setQuantidadeUsada
 
 }: ChamadoModalProps) => {
   const [chatMensagens, setChatMensagens] = useState<any[]>([]);
   const [novaMensagem, setNovaMensagem] = useState("");
   const status = getStatus(chamado);
   const [usuarioLogado, setUsuarioLogado] = useState<{ id: number, tipo: string } | null>(null);
-  const [produtos, setProdutos] = useState([]);
   const [erroSolucao, setErroSolucao] = useState(false);
 
 
@@ -73,7 +60,7 @@ export const ChamadoModal = ({
     if (!token) return;
   
     try {
-      const response = await api.get("/api/usuarios/me", {
+      const response = await api.get("/api/auth/me/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsuarioLogado({ id: response.data.id, tipo: response.data.tipo });
@@ -86,31 +73,9 @@ export const ChamadoModal = ({
     if (chamado.id) {
       buscarComentarios();
       fetchUsuario();
-      fetchProdutos();
     }
   }, [chamado.id]);
-  const fetchProdutos = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await api.get("/api/chamados/produtos/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProdutos(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar produtos:", error);
-    }
-  };
 
-  useEffect(() => {
-    if (aberto) {
-      setErroSolucao(false);
-      if (setUsarProduto) setUsarProduto(false);
-      if (setProdutoSelecionado) setProdutoSelecionado(null);
-      if (setQuantidadeUsada) setQuantidadeUsada(1);
-    }
-  }, [aberto]);
-  
-  
     const buscarComentarios = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -233,48 +198,6 @@ export const ChamadoModal = ({
             <p className="text-sm text-red-500 mt-1">Este campo é obrigatório para encerrar o chamado.</p>
           )}
         </div>
-
-
-        {/* Uso de Produto */}
-        {usuarioLogado?.tipo === "analista" && (
-        <div className="mb-4 space-y-2">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={usarProduto}
-                onChange={(e) => setUsarProduto?.(e.target.checked)}
-              />
-              Utilizei algum produto do estoque?
-            </label>
-
-            {usarProduto && (
-              <>
-                <select
-                  className="w-full p-2 border rounded"
-                  value={produtoSelecionado ?? ""}
-                  onChange={(e) => setProdutoSelecionado?.(Number(e.target.value))}
-                >
-                  <option value="">Selecione um produto</option>
-                  {produtos.map((produto: any) => (
-                    <option key={produto.id} value={produto.id}>
-                      {produto.nome} ({produto.quantidade} disponíveis)
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="number"
-                  min={1}
-                  className="w-full p-2 border rounded"
-                  placeholder="Quantidade utilizada"
-                  value={quantidadeUsada}
-                  onChange={(e) => setQuantidadeUsada?.(Number(e.target.value))}
-                />
-              </>
-            )}
-          </div>
-        )}
-
 
        {/* Chat de Comentários */}
         <div className="mb-6">

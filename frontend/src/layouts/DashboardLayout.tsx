@@ -3,15 +3,14 @@ import { LogOut, Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/router";
 import { getPerfilUsuario } from "@/utils/chamadoUtils";
 import { api } from "@/services/api"; 
-import PerguntasFrequentes from "@/components/PerguntasFrequentes";
+import PerguntasFrequentes from "@/components/chamados/PerguntasFrequentes";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChamadoModal } from "@/components/ChamadoModal";
-import { Produtos } from "@/components/Produtos";
-import CadastroFuncionario from "@/components/CadastroFuncionario";
-import Ajuda from "@/components/Ajuda";
-import Qlinks from "@/components/Qlinks";
+import { ChamadoModal } from "@/components/chamados/ChamadoModal";
+import CadastroFuncionario from "@/components/chamados/CadastroFuncionario";
+import Ajuda from "@/components/chamados/Ajuda";
+import Qlinks from "@/components/chamados/Qlinks";
 import { Chamado } from "@/utils/chamadoUtils";
-import Dashboard from "@/components/dashboard";
+import Dashboard from "@/components/chamados/dashboard";
 
 interface Notificacao {
   id: number;
@@ -58,9 +57,6 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const [modalAberto, setModalAberto] = useState(false);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<any>(null);
   const [setorUsuario, setSetorUsuario] = useState("");
-  const [produtos, setProdutos] = useState([]);
-  const [usarProduto, setUsarProduto] = useState(false);
-  const [produtoSelecionado, setProdutoSelecionado] = useState<number | null>(null);
   const [quantidadeUsada, setQuantidadeUsada] = useState(1);
   const [solucao, setSolucao] = useState("");
   const [tokenExpirado, setTokenExpirado] = useState(false);
@@ -81,7 +77,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
 
   const fetchUsuario = async () => {
     try {
-      const { data } = await api.get("/api/usuarios/me/");
+      const { data } = await api.get("/api/auth/me/");
       setTipoUsuario(data.tipo || "");
       setIsAdmin(data.is_admin || false);
       setSetorUsuario(data.setor || "");
@@ -96,7 +92,6 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       setNotificacoes(data);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        // Impede erro não tratado
         const evento = new Event("tokenExpired");
         window.dispatchEvent(evento);
       } else {
@@ -229,7 +224,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       const token = localStorage.getItem("token");
       if (!token) return;
   
-      const { data } = await api.get(`/api/usuarios/chamados/${chamadoId}/`, {
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -425,22 +420,8 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
                   </button>
                   
                 )}
-
-                {/* Só mostra para analistas do setor Suporte */}
-                {setorUsuario === "Suporte" && (
-                  <button
-                    onClick={() => setActiveView?.("produtos")}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeView === "produtos" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    Produtos
-                  </button>
-                  
-                )}
               </>
             )}
-
              {/* MENU PARA USUÁRIO COMUM */}
              {perfilUsuario === "usuario" && (
                   <>
@@ -604,8 +585,6 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             <Qlinks />
           ) : activeView === "ajuda" ? (
             <Ajuda />
-          ) : activeView === "produtos" ? (
-            <Produtos aberto={true} onClose={() => setActiveView?.("meus")} />
           ) : activeView === "dashboard" ? (
             <Dashboard />
           ) : (
@@ -659,12 +638,6 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             isAtendendo={false}
             isEncerrando={false}
             modoAdmin={perfilUsuario !== "usuario"}
-            usarProduto={usarProduto}
-            setUsarProduto={setUsarProduto}
-            produtoSelecionado={produtoSelecionado}
-            setProdutoSelecionado={setProdutoSelecionado}
-            quantidadeUsada={quantidadeUsada}
-            setQuantidadeUsada={setQuantidadeUsada}
           />
         )}
        
@@ -686,8 +659,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
             </button>
           </div>
         </div>
-)}
-
+      )}
       </main>
     </div>
   );
