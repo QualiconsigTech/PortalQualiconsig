@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "@/services/api";
-import ChamadosUsuarios from "@/components/chamados/usuarios/ChamadosUsuarios";
-import ChamadosUsuariosAdmin from "@/components/chamados/usuariosAdmin/ChamadosUsuariosAdmin";
-import Qlinks from "@/components/chamados/Qlinks";
-import Dashboard from "@/components/chamados/dashboard";
-import CadastroFuncionario from "@/components/chamados/CadastroFuncionario";
-import PerguntasFrequentes from "@/components/chamados/PerguntasFrequentes";
-import Ajuda from "@/components/chamados/Ajuda";
-interface ComercialHomeProps {
+import ChamadosUsuarios from "@/components/portalQuali/portalUsuario/usuarios/ChamadosUsuarios";
+import ChamadosUsuariosAdmin from "@/components/portalQuali/portalUsuario/usuariosAdmin/ChamadosUsuariosAdmin";
+import Qlinks from "@/components/portalQuali/chamados/Qlinks";
+import Dashboard from "@/components/portalQuali/chamados/dashboard";
+import CadastroFuncionario from "@/components/portalQuali/chamados/CadastroFuncionario";
+import PerguntasFrequentes from "@/components/portalQuali/chamados/PerguntasFrequentes";
+import Ajuda from "@/components/portalQuali/chamados/Ajuda";
+interface PortalUsuarioHomeProps {
   activeView: string;
   setActiveView: (view: string) => void;
 }
 
-export default function ComercialHome({ activeView, setActiveView }: ComercialHomeProps) {
+export default function PortalUsuarioHome({
+  activeView,
+  setActiveView,
+}: PortalUsuarioHomeProps) {
   const router = useRouter();
   const [tipoUsuario, setTipoUsuario] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -49,7 +52,7 @@ export default function ComercialHome({ activeView, setActiveView }: ComercialHo
 
   if (loading) return <p className="text-gray-600 p-4">Carregando...</p>;
 
-  const renderComercialView = () => {
+  const renderizarConteudo = () => {
     if (tipoUsuario === "usuario" && isAdmin) {
       switch (activeView) {
         case "dashboard":
@@ -92,5 +95,5 @@ export default function ComercialHome({ activeView, setActiveView }: ComercialHo
     );
   };
 
-  return <div className="p-6">{renderComercialView()}</div>;
+  return <div className="p-6">{renderizarConteudo()}</div>;
 }

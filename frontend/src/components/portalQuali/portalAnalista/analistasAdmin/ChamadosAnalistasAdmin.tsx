@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { format } from "date-fns";
 import { api } from "@/services/api";
 import { TableOfContents } from "lucide-react";
-import { ChamadoModal } from "@/components/chamados/ChamadoModal";
+import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { Chamado, getStatus } from "@/utils/chamadoUtils";
 import { useDashboardLogic } from "@/hooks/useDashboardLogic";
 import { useNotificacoes } from "@/hooks/useNotificacoes";

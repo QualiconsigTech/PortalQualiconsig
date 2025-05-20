@@ -3,14 +3,14 @@ import { LogOut, Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/router";
 import { getPerfilUsuario } from "@/utils/chamadoUtils";
 import { api } from "@/services/api"; 
-import PerguntasFrequentes from "@/components/chamados/PerguntasFrequentes";
+import PerguntasFrequentes from "@/components/portalQuali/chamados/PerguntasFrequentes";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChamadoModal } from "@/components/chamados/ChamadoModal";
-import CadastroFuncionario from "@/components/chamados/CadastroFuncionario";
-import Ajuda from "@/components/chamados/Ajuda";
-import Qlinks from "@/components/chamados/Qlinks";
+import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
+import CadastroFuncionario from "@/components/portalQuali/chamados/CadastroFuncionario";
+import Ajuda from "@/components/portalQuali/chamados/Ajuda";
+import Qlinks from "@/components/portalQuali/chamados/Qlinks";
 import { Chamado } from "@/utils/chamadoUtils";
-import Dashboard from "@/components/chamados/dashboard";
+import Dashboard from "@/components/portalQuali/chamados/dashboard";
 
 interface Notificacao {
   id: number;

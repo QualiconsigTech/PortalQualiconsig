@@ -1,30 +1,39 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import FinanceiroHome from "@/components/financeiro/FinanceiroHome";
-import TecnologiaHome from "@/components/tecnologia/TecnologiaHome";
-import ComercialHome from "@/components/comercial/ComercialHome";
+import PortalAnalistaHome from "@/components/portalQuali/analistas/PortalAnalistaHome";
+import PortalUsuarioHome from "@/components/portalQuali/usuarios/PortalUsuarioHome";
+import Qlinks from "@/components/portalQuali/chamados/Qlinks"
+import { NotificacoesDropdown } from "@/components/portalQuali/chamados/NotificacoesDropdown";
 import { api } from "@/services/api";
+import { Chamado } from "@/utils/chamadoUtils";
+
 interface TelaInicialProps {
   nomeUsuario?: string;
 }
 
 export default function TelaInicial(props: TelaInicialProps) {
 
-  const {nomeUsuario = "Usuario"} = props;
   const [grupos, setGrupos] = useState<string[]>([]);
   const [grupoSelecionado, setGrupoSelecionado] = useState<string>("");
   const [subView, setSubView] = useState<string>("");
   const [sidebarAberto, setSidebarAberto] = useState(true);
   const [tipoUsuario, setTipoUsuario] = useState<string>("");
+  const [nomeUsuario, setNomeUsuario] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
+  const [solucao, setSolucao] = useState("");
 
   useEffect(() => {
     const storageGrupos = localStorage.getItem("grupos");
     if (storageGrupos) {
       try {
         const parsed = JSON.parse(storageGrupos);
-        setGrupos(parsed);
-        if (parsed.length > 0) setGrupoSelecionado(parsed[0]);
+        const gruposFixos = ["Portal de Chamados", "Qlinks"];
+        const completos = [...gruposFixos, ...parsed];
+        setGrupos(completos);
+        setGrupoSelecionado("Portal de Chamados");
       } catch (error) {
         console.error("Erro ao parsear os grupos:", error);
       }
@@ -39,6 +48,8 @@ export default function TelaInicial(props: TelaInicialProps) {
         });
         setTipoUsuario(response.data.tipo);
         setIsAdmin(response.data.is_admin);
+        setNomeUsuario(response.data.nome);
+
 
         // Subview padrão
         if (response.data.tipo === "analista" && !response.data.is_admin) {
@@ -55,11 +66,29 @@ export default function TelaInicial(props: TelaInicialProps) {
   }, []);
  
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("user");
-    localStorage.removeItem("grupos");
+    localStorage.clear();
     window.location.href = "/login";
+  };
+
+  const abrirModalChamado = async (chamadoId: number, notificacaoId?: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setChamadoSelecionado(data);
+      setSolucao(data.solucao || "");
+      setModalAberto(true);
+
+      if (notificacaoId) {
+        await api.post(`/api/chamados/notificacoes/${notificacaoId}/visualizar/`);
+      }
+    } catch (error) {
+      console.error("Erro ao abrir chamado:", error);
+    }
   };
 
   
@@ -68,50 +97,50 @@ export default function TelaInicial(props: TelaInicialProps) {
     "desenvolvimento",
     "dados",
     "suporte",
-    "qlinks",
     "dashboard",
     "cadastroFuncionario"
   ];
 
-  const subMenusTecnologiaAnalista = ["meus", "setor", "qlinks"];
+  const subMenusTecnologiaAnalista = ["meus", "setor"];
   const subMenusComercialAdmin = [
     "meus",
     "analistas",
     "faq",
     "cadastroUsuario",
     "ajuda",
-    "qlinks",
     "dashboard",
   ];
 
-  const subMenusComercialUsuarios = ["meus", "qlinks", "ajuda", "faq"];
+  const subMenusComercialUsuarios = ["meus", "ajuda", "faq"];
 
-
-  const getSubMenus = () => { if (grupoSelecionado === "Tecnologia") {
+const getSubMenus = () => {
+    if (grupoSelecionado === "Portal de Chamados") {
       if (tipoUsuario === "analista" && !isAdmin) return subMenusTecnologiaAnalista;
-      return subMenusTecnologiaAdmin;
-    }
-
-    if (grupoSelecionado === "Comercial") {
       if (tipoUsuario === "usuario" && !isAdmin) return subMenusComercialUsuarios;
-      return subMenusComercialAdmin;
+      return isAdmin && tipoUsuario === "analista"
+        ? subMenusTecnologiaAdmin
+        : subMenusComercialAdmin;
     }
-
     return [];
   };
 
   const renderConteudo = () => {
-    if (grupoSelecionado === "Tecnologia") {
-      return <TecnologiaHome activeView={subView} setActiveView={setSubView} />;
+    if (grupoSelecionado === "Portal de Chamados") {
+      return tipoUsuario === "analista" ? (
+        <PortalAnalistaHome activeView={subView} setActiveView={setSubView} />
+      ) : (
+        <PortalUsuarioHome activeView={subView} setActiveView={setSubView} />
+      );
     }
 
     if (grupoSelecionado === "Financeiro") {
       return <FinanceiroHome />;
     }
 
-    if (grupoSelecionado === "Comercial") {
-      return <ComercialHome activeView={subView} setActiveView={setSubView} />;
+    if (grupoSelecionado === "Qlinks") {
+      return <Qlinks />;
     }
+
 
     return (
       <div className="p-8">
@@ -122,7 +151,6 @@ export default function TelaInicial(props: TelaInicialProps) {
       </div>
     );
   };
-
   return (
   <div className="flex min-h-screen bg-[#f9f9fb]">
     {/* Sidebar */}
@@ -159,8 +187,9 @@ export default function TelaInicial(props: TelaInicialProps) {
               >
                 {grupo}
               </button>
-              {/* Submenus Tecnologia */}
-                  {grupoSelecionado === "Tecnologia" && grupo === "Tecnologia" && (
+
+                  {/* Submenus dinamicamente */}
+                  {grupoSelecionado === grupo && (
                     <div className="pl-4 mt-2 space-y-1">
                       {getSubMenus().map((item) => (
                         <button
@@ -172,41 +201,15 @@ export default function TelaInicial(props: TelaInicialProps) {
                               : "hover:bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {item === "cadastroFuncionario"
-                            ? "Cadastrar Analista"
-                            : item === "meus"
-                            ? "Meus Chamados"
-                            : item === "setor"
-                            ? "Chamados do Setor"
-                            : item.charAt(0).toUpperCase() + item.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {/* Submenus Comercial */}
-                  {grupoSelecionado === "Comercial" && grupo === "Comercial" && (
-                    <div className="pl-4 mt-2 space-y-1">
-                      {getSubMenus().map((item) => (
-                        <button
-                          key={item}
-                          onClick={() => setSubView(item)}
-                          className={`w-full text-left px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                            subView === item
-                              ? "bg-blue-100 text-blue-700"
-                              : "hover:bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {item === "cadastroUsuario"
-                            ? "Cadastrar Usuário"
-                            : item === "meus"
-                            ? "Meus Chamados"
-                            : item === "faq"
-                            ? "Perguntas Frequentes"
-                            : item === "ajuda"
-                            ? "Ajuda"
-                            : item === "analistas"
-                            ? "Analistas"
-                            : item.charAt(0).toUpperCase() + item.slice(1)}
+                          {{
+                            cadastroFuncionario: "Cadastrar Analista",
+                            cadastroUsuario: "Cadastrar Usuário",
+                            meus: "Meus Chamados",
+                            setor: "Chamados do Setor",
+                            faq: "Perguntas Frequentes",
+                            ajuda: "Ajuda",
+                            analistas: "Analistas",
+                          }[item] || item.charAt(0).toUpperCase() + item.slice(1)}
                         </button>
                       ))}
                     </div>
@@ -232,15 +235,18 @@ export default function TelaInicial(props: TelaInicialProps) {
     {/* Área principal */}
     <main className="flex-1 transition-all duration-300">
       <header className="bg-[#00247A] text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-3">
-          <img
-            src="/images/Qualiconsig-Logo-branco-1-1024x341.png"
-            alt="Logo Qualiconsig"
-            className="h-15"
-          />
-        </div>
-        <p className="text-white">Olá, {nomeUsuario}</p>
-      </header>
+      <div className="flex items-center gap-3">
+        <img
+          src="/images/Qualiconsig-Logo-branco-1-1024x341.png"
+          alt="Logo Qualiconsig"
+          className="h-15"
+        />
+      </div>
+      <div className="flex items-center gap-4">
+        <NotificacoesDropdown nomeUsuario={nomeUsuario} onAbrirChamado={abrirModalChamado} />
+      </div>
+    </header>
+
 
       {/* Conteúdo dinâmico */}
       {renderConteudo()}

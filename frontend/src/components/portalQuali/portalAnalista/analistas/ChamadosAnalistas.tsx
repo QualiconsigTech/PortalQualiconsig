@@ -1,7 +1,7 @@
 import { useEffect, useState} from "react";
 import { format } from "date-fns";
 import { api } from "@/services/api";
-import { ChamadoModal } from "@/components/chamados/ChamadoModal";
+import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
 

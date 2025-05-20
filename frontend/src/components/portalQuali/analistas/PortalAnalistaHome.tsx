@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
-import ChamadosAnalistasAdmin from "@/components/chamados/analistasAdmin/ChamadosAnalistasAdmin";
-import ChamadosAnalistas from "@/components/chamados/analistas/ChamadosAnalistas";
-import Qlinks from "@/components/chamados/Qlinks";
-import Dashboard from "@/components/chamados/dashboard";
-import CadastroFuncionario from "@/components/chamados/CadastroFuncionario";
+import ChamadosAnalistasAdmin from "@/components/portalQuali/portalAnalista/analistasAdmin/ChamadosAnalistasAdmin";
+import ChamadosAnalistas from "@/components/portalQuali/portalAnalista/analistas/ChamadosAnalistas";
+import Qlinks from "@/components/portalQuali/chamados/Qlinks";
+import Dashboard from "@/components/portalQuali/chamados/dashboard";
+import CadastroFuncionario from "@/components/portalQuali/chamados/CadastroFuncionario";
 import { api } from "@/services/api";
 import { useRouter } from "next/router";
-import { ChamadoModal } from "@/components/chamados/ChamadoModal";
-import { NotificacoesDropdown } from "@/components/chamados/NotificacoesDropdown";
+import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
+import { NotificacoesDropdown } from "@/components/portalQuali/chamados/NotificacoesDropdown";
 import { Chamado } from "@/utils/chamadoUtils";
-interface TecnologiaHomeProps {
+
+interface PortalAnalistaHomeProps {
   activeView: string;
   setActiveView: (view: string) => void;
 }
-export default function TecnologiaHome({ activeView, setActiveView }: TecnologiaHomeProps) {
+export default function PortalAnalistaHome({
+  activeView,
+  setActiveView,
+}: PortalAnalistaHomeProps) {
   const router = useRouter();
   const [tipoUsuario, setTipoUsuario] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -82,7 +86,9 @@ export default function TecnologiaHome({ activeView, setActiveView }: Tecnologia
       case "desenvolvimento":
       case "dados":
       case "suporte":
-        return <ChamadosAnalistasAdmin activeView={activeView} setActiveView={setActiveView} />;
+        return (
+            <ChamadosAnalistasAdmin activeView={activeView} setActiveView={setActiveView} />
+          );
       case "qlinks":
         return <Qlinks />;
       case "dashboard":
