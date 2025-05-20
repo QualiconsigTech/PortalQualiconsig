@@ -62,25 +62,7 @@ export default function TelaInicial(props: TelaInicialProps) {
     window.location.href = "/login";
   };
 
-  const renderConteudo = () => {
-    switch (grupoSelecionado) {
-      case "Tecnologia":
-        return <TecnologiaHome activeView={subView} setActiveView={setSubView} />;
-      case "Financeiro":
-        return <FinanceiroHome />;
-      case "Comercial":
-        return <ComercialHome />;
-      default:
-        return (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-[#041161] mb-2">
-              Bem-vindo ao Portal Qualiconsig
-            </h1>
-            <p className="text-gray-600">Selecione uma área no menu lateral para começar.</p>
-          </div>
-        );
-    }
-  };
+  
   const subMenusTecnologiaAdmin = [
     "todos",
     "desenvolvimento",
@@ -92,12 +74,53 @@ export default function TelaInicial(props: TelaInicialProps) {
   ];
 
   const subMenusTecnologiaAnalista = ["meus", "setor", "qlinks"];
+  const subMenusComercialAdmin = [
+    "meus",
+    "analistas",
+    "faq",
+    "cadastroUsuario",
+    "ajuda",
+    "qlinks",
+    "dashboard",
+  ];
 
-  const getSubMenus = () => {
-    if (tipoUsuario === "analista" && !isAdmin) {
-      return subMenusTecnologiaAnalista;
+  const subMenusComercialUsuarios = ["meus", "qlinks", "ajuda", "faq"];
+
+
+  const getSubMenus = () => { if (grupoSelecionado === "Tecnologia") {
+      if (tipoUsuario === "analista" && !isAdmin) return subMenusTecnologiaAnalista;
+      return subMenusTecnologiaAdmin;
     }
-    return subMenusTecnologiaAdmin;
+
+    if (grupoSelecionado === "Comercial") {
+      if (tipoUsuario === "usuario" && !isAdmin) return subMenusComercialUsuarios;
+      return subMenusComercialAdmin;
+    }
+
+    return [];
+  };
+
+  const renderConteudo = () => {
+    if (grupoSelecionado === "Tecnologia") {
+      return <TecnologiaHome activeView={subView} setActiveView={setSubView} />;
+    }
+
+    if (grupoSelecionado === "Financeiro") {
+      return <FinanceiroHome />;
+    }
+
+    if (grupoSelecionado === "Comercial") {
+      return <ComercialHome activeView={subView} setActiveView={setSubView} />;
+    }
+
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-[#041161] mb-2">
+          Bem-vindo ao Portal Qualiconsig
+        </h1>
+        <p className="text-gray-600">Selecione uma área no menu lateral para começar.</p>
+      </div>
+    );
   };
 
   return (
@@ -155,6 +178,34 @@ export default function TelaInicial(props: TelaInicialProps) {
                             ? "Meus Chamados"
                             : item === "setor"
                             ? "Chamados do Setor"
+                            : item.charAt(0).toUpperCase() + item.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Submenus Comercial */}
+                  {grupoSelecionado === "Comercial" && grupo === "Comercial" && (
+                    <div className="pl-4 mt-2 space-y-1">
+                      {getSubMenus().map((item) => (
+                        <button
+                          key={item}
+                          onClick={() => setSubView(item)}
+                          className={`w-full text-left px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                            subView === item
+                              ? "bg-blue-100 text-blue-700"
+                              : "hover:bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {item === "cadastroUsuario"
+                            ? "Cadastrar Usuário"
+                            : item === "meus"
+                            ? "Meus Chamados"
+                            : item === "faq"
+                            ? "Perguntas Frequentes"
+                            : item === "ajuda"
+                            ? "Ajuda"
+                            : item === "analistas"
+                            ? "Analistas"
                             : item.charAt(0).toUpperCase() + item.slice(1)}
                         </button>
                       ))}

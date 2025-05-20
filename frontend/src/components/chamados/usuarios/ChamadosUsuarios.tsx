@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import DashboardLayout from "@/layouts/DashboardLayout";
 import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
@@ -8,10 +7,8 @@ import PerguntasFrequentes from "@/components/chamados/PerguntasFrequentes";
 import { ChamadoModal } from "@/components/chamados/ChamadoModal";
 import { getStatus, toBase64, Chamado } from "@/utils/chamadoUtils";
 
-
 export default function ChamadosUsuarios() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
-  const [activeView, setActiveView] = useState("meus");
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
@@ -90,6 +87,21 @@ export default function ChamadosUsuarios() {
     }
   };
 
+  const fetchCategorias = async () => {
+    const response = await api.get("/api/chamados/categorias/");
+    setCategorias(response.data);
+  };
+
+  const fetchSetores = async () => {
+    const response = await api.get("/api/core/setores/");
+    setSetores(response.data);
+  };
+
+  const fetchPrioridades = async () => {
+    const response = await api.get("/api/chamados/prioridades/");
+    setPrioridades(response.data);
+  };
+
   const encerrarChamado = async () => {
     if (!chamadoSelecionado || !solucao.trim()) return;
   
@@ -131,46 +143,6 @@ export default function ChamadosUsuarios() {
   };
   
 
-  const fetchCategorias = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      const response = await api.get("/api/chamados/categorias/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCategorias(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar categorias", error);
-      handleTokenError(error);
-    }
-  };
-
-    const fetchSetores = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      try {
-        const response = await api.get("/api/core/setores/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSetores(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar setores", error);
-        handleTokenError(error);
-      }
-    };
-    const fetchPrioridades = async () => { 
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      try {
-        const response = await api.get("/api/chamados/prioridades/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setPrioridades(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar prioridades", error);
-        handleTokenError(error);
-      }
-    };
 
   useEffect(() => {
     const loadAll = async () => {
@@ -246,15 +218,7 @@ export default function ChamadosUsuarios() {
   };
 
   return (
-    <DashboardLayout
-      nomeUsuario={nomeUsuario}
-      activeView={activeView} 
-      setActiveView={setActiveView} 
-      totalItems={chamados.length} 
-      itemsPerPage={itemsPerPage}             
-      onPageChange={(page) => setCurrentPage(page)} 
-      >
-        {activeView === "faq" && <PerguntasFrequentes />}
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
         <button
@@ -273,7 +237,7 @@ export default function ChamadosUsuarios() {
               <th className="py-2">Título</th>
               <th className="py-2">Status</th>
               <th className="py-2">Prioridade</th>
-              <th className="py-2">Analista Atribuido</th>
+              <th className="py-2">Analista Atribuído</th>
               <th className="py-2">Data</th>
               <th className="py-2">Ações</th>
             </tr>
@@ -304,7 +268,7 @@ export default function ChamadosUsuarios() {
                     <td className="py-2">{chamado.titulo}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
                     <td className="py-2 text-orange-500">{chamado.prioridade_nome || "--"}</td>
-                    <td className="py-2">{chamado.analista ? chamado.analista.nome : "Não atribuído"}</td>
+                    <td className="py-2">{chamado.analista?.nome || "Não atribuído"}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
                       <button
@@ -361,6 +325,6 @@ export default function ChamadosUsuarios() {
           modoAdmin={false}
         />
       )}
-    </DashboardLayout>
+    </div>
   );
 }

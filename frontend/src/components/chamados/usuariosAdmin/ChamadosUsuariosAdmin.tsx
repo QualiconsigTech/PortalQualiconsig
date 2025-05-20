@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import DashboardLayout from "@/layouts/DashboardLayout";
 import { TableOfContents } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
@@ -14,7 +13,6 @@ export default function ChamadosUsuariosAdmin() {
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
-  const [activeView, setActiveView] = useState("meus");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
@@ -175,22 +173,6 @@ export default function ChamadosUsuariosAdmin() {
     loadAll();
   }, []);
   
-
-  useEffect(() => {
-    if (activeView === "meus") {
-      fetchChamados("/api/chamados/meus/");
-    } else if (activeView === "analistas") {
-      fetchChamados("/api/core/setores/");
-    }
-  }, [activeView]);
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => setShowToast(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
-  
-
  
   const handleSalvarChamado = async (dados: {
     titulo: string;
@@ -249,15 +231,7 @@ export default function ChamadosUsuariosAdmin() {
   };
 
   return (
-    <DashboardLayout 
-    nomeUsuario={nomeUsuario}
-    activeView={activeView} 
-    setActiveView={setActiveView} 
-    totalItems={chamados.length} 
-    itemsPerPage={itemsPerPage}             
-    onPageChange={(page) => setCurrentPage(page)} 
-    >
-      
+    <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
         <button
@@ -366,6 +340,6 @@ export default function ChamadosUsuariosAdmin() {
           modoAdmin={false}
         />
       )}
-    </DashboardLayout>
+    </div>
   );
 }
