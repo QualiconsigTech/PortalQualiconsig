@@ -3,6 +3,7 @@ export interface Chamado {
   titulo: string;
   descricao: string;
   criado_em: string;
+  status: string;
   encerrado_em: string | null;
   solucao?: string | null;
   comentarios?: string | null;

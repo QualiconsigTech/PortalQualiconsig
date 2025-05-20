@@ -1,14 +1,27 @@
 import { useEffect, useState } from "react";
 import ChamadosAnalistasAdmin from "@/components/chamados/analistasAdmin/ChamadosAnalistasAdmin";
 import ChamadosAnalistas from "@/components/chamados/analistas/ChamadosAnalistas";
+import Qlinks from "@/components/chamados/Qlinks";
+import Dashboard from "@/components/chamados/dashboard";
+import CadastroFuncionario from "@/components/chamados/CadastroFuncionario";
 import { api } from "@/services/api";
 import { useRouter } from "next/router";
-
-export default function TecnologiaHome() {
+import { ChamadoModal } from "@/components/chamados/ChamadoModal";
+import { NotificacoesDropdown } from "@/components/chamados/NotificacoesDropdown";
+import { Chamado } from "@/utils/chamadoUtils";
+interface TecnologiaHomeProps {
+  activeView: string;
+  setActiveView: (view: string) => void;
+}
+export default function TecnologiaHome({ activeView, setActiveView }: TecnologiaHomeProps) {
   const router = useRouter();
   const [tipoUsuario, setTipoUsuario] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const [loading, setLoading] = useState(true);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
+  const [solucao, setSolucao] = useState("");
 
   const redirecionarParaLogin = () => {
     localStorage.removeItem("token");
@@ -23,6 +36,7 @@ export default function TecnologiaHome() {
       const { data } = await api.get("/api/auth/me/", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setNomeUsuario(data.nome);
       setTipoUsuario(data.tipo);
       setIsAdmin(data.is_admin);
     } catch (error: any) {
@@ -38,28 +52,95 @@ export default function TecnologiaHome() {
     fetchUsuario();
   }, []);
 
+  const abrirModalChamado = async (chamadoId: number, notificacaoId?: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setChamadoSelecionado(data);
+      setSolucao(data.solucao || "");
+      setModalAberto(true);
+
+      if (notificacaoId) {
+        await api.post(`/api/chamados/notificacoes/${notificacaoId}/visualizar/`);
+      }
+    } catch (error) {
+      console.error("Erro ao abrir chamado:", error);
+    }
+  };
+
   if (loading) return <p className="text-gray-600 p-4">Carregando...</p>;
 
+  const renderizarConteudo = () => {
   if (tipoUsuario === "analista" && isAdmin) {
-    return (
-      <div className="p-6">
-        <ChamadosAnalistasAdmin />
-      </div>
-    );
+    switch (activeView) {
+      case "todos":
+      case "desenvolvimento":
+      case "dados":
+      case "suporte":
+        return <ChamadosAnalistasAdmin activeView={activeView} setActiveView={setActiveView} />;
+      case "qlinks":
+        return <Qlinks />;
+      case "dashboard":
+        return <Dashboard />;
+      case "cadastroFuncionario":
+        return <CadastroFuncionario />;
+      default:
+        return <p className="text-gray-600">Selecione uma opção do menu.</p>;
+    }
   }
 
   if (tipoUsuario === "analista") {
+      switch (activeView) {
+        case "meus":
+        case "setor":
+            return <ChamadosAnalistas key={activeView} activeView={activeView} />;
+        case "qlinks":
+          return <Qlinks />;
+        default:
+          return <p className="text-gray-600">Você não tem permissão para visualizar esta seção.</p>;
+      }
+    }
+
     return (
-      <div className="p-6">
-        <ChamadosAnalistas />
-      </div>
-    );
-  }
+    <div className="mt-6">
+      <h1 className="text-2xl font-bold text-[#041161] mb-2">Área de Tecnologia</h1>
+      <p className="text-gray-600">Conteúdo exclusivo para o grupo de Tecnologia.</p>
+    </div>
+  );
+};
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-[#041161] mb-2">Área de Tecnologia</h1>
-      <p className="text-gray-600">Conteúdo exclusivo para o grupo de Tecnologia.</p>
+      {renderizarConteudo()}
+
+      {modalAberto && chamadoSelecionado && (
+        <ChamadoModal
+          chamado={chamadoSelecionado}
+          aberto={modalAberto}
+          onClose={() => setModalAberto(false)}
+          onAtender={() => {}}
+          onEncerrar={() => {}}
+          podeAtender={tipoUsuario !== "usuario"}
+          podeEncerrar={
+            tipoUsuario !== "usuario" &&
+            chamadoSelecionado.status !== "Encerrado"
+          }
+          solucao={solucao}
+          setSolucao={setSolucao}
+          comentarios=""
+          setComentarios={() => {}}
+          anexos={null}
+          setAnexos={() => {}}
+          isAtendendo={false}
+          isEncerrando={false}
+          modoAdmin={tipoUsuario !== "usuario"}
+        />
+      )}
     </div>
   );
 }

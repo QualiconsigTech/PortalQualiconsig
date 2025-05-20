@@ -3,12 +3,24 @@ import { useRouter } from "next/router";
 import { format } from "date-fns";
 import { api } from "@/services/api";
 import { TableOfContents } from "lucide-react";
-import DashboardLayout from "@/layouts/DashboardLayout";
 import { ChamadoModal } from "@/components/chamados/ChamadoModal";
 import { Chamado, getStatus } from "@/utils/chamadoUtils";
+import { useDashboardLogic } from "@/hooks/useDashboardLogic";
+import { useNotificacoes } from "@/hooks/useNotificacoes";
 
-export default function ChamadosAnalistasAdmin() {
+interface Props {
+  activeView: string;
+  setActiveView: (view: string) => void;
+}
+
+export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Props) {
   const router = useRouter();
+  const { perfilUsuario, tipoUsuario } = useDashboardLogic();
+  const {
+    notificacoes,
+    marcarNotificacaoComoLida,
+    fetchNotificacoes
+  } = useNotificacoes();
   
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,9 +36,7 @@ export default function ChamadosAnalistasAdmin() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
-  const [activeView, setActiveView] = useState("todos");
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
-  const [perfilUsuario, setPerfilUsuario] = useState<string>("");
   const redirecionarParaLogin = () => {
     localStorage.removeItem("token");
     router.push("/login");
@@ -35,12 +45,10 @@ export default function ChamadosAnalistasAdmin() {
     const token = localStorage.getItem("token");
     if (!token) return redirecionarParaLogin();
     try {
-      const response = await api.get("/api/auth/me/", {
+      await api.get("/api/auth/me/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNomeUsuario(response.data.nome);
-      setPerfilUsuario(response.data.tipo);
-    } catch (error: any) {
+      } catch (error: any) {
       if (error?.response?.status === 401) {
         redirecionarParaLogin();
       } else {
@@ -101,14 +109,8 @@ export default function ChamadosAnalistasAdmin() {
     setCurrentPage(page);
   };
   return (
-    <DashboardLayout
-    nomeUsuario={nomeUsuario}
-    activeView={activeView} 
-    setActiveView={handleFiltro} 
-    totalItems={chamados.length} 
-    itemsPerPage={itemsPerPage}             
-    onPageChange={(page) => setCurrentPage(page)}
-    >
+    <section className="p-6">
+      <h1 className="text-2xl font-bold text-[#041161] mb-4">Chamados - Tecnologia</h1>
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
@@ -146,8 +148,8 @@ export default function ChamadosAnalistasAdmin() {
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
                     <td className="py-2 text-orange-500">{chamado.prioridade_nome}</td>
                     <td className="py-2">{chamado.setor_nome}</td>
-                    <td className="py-2">{chamado.analista ? chamado.analista.nome : "Não atribuído"}</td>
-                    <td className="py-2">{chamado.usuario ? chamado.usuario.nome : "Não informado"}</td>
+                    <td className="py-2">{chamado.analista?.nome || "Não atribuído"}</td>
+                    <td className="py-2">{chamado.usuario?.nome || "Não informado"}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
                       <button
@@ -170,6 +172,24 @@ export default function ChamadosAnalistasAdmin() {
           </tbody>
         </table>
       </section>
+      {/* Paginação */}
+      {chamados.length > itemsPerPage && (
+        <div className="flex justify-center mt-8 gap-2">
+          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                currentPage === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      )}
 
       {modalAberto && chamadoSelecionado && (
         <ChamadoModal
@@ -199,6 +219,6 @@ export default function ChamadosAnalistasAdmin() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+     </section>
   );
 }

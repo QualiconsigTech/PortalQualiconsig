@@ -1,13 +1,14 @@
-import { useEffect, useState, Dispatch, SetStateAction } from "react";
+import { useEffect, useState} from "react";
 import { format } from "date-fns";
 import { api } from "@/services/api";
-import DashboardLayout from "@/layouts/DashboardLayout";
 import { ChamadoModal } from "@/components/chamados/ChamadoModal";
 import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
 
-
-export default function ChamadosAnalistas() {
+interface ChamadosAnalistasProps {
+  activeView: string;
+}
+export default function ChamadosAnalistas({ activeView }: ChamadosAnalistasProps) {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -18,19 +19,16 @@ export default function ChamadosAnalistas() {
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [isAtendendo, setIsAtendendo] = useState(false);
   const [isEncerrando, setIsEncerrando] = useState(false);
-  const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
-  const [nomeDoSetor, setNomeDoSetor] = useState<string>("Setor");
-  const [activeView, setActiveView] = useState("meus");
-  const [perfilUsuario, setPerfilUsuario] = useState<string>("");
+  const [nomeUsuario, setNomeUsuario] = useState("Usuário");
+  const [nomeDoSetor, setNomeDoSetor] = useState("Setor");
+  const [perfilUsuario, setPerfilUsuario] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMensagem, setToastMensagem] = useState("");
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMensagem, setToastMensagem] = useState(""); 
-  const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
-
 const fetchUsuario = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -56,12 +54,11 @@ const fetchUsuario = async () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token ausente");
       setLoading(true);
-      let url = "/api/chamados/analista/";
-      if (perfilUsuario === "analista" || perfilUsuario === "analista_admin") {
-        url = activeView === "meus"
-          ? "/api/chamados/atribuidos/"
-          : "/api/chamados/analista/";
-      }
+      
+      const url = activeView === "meus"
+        ? "/api/chamados/atribuidos/"
+        : "/api/chamados/analista/";
+
       const response = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -103,9 +100,7 @@ const fetchUsuario = async () => {
       
       setToastMensagem("Chamado atribuído com sucesso.");
       setShowToast(true); 
-      setTimeout(() => {
-        setShowToast(false);
-      }, 1000);
+      setTimeout(() => setShowToast(false), 1000);
       fetchChamados();
       setModalAberto(false);
     } catch (err) {
@@ -117,13 +112,8 @@ const fetchUsuario = async () => {
   };
 
   const encerrarChamado = async () => {
-    if (!chamadoSelecionado || !solucao.trim()) {
-      return;
-    }
-    
-  
+    if (!chamadoSelecionado || !solucao.trim()) return;  
     setIsEncerrando(true);
-    const token = localStorage.getItem("token");
   
     try {
       const token = localStorage.getItem("token");
@@ -160,22 +150,10 @@ const fetchUsuario = async () => {
     }
   };
   
-
-    const changePage = (page: number) => {
-    setCurrentPage(page);
-  };
   return (
-    <DashboardLayout
-      nomeUsuario={nomeUsuario}
-      nomeDoSetor={nomeDoSetor}
-      activeView={activeView}
-      setActiveView={setActiveView}
-      totalItems={chamados.length} 
-      itemsPerPage={itemsPerPage}             
-      onPageChange={(page) => setCurrentPage(page)}
-      setChamadoSelecionado={setChamadoSelecionado}  
-      setModalAberto={setModalAberto}                 
-    >
+    <section className="p-6">
+      <h1 className="text-2xl font-bold text-[#041161] mb-4">Chamados Atribuídos</h1>
+
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
@@ -214,7 +192,7 @@ const fetchUsuario = async () => {
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
                     <td className="py-2 text-orange-500">{chamado.prioridade_nome}</td>
-                    <td className="py-2">{chamado.usuario?.setor_nome }</td>
+                    <td className="py-2">{chamado.usuario?.setor_nome}</td>
                     <td className="py-2">{format(new Date(chamado.criado_em), "dd/MM/yy")}</td>
                     <td className="py-2">
                       <button
@@ -238,6 +216,24 @@ const fetchUsuario = async () => {
           </tbody>
         </table>
       </section>
+      {/* Paginação */}
+      {chamados.length > itemsPerPage && (
+        <div className="flex justify-center mt-8 gap-2">
+          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                currentPage === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      )}
       {showToast && (
         <div
           className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-lg cursor-pointer z-50 animate-slide-up"
@@ -246,8 +242,6 @@ const fetchUsuario = async () => {
           {toastMensagem}
         </div>
       )}
-
-
 
       {modalAberto && chamadoSelecionado && (
         <ChamadoModal
@@ -268,6 +262,6 @@ const fetchUsuario = async () => {
           isAtendendo={isAtendendo}
         />
       )}
-    </DashboardLayout>
+      </section>
   );
 }

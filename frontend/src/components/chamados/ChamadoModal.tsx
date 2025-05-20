@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { base64ToBlob, getStatus, Chamado } from "@/utils/chamadoUtils";
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
+
 interface Comentario {
   id: number;
   chamado: number;

@@ -3,20 +3,20 @@ import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import FinanceiroHome from "@/components/financeiro/FinanceiroHome";
 import TecnologiaHome from "@/components/tecnologia/TecnologiaHome";
 import ComercialHome from "@/components/comercial/ComercialHome";
-
-
-
-
+import { api } from "@/services/api";
 interface TelaInicialProps {
   nomeUsuario?: string;
 }
 
 export default function TelaInicial(props: TelaInicialProps) {
 
-  const {nomeUsuario = "Usuario",} = props;
+  const {nomeUsuario = "Usuario"} = props;
   const [grupos, setGrupos] = useState<string[]>([]);
   const [grupoSelecionado, setGrupoSelecionado] = useState<string>("");
+  const [subView, setSubView] = useState<string>("");
   const [sidebarAberto, setSidebarAberto] = useState(true);
+  const [tipoUsuario, setTipoUsuario] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     const storageGrupos = localStorage.getItem("grupos");
@@ -29,8 +29,31 @@ export default function TelaInicial(props: TelaInicialProps) {
         console.error("Erro ao parsear os grupos:", error);
       }
     }
-  }, []);
+    const fetchUserType = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token ausente");
 
+        const response = await api.get("/api/auth/me/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTipoUsuario(response.data.tipo);
+        setIsAdmin(response.data.is_admin);
+
+        // Subview padrão
+        if (response.data.tipo === "analista" && !response.data.is_admin) {
+          setSubView("meus");
+        } else {
+          setSubView("todos");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar tipo de usuário:", error);
+      }
+    };
+
+    fetchUserType();
+  }, []);
+ 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refresh");
@@ -42,7 +65,7 @@ export default function TelaInicial(props: TelaInicialProps) {
   const renderConteudo = () => {
     switch (grupoSelecionado) {
       case "Tecnologia":
-        return <TecnologiaHome />;
+        return <TecnologiaHome activeView={subView} setActiveView={setSubView} />;
       case "Financeiro":
         return <FinanceiroHome />;
       case "Comercial":
@@ -57,6 +80,24 @@ export default function TelaInicial(props: TelaInicialProps) {
           </div>
         );
     }
+  };
+  const subMenusTecnologiaAdmin = [
+    "todos",
+    "desenvolvimento",
+    "dados",
+    "suporte",
+    "qlinks",
+    "dashboard",
+    "cadastroFuncionario"
+  ];
+
+  const subMenusTecnologiaAnalista = ["meus", "setor", "qlinks"];
+
+  const getSubMenus = () => {
+    if (tipoUsuario === "analista" && !isAdmin) {
+      return subMenusTecnologiaAnalista;
+    }
+    return subMenusTecnologiaAdmin;
   };
 
   return (
@@ -84,8 +125,8 @@ export default function TelaInicial(props: TelaInicialProps) {
           <p className="text-sm text-black-500 font-semibold mb-2">MENU</p>
           <nav className="space-y-2 w-full">
             {grupos.map((grupo) => (
+              <div key={grupo} className="w-full">
               <button
-                key={grupo}
                 onClick={() => setGrupoSelecionado(grupo)}
                 className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   grupoSelecionado === grupo
@@ -95,6 +136,31 @@ export default function TelaInicial(props: TelaInicialProps) {
               >
                 {grupo}
               </button>
+              {/* Submenus Tecnologia */}
+                  {grupoSelecionado === "Tecnologia" && grupo === "Tecnologia" && (
+                    <div className="pl-4 mt-2 space-y-1">
+                      {getSubMenus().map((item) => (
+                        <button
+                          key={item}
+                          onClick={() => setSubView(item)}
+                          className={`w-full text-left px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                            subView === item
+                              ? "bg-blue-100 text-blue-700"
+                              : "hover:bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {item === "cadastroFuncionario"
+                            ? "Cadastrar Analista"
+                            : item === "meus"
+                            ? "Meus Chamados"
+                            : item === "setor"
+                            ? "Chamados do Setor"
+                            : item.charAt(0).toUpperCase() + item.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
             ))}
           </nav>
         </div>
