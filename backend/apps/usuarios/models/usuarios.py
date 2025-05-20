@@ -31,6 +31,7 @@ class Usuario(AbstractBaseUser):
     setor = models.ForeignKey(Setor, on_delete=models.PROTECT, related_name="usuarios")
     cargo = models.ForeignKey(Cargo, on_delete=models.PROTECT, related_name="usuarios")
     tipo = models.CharField(max_length=20, choices=TIPOS_USUARIO, default='usuario')
+    ultimo_acesso = models.DateTimeField(null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

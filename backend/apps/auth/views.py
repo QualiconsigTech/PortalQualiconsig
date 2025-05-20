@@ -65,3 +65,16 @@ class UsuarioLogadoView(APIView):
         usuario = obter_dados_do_usuario(request.user)
         serializer = UsuarioLogadoSerializer(usuario)
         return Response(serializer.data)
+
+
+class AtualizarSenhaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        try:
+            data, errors, status_code = alterar_senha(request)
+            if errors:
+                return Response(errors, status=status_code)
+            return Response(data, status=status_code)
+        except Exception as e:
+            return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)

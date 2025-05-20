@@ -8,6 +8,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         queryset=Grupo.objects.all()
     )
     setor = serializers.PrimaryKeyRelatedField(queryset=Setor.objects.all())
+    setor_nome = serializers.CharField(source="setor.nome", read_only=True)
     cargo = serializers.PrimaryKeyRelatedField(queryset=Cargo.objects.all())
 
     class Meta:
@@ -18,6 +19,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
             "email",
             "grupos",
             "setor",
+            "setor_nome",
             "cargo",
             "tipo",
             "is_active",
