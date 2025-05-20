@@ -31,7 +31,26 @@ class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
     prioridade_nome = serializers.CharField(source='prioridade.nome', read_only=True)
     class Meta:
         model = Chamado
-        fields = '__all__'
+        fields = [
+            'id',
+            'titulo',
+            'descricao',
+            'gravidade',
+            'criado_em',
+            'editado_em',
+            'encerrado_em',
+            'solucao',
+            'comentarios',
+            'arquivos',
+            'usuario',
+            'analista',
+            'categoria_nome',
+            'setor_nome',
+            'prioridade_nome',
+            'categoria',
+            'setor',
+            'prioridade',
+        ]
 
 class PerguntaFrequenteSerializer(serializers.ModelSerializer):
     class Meta:

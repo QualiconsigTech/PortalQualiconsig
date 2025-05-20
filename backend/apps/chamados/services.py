@@ -1,5 +1,6 @@
 import logging
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from apps.chamados.models.chamados import Chamado
 from apps.chamados.models.perguntas import PerguntaFrequente

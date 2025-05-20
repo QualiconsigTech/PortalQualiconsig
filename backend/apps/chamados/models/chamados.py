@@ -17,6 +17,15 @@ class Chamado(models.Model):
     solucao = models.TextField(blank=True, null=True)
     comentarios = models.TextField(blank=True, null=True)
     arquivos = models.JSONField(null=True, blank=True)
+    
 
     def __str__(self):
         return self.titulo
+
+    @property
+    def status_calculado(self):
+        if self.encerrado_em:
+            return "Encerrado"
+        if self.analista:
+            return "Em Atendimento"
+        return "Aberto"

@@ -59,6 +59,38 @@ class DeletarChamadoView(APIView):
         data, status_code = deletar_chamado(chamado_id, request.user)
         return Response(data, status=status_code)
 
+class AtenderChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        try:
+            chamado = atender_chamado(chamado_id, request.user)
+
+            Notificacao.objects.create(
+                usuario_destino=chamado.usuario,
+                chamado=chamado,
+                mensagem=f"Seu chamado {chamado.titulo} está em atendimento."
+            )
+
+            return Response({
+                "mensagem": f"Chamado '{chamado.titulo}' atribuído ao analista com sucesso."
+            }, status=status.HTTP_200_OK)
+
+        except PermissionError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CancelarChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        try:
+            chamado = cancelar_chamado(chamado_id, request.user, request.data)
+            return Response({"mensagem": f"Chamado '{chamado.titulo}' cancelado com sucesso."})
+        except Exception as e:
+            return Response({"erro": str(e)}, status=400)
 
 class CriarPerguntaFrequenteView(APIView):
     permission_classes = [IsAuthenticated]

@@ -10,6 +10,7 @@ from apps.usuarios.utils import *
 from apps.usuarios.models.usuarios import Usuario
 from django.utils import timezone
 
+
 #ANALISTA COMUM
 class ChamadosDoAnalistaView(APIView):
     permission_classes = [IsAuthenticated]
@@ -19,29 +20,6 @@ class ChamadosDoAnalistaView(APIView):
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
 
-class AtenderChamadoView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, chamado_id):
-        try:
-            chamado = atender_chamado(request.user, chamado_id)
-
-           
-            Notificacao.objects.create(
-                usuario_destino=chamado.usuario,     
-                mensagem=f"Seu chamado {chamado.titulo} está em atendimento.",
-                chamado=chamado                     
-            )
-
-            return Response({
-                "mensagem": f"Chamado '{chamado.titulo}' atribuído ao analista com sucesso."
-            }, status=status.HTTP_200_OK)
-        
-        except PermissionError as e:
-            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
-        
-        except ValueError as e:
-            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         
 class ChamadosAtribuidosView(APIView):
@@ -52,23 +30,6 @@ class ChamadosAtribuidosView(APIView):
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
     
-class EncerrarChamadoView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, chamado_id):
-        chamado = encerrar_chamado(chamado_id, request.user, request.data)
-
-        Notificacao.objects.create(
-            usuario_destino=chamado.usuario,
-            chamado=chamado,
-            mensagem=f"Seu chamado {chamado.titulo} foi encerrado."
-        )
-
-        return Response({
-            'mensagem': 'Chamado encerrado com sucesso.',
-            'chamado_id': chamado.id,
-            'encerrado_em': chamado.encerrado_em
-        })
 
     
 #ANALISTA ADMIN    
@@ -98,31 +59,76 @@ class ChamadosDoUsuarioView(APIView):
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
 
+class AtenderChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        try:
+            chamado = atender_chamado(chamado_id, request.user)
+
+            Notificacao.objects.create(
+                usuario_destino=chamado.usuario,
+                chamado=chamado,
+                mensagem=f"Seu chamado {chamado.titulo} está em atendimento."
+            )
+
+            return Response({
+                "mensagem": f"Chamado '{chamado.titulo}' atribuído ao analista com sucesso."
+            }, status=status.HTTP_200_OK)
+
+        except PermissionError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"erro": "Erro ao atender o chamado."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class EncerrarChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        try:
+            chamado = encerrar_chamado(chamado_id, request.user, request.data)
+
+            Notificacao.objects.create(
+                usuario_destino=chamado.usuario,
+                chamado=chamado,
+                mensagem=f"Seu chamado {chamado.titulo} foi encerrado."
+            )
+
+            return Response({
+                'mensagem': 'Chamado encerrado com sucesso.',
+                'chamado_id': chamado.id,
+                'encerrado_em': chamado.encerrado_em
+            }, status=status.HTTP_200_OK)
+        
+        except PermissionError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"erro": "Erro interno ao encerrar chamado."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 class CancelarChamadoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, chamado_id):
         try:
-            chamado = get_object_or_404(Chamado, id=chamado_id)
-
-            # Verifica se o chamado já foi atribuído
-            if chamado.analista:
-                return Response(
-                    {"erro": "Chamado já atribuído, não pode ser cancelado."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            chamado.solucao = request.data.get("solucao", "")
-            chamado.encerrado_em = timezone.now()
-            chamado.save()
-
-            return Response(
-                {"mensagem": f"Chamado '{chamado.titulo}' cancelado com sucesso."}
-            )
-
+            chamado = cancelar_chamado(chamado_id, request.user, request.data)
+            return Response({
+                "mensagem": f"Chamado '{chamado.titulo}' cancelado com sucesso.",
+                "encerrado_em": chamado.encerrado_em
+            })
+        except PermissionError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+            return Response({"erro": "Erro interno ao cancelar chamado."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 #USUARIOS ADMIN
 class ChamadosDoSetorView(APIView):
     permission_classes = [IsAuthenticated]
