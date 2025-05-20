@@ -101,7 +101,7 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       setNotificacoes(data);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        // Impede erro não tratado
+        
         const evento = new Event("tokenExpired");
         window.dispatchEvent(evento);
       } else {

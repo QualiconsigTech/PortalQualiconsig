@@ -164,10 +164,10 @@ export const ChamadoModal = ({
       if (!usuarioLogado) return false;
     
       const ehUsuario = usuarioLogado.tipo === "usuario";
-      const chamadoAbertoOuEmAndamento = ["Aberto", "Em Atendimento"].includes(status.texto);
+      const chamadoAberto = status.texto === "Aberto";
       const semAnalistaAtribuido = !chamado.analista;
     
-      return ehUsuario && chamadoAbertoOuEmAndamento && semAnalistaAtribuido;
+      return ehUsuario && chamadoAberto && semAnalistaAtribuido;
     };
     
     
@@ -209,14 +209,14 @@ export const ChamadoModal = ({
       const token = localStorage.getItem("token");
       if (!token) return;
   
-      const response = await api.post(
-        `/api/usuarios/chamados/${chamado.id}/cancelar/`,
-        { solucao },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      if (!solucao.trim()) {
+        setErroSolucao(true);
+        alert("Você precisa preencher a solução para cancelar o chamado.");
+        return;
+      }
+      const response = await api.post(`/api/usuarios/chamados/${chamado.id}/cancelar/`, 
+        { solucao }, 
+        { headers: { Authorization: `Bearer ${token}` } }
       );
   
       alert("Chamado cancelado com sucesso.");
@@ -443,6 +443,17 @@ export const ChamadoModal = ({
               {isEncerrando ? "Encerrando..." : "Encerrar"}
             </button>
           )}
+
+          {podeMostrarBotaoCancelar() && (
+            <button
+              onClick={cancelarChamado}
+              disabled={isEncerrando}
+              className="px-6 py-2 rounded text-white bg-yellow-600 hover:bg-yellow-700"
+            >
+              {isEncerrando ? "Cancelando..." : "Cancelar chamado"}
+            </button>
+          )}
+
 
    
         </div>
