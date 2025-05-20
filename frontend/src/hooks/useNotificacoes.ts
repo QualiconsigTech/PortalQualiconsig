@@ -9,7 +9,17 @@ export interface Notificacao {
   chamado_id: number;
 }
 
-export function useNotificacoes() {
+interface UseNotificacoesParams {
+  perfilUsuario: string;
+  abrirModalChamadosAnalista: (chamadoId: number, notificacaoId?: number) => void;
+  abrirModalChamadosUsuario: (chamadoId: number, notificacaoId?: number) => void;
+}
+
+export function useNotificacoes({
+  perfilUsuario,
+  abrirModalChamadosAnalista,
+  abrirModalChamadosUsuario,
+}: UseNotificacoesParams) {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,8 +30,7 @@ export function useNotificacoes() {
       setNotificacoes(data);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        const evento = new Event("tokenExpired");
-        window.dispatchEvent(evento);
+        window.dispatchEvent(new Event("tokenExpired"));
       } else {
         console.error("Erro ao buscar notificações", error);
       }
@@ -50,6 +59,18 @@ export function useNotificacoes() {
     }
   };
 
+  const abrirNotificacao = async (notificacao: Notificacao) => {
+    try {
+      if (perfilUsuario === "analista" || perfilUsuario === "analista_admin") {
+        await abrirModalChamadosAnalista(notificacao.chamado_id, notificacao.id);
+      } else {
+        await abrirModalChamadosUsuario(notificacao.chamado_id, notificacao.id);
+      }
+    } catch (err) {
+      console.error("Erro ao abrir notificação:", err);
+    }
+  };
+
   useEffect(() => {
     fetchNotificacoes();
     const interval = setInterval(fetchNotificacoes, 5000);
@@ -62,5 +83,6 @@ export function useNotificacoes() {
     fetchNotificacoes,
     marcarNotificacaoComoLida,
     marcarTodasComoLidas,
+    abrirNotificacao, 
   };
 }

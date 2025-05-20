@@ -20,7 +20,7 @@ export default function ChamadosUsuarios() {
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [categorias, setCategorias] = useState([]);
-  const [setores, setSetores] = useState<{ id: number; nome: string; area_id: number }[]>([]);
+  const [setores, setSetores] = useState<{ id: number; nome: string; grupo: number }[]>([]);
   const [prioridades, setPrioridades] = useState<{ id: number; nome: string }[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;

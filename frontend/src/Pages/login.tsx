@@ -28,6 +28,11 @@ const LoginPage: React.FC = () => {
       localStorage.setItem("token", accessToken);
       localStorage.setItem("refresh", refreshToken);
 
+      if (response.data.primeiro_login) {
+        window.location.href = '/alterar-senha';
+        return;
+      }
+
       const meResponse = await axios.get("http://localhost:8000/api/auth/me/", {
         headers: {
           Authorization: `Bearer ${accessToken}`,

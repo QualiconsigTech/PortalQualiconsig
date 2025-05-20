@@ -12,7 +12,7 @@ interface AbrirChamadoModalProps {
     anexos: FileList | null;
   }) => void;
   categorias: { id: number; nome: string }[];
-  setores: { id: number; nome: string; area_id: number }[];
+  setores: { id: number; nome: string; grupo: number }[];
   prioridades: { id: number; nome: string }[];
 }
 
@@ -113,7 +113,7 @@ export const AbrirChamadoModal = ({
             >
               <option value={0}>Selecione o Setor</option>
               {setores
-                .filter((setor) => setor.area_id === 1)
+                .filter((setor) => Number(setor.grupo) === 2)
                 .map((setor) => (
                   <option key={setor.id} value={setor.id}>
                     {setor.nome}

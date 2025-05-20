@@ -5,18 +5,29 @@ import { useNotificacoes } from "@/hooks/useNotificacoes";
 
 interface Props {
   nomeUsuario: string;
-  onAbrirChamado: (chamadoId: number, notificacaoId?: number) => void;
+  perfilUsuario: string;
+  abrirModalChamadosAnalista: (chamadoId: number, notificacaoId?: number) => void;
+  abrirModalChamadosUsuario: (chamadoId: number, notificacaoId?: number) => void;
 }
 
-export function NotificacoesDropdown({ nomeUsuario, onAbrirChamado }: Props) {
+export function NotificacoesDropdown({
+  nomeUsuario,
+  perfilUsuario,
+  abrirModalChamadosAnalista,
+  abrirModalChamadosUsuario,
+}: Props) {
   const {
     notificacoes,
     marcarNotificacaoComoLida,
     marcarTodasComoLidas,
-  } = useNotificacoes();
+    abrirNotificacao,
+  } = useNotificacoes({
+    perfilUsuario,
+    abrirModalChamadosAnalista,
+    abrirModalChamadosUsuario,
+  });
 
   const notificacoesNaoLidas = notificacoes.filter((n) => !n.visualizado);
-
   const [mostrar, setMostrar] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -36,9 +47,7 @@ export function NotificacoesDropdown({ nomeUsuario, onAbrirChamado }: Props) {
 
     if (mostrar) {
       document.addEventListener("mousedown", handleClickOutside);
-      timeoutRef.current = setTimeout(() => {
-        setMostrar(false);
-      }, 5000);
+      timeoutRef.current = setTimeout(() => setMostrar(false), 5000);
     }
 
     return () => {
@@ -49,12 +58,7 @@ export function NotificacoesDropdown({ nomeUsuario, onAbrirChamado }: Props) {
 
   return (
     <div className="relative flex items-center gap-4">
-      {/* Botão do sino */}
-      <button
-        id="botao-notificacao"
-        onClick={() => setMostrar((prev) => !prev)}
-        className="relative"
-      >
+      <button id="botao-notificacao" onClick={() => setMostrar((prev) => !prev)} className="relative">
         <Bell className="w-6 h-6 text-white" />
         {notificacoesNaoLidas.length > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5">
@@ -65,7 +69,6 @@ export function NotificacoesDropdown({ nomeUsuario, onAbrirChamado }: Props) {
 
       <p className="text-white">Olá, {nomeUsuario}</p>
 
-      {/* Dropdown */}
       <AnimatePresence>
         {mostrar && (
           <motion.div
@@ -77,13 +80,11 @@ export function NotificacoesDropdown({ nomeUsuario, onAbrirChamado }: Props) {
             className="absolute right-0 top-full mt-2 w-80 bg-white text-black rounded shadow-md z-50 max-h-80 overflow-y-auto scrollbar-hide"
           >
             <style jsx>{`#menu-notificacao::-webkit-scrollbar { display: none; }`}</style>
+
             <div className="flex items-center justify-between p-4 font-bold border-b">
               <span>Notificações</span>
               {notificacoes.length > 0 && (
-                <button
-                  onClick={marcarTodasComoLidas}
-                  className="text-xs text-blue-600 hover:underline"
-                >
+                <button onClick={marcarTodasComoLidas} className="text-xs text-blue-600 hover:underline">
                   Marcar todas como lidas
                 </button>
               )}
@@ -92,11 +93,11 @@ export function NotificacoesDropdown({ nomeUsuario, onAbrirChamado }: Props) {
             {notificacoes.length === 0 ? (
               <div className="p-4 text-sm">Nenhuma notificação</div>
             ) : (
-              notificacoes.map((n, index) => (
+              notificacoes.map((n) => (
                 <div
-                  key={index}
+                  key={n.id}
                   onClick={() => {
-                    onAbrirChamado(n.chamado_id, n.id);
+                    abrirNotificacao(n);
                     setMostrar(false);
                   }}
                   className={`flex items-start gap-2 p-4 text-sm border-b cursor-pointer transition-all ${

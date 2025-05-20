@@ -50,8 +50,6 @@ export default function TelaInicial(props: TelaInicialProps) {
         setIsAdmin(response.data.is_admin);
         setNomeUsuario(response.data.nome);
 
-
-        // Subview padrão
         if (response.data.tipo === "analista" && !response.data.is_admin) {
           setSubView("meus");
         } else {
@@ -91,6 +89,33 @@ export default function TelaInicial(props: TelaInicialProps) {
     }
   };
 
+  const abrirChamadoGenerico = async (chamadoId: number, notificacaoId?: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const { data } = await api.get(`/api/chamados/${chamadoId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setChamadoSelecionado(data);
+      setSolucao(data.solucao || "");
+      setModalAberto(true);
+
+      if (notificacaoId) {
+        await api.post(`/api/chamados/notificacoes/${notificacaoId}/visualizar/`);
+      }
+    } catch (error) {
+      console.error("Erro ao abrir chamado:", error);
+    }
+  };
+
+
+  const abrirModalChamadosAnalista = (id: number, notificacaoId?: number) =>
+    abrirChamadoGenerico(id, notificacaoId);
+
+  const abrirModalChamadosUsuario = (id: number, notificacaoId?: number) =>
+    abrirChamadoGenerico(id, notificacaoId);
   
   const subMenusTecnologiaAdmin = [
     "todos",
@@ -243,8 +268,13 @@ const getSubMenus = () => {
         />
       </div>
       <div className="flex items-center gap-4">
-        <NotificacoesDropdown nomeUsuario={nomeUsuario} onAbrirChamado={abrirModalChamado} />
-      </div>
+            <NotificacoesDropdown
+              nomeUsuario={nomeUsuario}
+              perfilUsuario={tipoUsuario}
+              abrirModalChamadosAnalista={abrirModalChamadosAnalista}
+              abrirModalChamadosUsuario={abrirModalChamadosUsuario}
+            />
+          </div>
     </header>
 
 
