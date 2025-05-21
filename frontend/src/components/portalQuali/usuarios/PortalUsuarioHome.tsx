@@ -66,12 +66,13 @@ export default function PortalUsuarioHome({
         case "ajuda":
           return <Ajuda />;
         case "analistas":
-          return <div className="text-gray-600 p-4">Listagem de analistas (placeholder)</div>; // ou crie um componente
+        return <ChamadosUsuariosAdmin tipo="setor" />;
         case "meus":
+          return <ChamadosUsuariosAdmin tipo="meus" />;
         default:
-          return <ChamadosUsuariosAdmin />;
+          return <ChamadosUsuariosAdmin tipo="meus" />;
+        }
       }
-    }
 
     if (tipoUsuario === "usuario") {
       switch (activeView) {

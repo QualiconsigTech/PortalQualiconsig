@@ -9,12 +9,12 @@ const LoginPage: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setError] = useState("");
+  const [errors, setErrors] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErrors("");
 
     try {
        const response = await axios.post("http://localhost:8000/api/auth/login/", {
@@ -40,12 +40,7 @@ const LoginPage: React.FC = () => {
       });
 
       const userData = meResponse.data;
-
-      console.log("[LOGIN] Dados do usuário:", userData);
-
       const grupos = Array.isArray(userData.grupos) ? userData.grupos : [];
-
-      console.log("[LOGIN] Grupos recebidos:", grupos);
 
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("grupos", JSON.stringify(grupos));
@@ -53,7 +48,7 @@ const LoginPage: React.FC = () => {
       router.push("/tela-inicial");
     } catch (e: any) {
       console.error("[LOGIN] Erro:", e);
-      setError(e.response?.data?.detail ?? "Erro desconhecido");
+      setErrors(e.response?.data?.detail ?? "Erro desconhecido");
     }
   };
 
