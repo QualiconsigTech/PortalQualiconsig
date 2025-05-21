@@ -20,3 +20,11 @@ class Chamado(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+    @property
+    def status_calculado(self):
+        if self.encerrado_em:
+            return "Encerrado"
+        if self.analista:
+            return "Em Atendimento"
+        return "Aberto"

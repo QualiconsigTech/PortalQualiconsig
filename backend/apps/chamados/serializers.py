@@ -32,6 +32,24 @@ class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chamado
         fields = '__all__'
+        fields = [
+            'id',
+            'titulo',
+            'descricao',
+            'criado_em',
+            'editado_em',
+            'encerrado_em',
+            'solucao',
+            'arquivos',
+            'usuario',
+            'analista',
+            'categoria_nome',
+            'setor_nome',
+            'prioridade_nome',
+            'categoria',
+            'setor',
+            'prioridade',
+        ]
 
 class PerguntaFrequenteSerializer(serializers.ModelSerializer):
     class Meta:

@@ -53,16 +53,24 @@ class EncerrarChamadoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, chamado_id):
-        chamado = encerrar_chamado(chamado_id, request.user, request.data)
+        try:
+            chamado = encerrar_chamado(chamado_id, request.user, request.data)
 
-        Notificacao.objects.create(
-            usuario_destino=chamado.usuario,
-            chamado=chamado,
-            mensagem=f"Seu chamado {chamado.titulo} foi encerrado."
-        )
+            Notificacao.objects.create(
+                usuario_destino=chamado.usuario,
+                chamado=chamado,
+                mensagem=f"Seu chamado {chamado.titulo} foi encerrado."
+            )
 
-        return Response({
-            'mensagem': 'Chamado encerrado com sucesso.',
-            'chamado_id': chamado.id,
-            'encerrado_em': chamado.encerrado_em
-        })
+            return Response({
+                'mensagem': 'Chamado encerrado com sucesso.',
+                'chamado_id': chamado.id,
+                'encerrado_em': chamado.encerrado_em
+            }, status=status.HTTP_200_OK)
+        
+        except PermissionError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"erro": "Erro interno ao encerrar chamado."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

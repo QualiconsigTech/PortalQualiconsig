@@ -12,3 +12,13 @@ class ChamadosDoUsuarioView(APIView):
         serializer = ChamadoDetalhadoSerializer(chamados, many=True)
         return Response(serializer.data)
     
+class CancelarChamadoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, chamado_id):
+        try:
+            chamado = cancelar_chamado(chamado_id, request.user, request.data)
+            return Response({"mensagem": f"Chamado '{chamado.titulo}' cancelado com sucesso."})
+        except Exception as e:
+            return Response({"erro": str(e)}, status=400)
+    

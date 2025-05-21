@@ -45,6 +45,7 @@ urlpatterns = [
     ## USUARIOS
      path('meus/', ChamadosDoSetorView.as_view(), name='chamados-do-usuario'),
      path('usuario/', ChamadosDoUsuarioView.as_view(), name='chamados-do-usuario'),
+     path("<int:chamado_id>/cancelar/", CancelarChamadoView.as_view(), name="cancelar-chamado"),
 
 
     ## LISTAGEM
