@@ -56,6 +56,8 @@ export const ChamadoModal = ({
   const status = getStatus(chamado);
   const [usuarioLogado, setUsuarioLogado] = useState<{ id: number, tipo: string } | null>(null);
   const [erroSolucao, setErroSolucao] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMensagem, setToastMensagem] = useState("");
 
 
   const fetchUsuario = async () => {
@@ -169,38 +171,41 @@ export const ChamadoModal = ({
   }
 
   const cancelarChamado = async () => {
-    if (!chamado?.id) return;
-    setErroSolucao(false);
+  if (!chamado?.id) return;
+  setErroSolucao(false);
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-
-  if (!solucao.trim()) {
-        setErroSolucao(true);
-        alert("Você precisa preencher a solução para cancelar o chamado.");
-        return;
-      }
-      const response = await api.post(`/api/chamados/${chamado.id}/cancelar/`, 
-        { solucao }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      alert("Chamado cancelado com sucesso.");
-      onClose(); // Fecha modal
-
-      if (atualizarListaChamados) {
-        atualizarListaChamados();
-      } else {
-        window.location.reload(); // fallback
-      }
-
-    } catch (error) {
-      console.error("Erro ao cancelar chamado:", error);
-      alert("Erro ao cancelar o chamado. Tente novamente.");
+    if (!solucao.trim()) {
+      setErroSolucao(true);
+      setToastMensagem("Você precisa preencher a solução para cancelar o chamado.");
+      setShowToast(true);
+      return;
     }
-  };
+
+    await api.post(`/api/chamados/${chamado.id}/cancelar/`, 
+      { solucao }, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setToastMensagem("Chamado cancelado com sucesso.");
+    setShowToast(true);
+    onClose();
+
+    if (atualizarListaChamados) {
+      atualizarListaChamados();
+    } else {
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error("Erro ao cancelar chamado:", error);
+    setToastMensagem("Erro ao cancelar o chamado. Tente novamente.");
+    setShowToast(true);
+  }
+};
+
   
   return (
     <div
@@ -375,6 +380,14 @@ export const ChamadoModal = ({
               {isEncerrando ? "Cancelando..." : "Cancelar chamado"}
             </button>
           )}
+
+          {showToast && (
+            <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-md z-50">
+              {toastMensagem}
+              <button onClick={() => setShowToast(false)} className="ml-2 font-bold">×</button>
+            </div>
+          )}
+
 
 
         </div>

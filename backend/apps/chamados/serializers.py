@@ -29,9 +29,14 @@ class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
     prioridade_nome = serializers.CharField(source='prioridade.nome', read_only=True)
+    
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        return obj.status_calculado
+
     class Meta:
         model = Chamado
-        fields = '__all__'
         fields = [
             'id',
             'titulo',
@@ -49,7 +54,9 @@ class ChamadoDetalhadoSerializer(serializers.ModelSerializer):
             'categoria',
             'setor',
             'prioridade',
+            'status',
         ]
+
 
 class PerguntaFrequenteSerializer(serializers.ModelSerializer):
     class Meta:

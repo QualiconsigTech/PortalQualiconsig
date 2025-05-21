@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
+import { api } from "@/services/api";
 
 
 interface LinhaRepasse {
@@ -166,21 +167,20 @@ const Relatorios: React.FC = () => {
     setLoading(true);
     try {
       const url = file.name.toLowerCase().includes("repasse")
-      ? "http://localhost:8000/api/financeiro/upload-repasse-cessao/"
-      : file.name.toLowerCase().includes("fatura")
-      ? "http://localhost:8000/api/financeiro/upload-fatura-comissao/"
-      : file.name.toLowerCase().includes("seguro")
-      ? "http://localhost:8000/api/financeiro/upload-seguro-cartao/"
-      : "";
+        ? "/api/financeiro/upload-repasse-cessao/"
+        : file.name.toLowerCase().includes("fatura")
+        ? "/api/financeiro/upload-fatura-comissao/"
+        : file.name.toLowerCase().includes("seguro")
+        ? "/api/financeiro/upload-seguro-cartao/"
+        : "";
 
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+    if (!url) throw new Error("Tipo de arquivo não suportado");
+
+      await api.post(url, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (!response.ok) throw new Error(await response.text());
       setToast({ tipo: "sucesso", texto: "Arquivo salvo com sucesso!" });
       setAprovados(prev => ({ ...prev, [file.name]: true }));
     } catch (error) {
@@ -194,22 +194,13 @@ const Relatorios: React.FC = () => {
   const handleGerarRelatorioFinal = async () => {
     setGerando(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/financeiro/gerar-relatorio-final/", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+      await api.post("/api/financeiro/gerar-relatorio-final/");
+
+      const response = await api.get("/api/financeiro/download-relatorio-final/", {
+        responseType: "blob",
       });
 
-      if (!response.ok) throw new Error(await response.text());
-
-      const downloadResponse = await fetch("http://localhost:8000/api/financeiro/download-relatorio-final/", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!downloadResponse.ok) throw new Error("Erro ao baixar o relatório.");
-
-      const blob = await downloadResponse.blob();
+      const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -218,6 +209,7 @@ const Relatorios: React.FC = () => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+
       setToast({ tipo: "sucesso", texto: "Relatório final gerado e baixado com sucesso!" });
     } catch (error) {
       console.error(error);
@@ -226,7 +218,7 @@ const Relatorios: React.FC = () => {
       setGerando(false);
     }
   };
-  
+
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
