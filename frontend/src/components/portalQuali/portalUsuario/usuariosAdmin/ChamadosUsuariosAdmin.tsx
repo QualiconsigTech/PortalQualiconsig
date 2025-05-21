@@ -8,7 +8,7 @@ import { getStatus, toBase64, getNomeAnalista, Chamado} from "@/utils/chamadoUti
 
 
 
-export default function ChamadosUsuariosAdmin() {
+export default function ChamadosUsuariosAdmin({ tipo = "meus" }: { tipo: "meus" | "setor" }) {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -161,17 +161,18 @@ export default function ChamadosUsuariosAdmin() {
     };
   
   useEffect(() => {
-    const loadAll = async () => {
-      await Promise.all([
-        fetchUsuario(),
-        fetchChamados("/api/chamados/meus/"),
-        fetchCategorias(),
-        fetchSetores(),
-        fetchPrioridades(),
-      ]);
-    };
-    loadAll();
-  }, []);
+  const loadAll = async () => {
+    await Promise.all([
+      fetchUsuario(),
+      fetchChamados(tipo === "setor" ? "/api/chamados/meus/" : "/api/chamados/usuario/"),
+      fetchCategorias(),
+      fetchSetores(),
+      fetchPrioridades(),
+    ]);
+  };
+  loadAll();
+}, [tipo]);
+
   
  
   const handleSalvarChamado = async (dados: {

@@ -16,12 +16,6 @@ interface Props {
 export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Props) {
   const router = useRouter();
   const { perfilUsuario, tipoUsuario } = useDashboardLogic();
-  const {
-    notificacoes,
-    marcarNotificacaoComoLida,
-    fetchNotificacoes
-  } = useNotificacoes();
-  
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
