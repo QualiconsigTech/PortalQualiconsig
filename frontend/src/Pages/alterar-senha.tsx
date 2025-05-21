@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState } from "react";
 import axios from "axios";
+import { api } from "@/services/api";
 
 const AlterarSenhaPage: React.FC = () => {
   const [novaSenha, setNovaSenha] = useState("");
@@ -9,43 +8,35 @@ const AlterarSenhaPage: React.FC = () => {
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMensagem("");
-    setErro("");
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setMensagem("");
+  setErro("");
 
-    if (novaSenha !== confirmarSenha) {
-      setErro("As senhas não coincidem.");
-      return;
-    }
+  if (novaSenha !== confirmarSenha) {
+    setErro("As senhas não coincidem.");
+    return;
+  }
 
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    await api.put("/api/auth/alterar-senha/", {
+      nova_senha: novaSenha,
+      confirmar_senha: confirmarSenha,
+    });
 
-      const response = await axios.put(
-        "http://localhost:8000/api/auth/alterar-senha/",
-        {
-          nova_senha: novaSenha,
-          confirmar_senha: confirmarSenha,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    setMensagem("Senha alterada com sucesso!");
+    setNovaSenha("");
+    setConfirmarSenha("");
 
-      setMensagem("Senha alterada com sucesso!");
-      setNovaSenha("");
-      setConfirmarSenha("");
+    setTimeout(() => {
+      setMensagem("");
+    }, 3000);
+  } catch (error: any) {
+    console.error("Erro ao alterar senha:", error);
+    setErro("Erro ao alterar senha.");
+  }
+};
 
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
-    } catch (err: any) {
-      setErro(err.response?.data?.erro ?? "Erro ao alterar a senha.");
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fffafa] px-4">

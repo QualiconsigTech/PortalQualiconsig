@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Mail, Eye, EyeOff, Lock } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { api } from "@/services/api";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -12,45 +13,48 @@ const LoginPage: React.FC = () => {
   const [errors, setErrors] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors("");
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setErrors("");
 
-    try {
-       const response = await axios.post("http://localhost:8000/api/auth/login/", {
-        email,
-        password,
-      });
+  try {
+    const response = await api.post("/api/auth/login/", {
+      email,
+      password,
+    });
 
-      const accessToken = response.data.token.access;
-      const refreshToken = response.data.token.refresh;
+    const accessToken = response.data.token.access;
+    const refreshToken = response.data.token.refresh;
 
-      localStorage.setItem("token", accessToken);
-      localStorage.setItem("refresh", refreshToken);
+    localStorage.setItem("token", accessToken);
+    localStorage.setItem("refresh", refreshToken);
 
-      if (response.data.primeiro_login) {
-        window.location.href = '/alterar-senha';
-        return;
-      }
-
-      const meResponse = await axios.get("http://localhost:8000/api/auth/me/", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const userData = meResponse.data;
-      const grupos = Array.isArray(userData.grupos) ? userData.grupos : [];
-
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("grupos", JSON.stringify(grupos));
-
-      router.push("/tela-inicial");
-    } catch (e: any) {
-      console.error("[LOGIN] Erro:", e);
-      setErrors(e.response?.data?.detail ?? "Erro desconhecido");
+    if (response.data.primeiro_login) {
+      window.location.href = "/alterar-senha";
+      return;
     }
-  };
+
+    const meResponse = await api.get("/api/auth/me/", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const userData = meResponse.data;
+
+    console.log("[LOGIN] Dados do usuário:", userData);
+    const grupos = Array.isArray(userData.grupos) ? userData.grupos : [];
+
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("grupos", JSON.stringify(grupos));
+
+    router.push("/tela-inicial");
+  } catch (e: any) {
+    console.error("[LOGIN] Erro:", e);
+    setErrors(e.response?.data?.detail ?? "Erro desconhecido");
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fffafa] px-4">

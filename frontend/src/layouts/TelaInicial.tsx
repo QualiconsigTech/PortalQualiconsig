@@ -7,6 +7,8 @@ import Qlinks from "@/components/portalQuali/chamados/Qlinks"
 import { NotificacoesDropdown } from "@/components/portalQuali/chamados/NotificacoesDropdown";
 import { api } from "@/services/api";
 import { Chamado } from "@/utils/chamadoUtils";
+import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
+
 
 interface TelaInicialProps {
   nomeUsuario?: string;
@@ -24,6 +26,11 @@ export default function TelaInicial(props: TelaInicialProps) {
   const [modalAberto, setModalAberto] = useState(false);
   const [chamadoSelecionado, setChamadoSelecionado] = useState<Chamado | null>(null);
   const [solucao, setSolucao] = useState("");
+  const [tokenExpirado, setTokenExpirado] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalChamados, setTotalChamados] = useState(0);
+
 
   useEffect(() => {
     const storageGrupos = localStorage.getItem("grupos");
@@ -88,6 +95,12 @@ export default function TelaInicial(props: TelaInicialProps) {
       console.error("Erro ao abrir chamado:", error);
     }
   };
+
+  useEffect(() => {
+  const handleTokenExpired = () => setTokenExpirado(true);
+  window.addEventListener("tokenExpired", handleTokenExpired);
+  return () => window.removeEventListener("tokenExpired", handleTokenExpired);
+}, []);
 
   const abrirChamadoGenerico = async (chamadoId: number, notificacaoId?: number) => {
     try {
@@ -276,7 +289,46 @@ const getSubMenus = () => {
             />
           </div>
     </header>
+        {tokenExpirado && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+            <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+              <h2 className="text-lg font-semibold mb-4">Tempo de acesso expirado</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Sua sessão foi encerrada. Por favor, clique em OK para fazer login novamente.
+              </p>
+              <button
+                onClick={() => {
+                  setTokenExpirado(false);
+                  window.location.href = '/login';
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
 
+        {modalAberto && chamadoSelecionado && (
+        <ChamadoModal
+          chamado={chamadoSelecionado}
+          aberto={modalAberto}
+          onClose={() => setModalAberto(false)}
+          onAtender={() => {}}
+          onEncerrar={() => {}}
+          podeAtender={true} 
+          podeEncerrar={chamadoSelecionado.status !== "Encerrado"}
+          solucao={solucao}
+          comentarios={""}
+          setSolucao={setSolucao}
+          setComentarios={() => {}}
+          anexos={null}
+          setAnexos={() => {}}
+          isAtendendo={false}
+          isEncerrando={false}
+          modoAdmin={true}
+        />
+      )}
 
       {/* Conteúdo dinâmico */}
       {renderConteudo()}

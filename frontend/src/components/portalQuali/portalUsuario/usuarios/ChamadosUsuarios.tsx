@@ -73,9 +73,15 @@ export default function ChamadosUsuarios() {
       }
 
       const ordenado = [...response.data].sort((a, b) => {
-        const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
-        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
-      });
+        const statusOrder = {
+          "Aberto": 0,
+          "Em Atendimento": 1,
+          "Aguardando Atendimento": 2,
+          "Encerrado": 3,
+        };
+
+          return statusOrder[a.status] - statusOrder[b.status];
+        });
 
       setChamados(ordenado);
     } catch (error) {
