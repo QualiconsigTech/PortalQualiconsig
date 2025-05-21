@@ -25,6 +25,17 @@ class Chamado(models.Model):
     def status_calculado(self):
         if self.encerrado_em:
             return "Encerrado"
+
         if self.analista:
-            return "Em Atendimento"
+            ultimo_comentario = self.comentarios_chamado.order_by('-criado_em').first()
+
+            if ultimo_comentario:
+                if ultimo_comentario.autor == self.analista:
+                    return "Aguardando Resposta"
+                else:
+                    return "Em Atendimento"
+
+            return "Em Atendimento" 
+
         return "Aberto"
+
