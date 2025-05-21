@@ -28,6 +28,7 @@ interface ChamadoModalProps {
   isAtendendo: boolean;
   isEncerrando: boolean;
   modoAdmin?: boolean;
+  atualizarListaChamados?: () => void;
 }
 
 export const ChamadoModal = ({
@@ -47,6 +48,7 @@ export const ChamadoModal = ({
   isAtendendo,
   isEncerrando,
   modoAdmin = false,
+  atualizarListaChamados
 
 }: ChamadoModalProps) => {
   const [chatMensagens, setChatMensagens] = useState<any[]>([]);
@@ -123,6 +125,18 @@ export const ChamadoModal = ({
     
       return false;
     };
+
+    const podeMostrarBotaoCancelar = () => {
+      if (!usuarioLogado) return false;
+
+      const ehUsuario = usuarioLogado.tipo === "usuario";
+      const chamadoAbertoOuEmAndamento = ["Aberto", "Em Atendimento"].includes(status.texto);
+      const chamadoAberto = status.texto === "Aberto";
+      const semAnalistaAtribuido = !chamado.analista;
+
+      return ehUsuario && chamadoAbertoOuEmAndamento && semAnalistaAtribuido;
+      return ehUsuario && chamadoAberto && semAnalistaAtribuido;
+    };
     
     
 
@@ -153,6 +167,40 @@ export const ChamadoModal = ({
   } catch (e) {
     console.error("Erro ao interpretar arquivos:", e);
   }
+
+  const cancelarChamado = async () => {
+    if (!chamado?.id) return;
+    setErroSolucao(false);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+
+  if (!solucao.trim()) {
+        setErroSolucao(true);
+        alert("Você precisa preencher a solução para cancelar o chamado.");
+        return;
+      }
+      const response = await api.post(`/api/chamados/${chamado.id}/cancelar/`, 
+        { solucao }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Chamado cancelado com sucesso.");
+      onClose(); // Fecha modal
+
+      if (atualizarListaChamados) {
+        atualizarListaChamados();
+      } else {
+        window.location.reload(); // fallback
+      }
+
+    } catch (error) {
+      console.error("Erro ao cancelar chamado:", error);
+      alert("Erro ao cancelar o chamado. Tente novamente.");
+    }
+  };
   
   return (
     <div
@@ -315,6 +363,16 @@ export const ChamadoModal = ({
               }`}
             >
               {isEncerrando ? "Encerrando..." : "Encerrar"}
+            </button>
+          )}
+
+          {podeMostrarBotaoCancelar() && (
+            <button
+              onClick={cancelarChamado}
+              disabled={isEncerrando}
+              className="px-6 py-2 rounded text-white bg-yellow-600 hover:bg-yellow-700"
+            >
+              {isEncerrando ? "Cancelando..." : "Cancelar chamado"}
             </button>
           )}
 
