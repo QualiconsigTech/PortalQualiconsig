@@ -3,6 +3,7 @@ export interface Chamado {
   titulo: string;
   descricao: string;
   criado_em: string;
+  status: string;
   encerrado_em: string | null;
   solucao?: string | null;
   comentarios?: string | null;
@@ -23,24 +24,18 @@ export interface Chamado {
 }
 
 
-
-
-
-export const getStatus = (chamado: {
-    analista: any;
-    encerrado_em: string | null;
-  }) => {
-    if (!chamado.analista) {
-      return { texto: "Aberto", cor: "text-green-600" };
-    }
-    if (chamado.analista && !chamado.encerrado_em) {
-      return { texto: "Em Atendimento", cor: "text-yellow-500" };
-    }
-    if (chamado.analista && chamado.encerrado_em) {
-      return { texto: "Encerrado", cor: "text-black" };
-    }
-    return { texto: "Desconhecido", cor: "text-gray-500" };
-  };
+export const getStatus = (chamado: { analista: any; encerrado_em: string | null }) => {
+  if (!chamado.analista && !chamado.encerrado_em) {
+    return { texto: "Aberto", cor: "text-green-600" };
+  }
+  if (chamado.analista && !chamado.encerrado_em) {
+    return { texto: "Em Atendimento", cor: "text-yellow-500" };
+  }
+  if (chamado.encerrado_em) {
+    return { texto: "Encerrado", cor: "text-black" };
+  }
+  return { texto: "Desconhecido", cor: "text-gray-500" };
+};
   
   export const toBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {

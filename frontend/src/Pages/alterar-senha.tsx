@@ -39,10 +39,9 @@ const AlterarSenhaPage: React.FC = () => {
       setNovaSenha("");
       setConfirmarSenha("");
 
-      // Redireciona após alguns segundos
       setTimeout(() => {
         window.location.href = "/login";
-      }, 3000);
+      }, 2000);
     } catch (err: any) {
       setErro(err.response?.data?.erro ?? "Erro ao alterar a senha.");
     }

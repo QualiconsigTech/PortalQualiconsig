@@ -3,6 +3,7 @@ from decouple import config
 from datetime import timedelta
 
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-6a^op!1=yf)9l9$0ldwqxjf)ohz2e!i11%9sbcmj93kgrl#bc%'
@@ -17,28 +18,34 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# Apps instalados
 INSTALLED_APPS = [
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+
     'rest_framework',
     'rest_framework_simplejwt',
-
-    # CORS
     'corsheaders',
+    'drf_yasg',
 
-    # Apps do projeto
-    'users',
-    'chamados',
-    'integracoes',
+
+
+    'apps.usuarios',
+    'apps.chamados',
+    'apps.integracoes',
+    'apps.financeiro',
+    'apps.permissoes',
+    'apps.core',
+
 ]
 
+
 MIDDLEWARE = [
-    # CORS
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 
@@ -75,12 +82,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # tempo para expirar sessão
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5), 
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
-
-# Banco de dados PostgreSQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -116,9 +121,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'users.Usuario'
+AUTH_USER_MODEL = 'usuarios.Usuario'
 
-# Corrige problemas com modelos customizados
+
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
