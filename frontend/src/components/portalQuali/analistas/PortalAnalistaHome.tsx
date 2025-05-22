@@ -13,6 +13,11 @@ import { Chamado } from "@/utils/chamadoUtils";
 interface PortalAnalistaHomeProps {
   activeView: string;
   setActiveView: (view: string) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  itemsPerPage: number;
+  totalChamados: number;
+  setTotalChamados: (total: number) => void;
 }
 export default function PortalAnalistaHome({
   activeView,

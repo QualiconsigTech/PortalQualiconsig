@@ -318,6 +318,25 @@ export default function ChamadosUsuariosAdmin({ tipo = "meus" }: { tipo: "meus" 
         </div>
       )}
 
+      {/* Paginação */}
+      {chamados.length > itemsPerPage && (
+        <div className="flex justify-center mt-8 gap-2">
+          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                currentPage === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
       <AbrirChamadoModal
         aberto={abrirModalAberto}
         onClose={() => setAbrirModalAberto(false)}

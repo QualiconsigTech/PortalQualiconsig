@@ -11,6 +11,11 @@ import Ajuda from "@/components/portalQuali/chamados/Ajuda";
 interface PortalUsuarioHomeProps {
   activeView: string;
   setActiveView: (view: string) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  itemsPerPage: number;
+  totalChamados: number;
+  setTotalChamados: (total: number) => void;
 }
 
 export default function PortalUsuarioHome({
@@ -84,7 +89,7 @@ export default function PortalUsuarioHome({
           return <Ajuda />;
         case "meus":
         default:
-          return <ChamadosUsuarios />;
+          return <ChamadosUsuarios key={activeView} activeView={activeView}  />;
       }
     }
 
