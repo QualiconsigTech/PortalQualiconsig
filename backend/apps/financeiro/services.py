@@ -1,7 +1,7 @@
 import uuid
 import pandas as pd
 import json
-from apps.financeiro.models import RepasseCessao, FaturaComissao, SeguroCartao, RelatorioRepasseQualibankingFinal
+from .models import RepasseCessao, FaturaComissao, SeguroCartao, RelatorioRepasseQualibankingFinal
 from django.db import transaction
 from datetime import datetime
 from django.http import HttpResponse

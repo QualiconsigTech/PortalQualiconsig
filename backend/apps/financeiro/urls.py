@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.financeiro.views import UploadRepasseCessaoView, UploadFaturaComissaoView, UploadSeguroCartaoView, UploadRelatorioFinalView, DownloadRelatorioFinalView
+from .views import UploadRepasseCessaoView, UploadFaturaComissaoView, UploadSeguroCartaoView, UploadRelatorioFinalView, DownloadRelatorioFinalView
 
 urlpatterns = [
     path("upload-repasse-cessao/", UploadRepasseCessaoView.as_view(), name="upload-repasse-cessao"),
