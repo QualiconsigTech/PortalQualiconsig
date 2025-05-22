@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .services import importar_repasses_cessao, importar_faturas_comissao, importar_seguro_cartao, gerar_relatorio_final, download_relatorio_final
+from apps.financeiro.services import importar_repasses_cessao, importar_faturas_comissao, importar_seguro_cartao, gerar_relatorio_final, download_relatorio_final
 
 
 
