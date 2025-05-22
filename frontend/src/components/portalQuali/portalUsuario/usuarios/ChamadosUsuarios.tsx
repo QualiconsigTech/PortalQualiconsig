@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
-import { TableOfContents } from "lucide-react";
+import { TableOfContents,Search } from "lucide-react";
 import { api } from "@/services/api";
 import { format } from "date-fns";
 import { AbrirChamadoModal } from "@/components/portalQuali/chamados/AbrirChamadoModal";
 import PerguntasFrequentes from "@/components/portalQuali/chamados/PerguntasFrequentes";
 import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { getStatus, toBase64, Chamado } from "@/utils/chamadoUtils";
+import { Input } from "@/components/ui/input";
+
 
 interface ChamadosUsuariosProps {
   activeView: string;
 }
 export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) {
   const [chamados, setChamados] = useState<Chamado[]>([]);
+   const [filtro, setFiltro] = useState("");
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState(""); 
@@ -29,7 +32,6 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const [isEncerrando, setIsEncerrando] = useState(false);
   const [perfilUsuario, setPerfilUsuario] = useState<string>("");
@@ -83,8 +85,8 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
           "Encerrado": 3,
         };
 
-          return statusOrder[a.status] - statusOrder[b.status];
-        });
+       return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
+      });
 
       setChamados(ordenado);
     } catch (error) {
@@ -110,6 +112,26 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
     const response = await api.get("/api/chamados/prioridades/");
     setPrioridades(response.data);
   };
+
+  const chamadosFiltrados = chamados.filter((chamado) => {
+    const texto = filtro.toLowerCase();
+    const status = getStatus(chamado).texto.toLowerCase();
+
+    return (
+      String(chamado.id).includes(texto) ||
+      chamado.titulo?.toLowerCase().includes(texto) ||
+      chamado.categoria_nome?.toLowerCase().includes(texto) ||
+      chamado.prioridade_nome?.toLowerCase().includes(texto) ||
+      chamado.usuario?.setor_nome?.toLowerCase().includes(texto) ||
+      status.includes(texto) ||
+      format(new Date(chamado.criado_em), "dd/MM/yy").includes(texto)
+    );
+  });
+
+  const paginatedChamados = chamadosFiltrados.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const encerrarChamado = async () => {
     if (!chamadoSelecionado || !solucao.trim()) return;
@@ -230,6 +252,19 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
+        <div className="mb-6 max-w-md relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <Input
+          type="text"
+          placeholder="Filtrar chamados por qualquer campo..."
+          value={filtro}
+          onChange={(e) => {
+            setFiltro(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="pl-10 pr-4 py-2 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+        />
+      </div>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
           onClick={() => setAbrirModalAberto(true)}
@@ -296,9 +331,9 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
         </table>
       </section>
       {/* Paginação */}
-      {chamados.length > itemsPerPage && (
+      {chamadosFiltrados.length > itemsPerPage && (
         <div className="flex justify-center mt-8 gap-2">
-          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+          {Array.from({ length: Math.ceil(chamadosFiltrados.length / itemsPerPage) }).map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentPage(index + 1)}

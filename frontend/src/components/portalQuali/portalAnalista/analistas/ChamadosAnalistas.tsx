@@ -4,6 +4,9 @@ import { api } from "@/services/api";
 import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { Chamado, getStatus, toBase64 } from "@/utils/chamadoUtils";
 import { TableOfContents } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+
 
 interface ChamadosAnalistasProps {
   activeView: string;
@@ -25,10 +28,10 @@ export default function ChamadosAnalistas({ activeView }: ChamadosAnalistasProps
   const [currentPage, setCurrentPage] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState("");
+  const [filtro, setFiltro] = useState("");
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
 const fetchUsuario = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -71,7 +74,7 @@ const fetchUsuario = async () => {
           "Encerrado": 3,
         };
 
-        return statusOrder[a.status] - statusOrder[b.status];
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
       });
 
       setChamados(ordenado);
@@ -92,7 +95,25 @@ const fetchUsuario = async () => {
     }
   }, [perfilUsuario, activeView]);
 
-  console.log("perfil aqui:",perfilUsuario)
+  const chamadosFiltrados = chamados.filter((chamado) => {
+    const texto = filtro.toLowerCase();
+    const status = getStatus(chamado).texto.toLowerCase();
+
+    return (
+      String(chamado.id).includes(texto) ||
+      chamado.titulo?.toLowerCase().includes(texto) ||
+      chamado.categoria_nome?.toLowerCase().includes(texto) ||
+      chamado.prioridade_nome?.toLowerCase().includes(texto) ||
+      chamado.usuario?.setor_nome?.toLowerCase().includes(texto) ||
+      status.includes(texto) ||
+      format(new Date(chamado.criado_em), "dd/MM/yy").includes(texto)
+    );
+  });
+
+  const paginatedChamados = chamadosFiltrados.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   
 
   const atenderChamado = async () => {
@@ -161,6 +182,20 @@ const fetchUsuario = async () => {
     <section className="p-6">
       <h1 className="text-2xl font-bold text-[#041161] mb-4">Chamados Atribuídos</h1>
 
+      <div className="mb-6 max-w-md relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <Input
+        type="text"
+        placeholder="Filtrar chamados por qualquer campo..."
+        value={filtro}
+        onChange={(e) => {
+          setFiltro(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="pl-10 pr-4 py-2 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+      />
+    </div>
+
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
@@ -226,9 +261,9 @@ const fetchUsuario = async () => {
         </table>
       </section>
       {/* Paginação */}
-      {chamados.length > itemsPerPage && (
+      {chamadosFiltrados.length > itemsPerPage && (
         <div className="flex justify-center mt-8 gap-2">
-          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+          {Array.from({ length: Math.ceil(chamadosFiltrados.length / itemsPerPage) }).map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentPage(index + 1)}
