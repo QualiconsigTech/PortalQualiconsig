@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { Mail, Eye, EyeOff, Lock } from "lucide-react";
-import axios from "axios";
 import { useRouter } from "next/router";
 import { api } from "@/services/api";
+import axios, { AxiosError } from "axios";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -41,19 +41,31 @@ const handleLogin = async (e: React.FormEvent) => {
     });
 
     const userData = meResponse.data;
-
-    console.log("[LOGIN] Dados do usuário:", userData);
     const grupos = Array.isArray(userData.grupos) ? userData.grupos : [];
 
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("grupos", JSON.stringify(grupos));
 
     router.push("/tela-inicial");
-  } catch (e: any) {
-    console.error("[LOGIN] Erro:", e);
-    setErrors(e.response?.data?.detail ?? "Erro desconhecido");
-  }
-};
+  } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const error = err as AxiosError;
+
+        if (error.response?.status === 401) {
+          setErrors("Usuário e/ou senha incorreto(s)");
+        } else if (error.message === "Network Error") {
+          setErrors("Erro de conexão com o servidor.");
+        } else {
+          setErrors("Erro inesperado. Tente novamente mais tarde.");
+        }
+
+        console.error("[LOGIN] Erro:", error);
+      } else {
+        console.error("[LOGIN] Erro desconhecido:", err);
+        setErrors("Erro inesperado.");
+      }
+    }
+  };
 
 
   return (
@@ -119,9 +131,7 @@ const handleLogin = async (e: React.FormEvent) => {
             Entrar
           </button>
 
-          <div className="text-center">
-            {errors && <span className="text-red-500 text-sm">{errors}</span>}
-          </div>
+          
         </form>
       </div>
     </div>

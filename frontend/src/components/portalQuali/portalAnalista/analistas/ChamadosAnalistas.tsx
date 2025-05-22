@@ -165,6 +165,7 @@ const fetchUsuario = async () => {
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
             <tr>
+              <th className="py-2">N° Chamado</th>
               <th className="py-2">Nome Chamado</th>
               <th className="py-2">Categoria</th>
               <th className="py-2">Status</th>
@@ -195,6 +196,7 @@ const fetchUsuario = async () => {
                       setModalAberto(true);
                     }}
                   >
+                    <td className="py-2">{chamado.id}</td>
                     <td className="py-2">{chamado.titulo}</td>
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>

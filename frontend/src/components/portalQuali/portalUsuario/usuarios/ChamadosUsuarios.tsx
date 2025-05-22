@@ -7,7 +7,10 @@ import PerguntasFrequentes from "@/components/portalQuali/chamados/PerguntasFreq
 import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { getStatus, toBase64, Chamado } from "@/utils/chamadoUtils";
 
-export default function ChamadosUsuarios() {
+interface ChamadosUsuariosProps {
+  activeView: string;
+}
+export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [abrirModalAberto, setAbrirModalAberto] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -292,6 +295,24 @@ export default function ChamadosUsuarios() {
           </tbody>
         </table>
       </section>
+      {/* Paginação */}
+      {chamados.length > itemsPerPage && (
+        <div className="flex justify-center mt-8 gap-2">
+          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                currentPage === index + 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      )}
 
       {showToast && (
         <div

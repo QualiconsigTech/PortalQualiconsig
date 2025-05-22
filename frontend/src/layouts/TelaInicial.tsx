@@ -165,9 +165,25 @@ const getSubMenus = () => {
   const renderConteudo = () => {
     if (grupoSelecionado === "Portal de Chamados") {
       return tipoUsuario === "analista" ? (
-        <PortalAnalistaHome activeView={subView} setActiveView={setSubView} />
+        <PortalAnalistaHome
+          activeView={subView}
+          setActiveView={setSubView}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          totalChamados={totalChamados}
+          setTotalChamados={setTotalChamados}
+        />
       ) : (
-        <PortalUsuarioHome activeView={subView} setActiveView={setSubView} />
+        <PortalUsuarioHome
+          activeView={subView}
+          setActiveView={setSubView}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          totalChamados={totalChamados}
+          setTotalChamados={setTotalChamados}
+        />
       );
     }
 
