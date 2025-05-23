@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { api } from "@/services/api";
+import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/router";
 
 const AlterarSenhaPage: React.FC = () => {
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
+  const router = useRouter();
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -29,8 +34,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     setConfirmarSenha("");
 
     setTimeout(() => {
-      setMensagem("");
-    }, 3000);
+        router.push("/login");
+      }, 1500);
   } catch (error: any) {
     console.error("Erro ao alterar senha:", error);
     setErro("Erro ao alterar senha.");
@@ -49,27 +54,46 @@ const handleSubmit = async (e: React.FormEvent) => {
             <label className="block text-sm font-medium text-gray-700">
               Nova Senha
             </label>
-            <input
-              type="password"
-              value={novaSenha}
-              onChange={(e) => setNovaSenha(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md"
-              placeholder="Digite a nova senha"
-            />
+            <div className="relative">
+              <input
+                type={mostrarSenha ? "text" : "password"}
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
+                placeholder="Digite a nova senha"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenha((prev) => !prev)}
+                className="absolute right-2 top-2.5 text-gray-500"
+              >
+                {mostrarSenha ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Confirmar Nova Senha
             </label>
-            <input
-              type="password"
-              value={confirmarSenha}
-              onChange={(e) => setConfirmarSenha(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md"
-              placeholder="Confirme a nova senha"
-            />
+            <div className="relative">
+              <input
+                type={mostrarConfirmar ? "text" : "password"}
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"
+                placeholder="Confirme a nova senha"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmar((prev) => !prev)}
+                className="absolute right-2 top-2.5 text-gray-500"
+              >
+                {mostrarConfirmar ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {erro && <p className="text-red-500 text-sm">{erro}</p>}

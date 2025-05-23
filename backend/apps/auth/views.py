@@ -78,3 +78,13 @@ class AtualizarSenhaView(APIView):
             return Response(data, status=status_code)
         except Exception as e:
             return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class CadastrarUsuariosEmLoteView(APIView):
+    def post(self, request):
+        if not isinstance(request.data, list):
+            return Response({"erro": "Formato inválido. Envie uma lista de usuários."}, status=400)
+
+        dados, status_code = cadastrar_usuarios_em_lote(request.data)
+        return Response(dados, status=status_code)
+
+

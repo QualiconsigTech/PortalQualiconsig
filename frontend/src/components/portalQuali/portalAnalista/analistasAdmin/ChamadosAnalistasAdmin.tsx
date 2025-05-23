@@ -7,6 +7,8 @@ import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { Chamado, getStatus } from "@/utils/chamadoUtils";
 import { useDashboardLogic } from "@/hooks/useDashboardLogic";
 import { useNotificacoes } from "@/hooks/useNotificacoes";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface Props {
   activeView: string;
@@ -25,11 +27,11 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
   const [comentarios, setComentarios] = useState("");
   const [anexos, setAnexos] = useState<FileList | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedChamados = chamados.slice(indexOfFirstItem, indexOfLastItem);
   const [nomeUsuario, setNomeUsuario] = useState<string>("Usuário");
   const redirecionarParaLogin = () => {
     localStorage.removeItem("token");
@@ -52,29 +54,48 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
   };
 
   const buscarChamados = async (rota: string) => {
-      const token = localStorage.getItem("token");
-      if (!token) return redirecionarParaLogin();
-      setLoading(true);
-      try {
-        const response = await api.get(rota, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      const ordenado = [...response.data].sort((a, b) => {
-        const statusOrder = { "Aberto": 1, "Em Atendimento": 2, "Encerrado": 3 };
-        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
-      });
+  const token = localStorage.getItem("token");
+  if (!token) return redirecionarParaLogin();
+  setLoading(true);
+  try {
+    const response = await api.get(rota, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      setChamados(ordenado);
-    } catch (err: any) {
-      if (err?.response?.status === 401) {
-        redirecionarParaLogin();
-      } else {
-        setErro("Erro ao carregar chamados.");
-      }
-    } finally {
-      setLoading(false);
+    let chamadosRecebidos = response.data;
+
+    
+    if (activeView === "todos") {
+      chamadosRecebidos = chamadosRecebidos.filter(
+        (chamado: Chamado) => getStatus(chamado).texto === "Aberto"
+      );
     }
-  };
+
+    const ordenado = [...chamadosRecebidos].sort((a, b) => {
+      const statusOrder = {
+        "Aberto": 0,
+        "Em Atendimento": 1,
+        "Aguardando Atendimento": 2,
+        "Encerrado": 3,
+      };
+
+      return (
+        statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto]
+      );
+    });
+
+    setChamados(ordenado);
+  } catch (err: any) {
+    if (err?.response?.status === 401) {
+      redirecionarParaLogin();
+    } else {
+      setErro("Erro ao carregar chamados.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchUsuario();
@@ -90,10 +111,25 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
     }
   }, [activeView]);
 
-  const handleFiltro = (filtro: string) => {
-    setActiveView(filtro);
-  };
+  const chamadosFiltrados = chamados.filter((chamado) => {
+    const texto = filtro.toLowerCase();
+    const status = getStatus(chamado).texto.toLowerCase();
 
+    return (
+      String(chamado.id).includes(texto) ||
+      chamado.titulo?.toLowerCase().includes(texto) ||
+      chamado.categoria_nome?.toLowerCase().includes(texto) ||
+      chamado.prioridade_nome?.toLowerCase().includes(texto) ||
+      chamado.usuario?.setor_nome?.toLowerCase().includes(texto) ||
+      status.includes(texto) ||
+      format(new Date(chamado.criado_em), "dd/MM/yy").includes(texto)
+    );
+  });
+
+  const paginatedChamados = chamadosFiltrados.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   const exibirMensagem = (texto: string) => {
     setMensagem(texto);
     setTimeout(() => setMensagem(null), 4000);
@@ -105,10 +141,24 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
   return (
     <section className="p-6">
       <h1 className="text-2xl font-bold text-[#041161] mb-4">Chamados - Tecnologia</h1>
+      <div className="mb-6 max-w-md relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <Input
+        type="text"
+        placeholder="Filtrar chamados por qualquer campo..."
+        value={filtro}
+        onChange={(e) => {
+          setFiltro(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="pl-10 pr-4 py-2 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+      />
+    </div>
       <section className="bg-white p-6 rounded-xl shadow mt-4">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
             <tr>
+              <th className="py-2">N° Chamado</th>
               <th className="py-2">Nome Chamado</th>
               <th className="py-2">Categoria</th>
               <th className="py-2">Status</th>
@@ -137,6 +187,7 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
                     setComentarios(chamado.comentarios || "");
                     setModalAberto(true);
                   }}>
+                    <td className="py-2">{chamado.id}</td>
                     <td className="py-2">{chamado.titulo}</td>
                     <td className="py-2">{chamado.categoria_nome}</td>
                     <td className={`py-2 font-semibold ${status.cor}`}>{status.texto}</td>
@@ -167,9 +218,9 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
         </table>
       </section>
       {/* Paginação */}
-      {chamados.length > itemsPerPage && (
+      {chamadosFiltrados.length > itemsPerPage && (
         <div className="flex justify-center mt-8 gap-2">
-          {Array.from({ length: Math.ceil(chamados.length / itemsPerPage) }).map((_, index) => (
+          {Array.from({ length: Math.ceil(chamadosFiltrados.length / itemsPerPage) }).map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentPage(index + 1)}
