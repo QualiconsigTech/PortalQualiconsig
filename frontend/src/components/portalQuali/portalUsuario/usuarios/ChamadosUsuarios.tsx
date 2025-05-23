@@ -250,29 +250,31 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
-        <div className="mb-6 max-w-md relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <Input
-          type="text"
-          placeholder="Filtrar chamados por qualquer campo..."
-          value={filtro}
-          onChange={(e) => {
-            setFiltro(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="pl-10 pr-4 py-2 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-        />
-      </div>
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
-          onClick={() => setAbrirModalAberto(true)}
-        >
-          Novo Chamado
-        </button>
-      </div>
+      <div className="mb-6 flex flex-col gap-3">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold text-[#041161]">Chamados</h1>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+            onClick={() => setAbrirModalAberto(true)}
+          >
+            Novo Chamado
+          </button>
+        </div>
 
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          <Input
+            type="text"
+            placeholder="Filtrar chamados por qualquer campo..."
+            value={filtro}
+            onChange={(e) => {
+              setFiltro(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-10 pr-4 py-2 w-full border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+          />
+        </div>
+      </div>
       <section className="bg-white p-6 rounded-xl shadow">
         <table className="w-full text-sm">
           <thead className="text-left text-gray-600 border-b">
