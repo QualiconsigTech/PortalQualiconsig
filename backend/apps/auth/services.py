@@ -105,3 +105,29 @@ def alterar_senha(request):
 
     return {'mensagem': 'Senha alterada com sucesso.'}, None, status.HTTP_200_OK
 
+
+def cadastrar_usuarios_em_lote(lista_dados):
+    usuarios_criados = []
+    erros = []
+
+    for dados in lista_dados:
+        serializer = UsuarioSerializer(data=dados)
+        if serializer.is_valid():
+            user = serializer.save()
+            usuarios_criados.append({
+                "nome": user.nome,
+                "email": user.email,
+                "id": user.id
+            })
+        else:
+            erros.append({
+                "email": dados.get("email"),
+                "errors": serializer.errors
+            })
+
+    if erros:
+        return {"criados": usuarios_criados, "erros": erros}, 207 
+    
+    return {"mensagem": f"{len(usuarios_criados)} usuários criados com sucesso"}, 201
+
+

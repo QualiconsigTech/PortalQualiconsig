@@ -11,4 +11,6 @@ urlpatterns = [
     path('atualizar/<str:tipo>/<int:id>/', AtualizarUsuarioView.as_view(), name='atualizar-usuario'),
     path('deletar/<str:tipo>/<int:id>/', DeletarUsuarioView.as_view(), name='deletar-usuario'),
     path('alterar-senha/', AtualizarSenhaView.as_view(), name='deletar-usuario'),
+    path('cadastrar/usuarios/', CadastrarUsuariosEmLoteView.as_view(), name='cadastrar-usuarios-em-lote'),
+
 ]
