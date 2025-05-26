@@ -1,121 +1,284 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pencil, BookOpen } from "lucide-react";
+
+interface Produto {
+  id: number;
+  pavimento: string | null;
+  setor: string | null;
+  posicao: string | null;
+  gerente: string | null;
+  consultor: string | null;
+  marca: string | null;
+  modelo: string | null;
+  processador: string | null;
+  memoria: string | null;
+  armazenamento: string | null;
+  hostname: string | null;
+  ip: string | null;
+  anydesk: string | null;
+  impressora: string | null;
+  headset: string | null;
+  serial: string | null;
+  status: string | null;
+  ativo: boolean;
+  observacao: string | null;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export default function Inventario() {
   const [modoCadastro, setModoCadastro] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
 
+  const [formData, setFormData] = useState({
+    pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
+    marca: "", modelo: "", processador: "", memoria: "", armazenamento: "",
+    hostname: "", ip: "", anydesk: "",
+    impressora: "", headset: "",
+    serial: "", status: "", ativo: true,
+    observacao: "",
+  });
+
+  const handleChange = (field: string, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatusMsg(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8000/api/chamados/inventario/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatusMsg("Produto cadastrado com sucesso!");
+        setFormData({
+          pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
+          marca: "", modelo: "", processador: "", memoria: "", armazenamento: "",
+          hostname: "", ip: "", anydesk: "",
+          impressora: "", headset: "",
+          serial: "", status: "", ativo: true,
+          observacao: "",
+        });
+        fetchInventario();
+        setModoCadastro(false);
+      } else {
+        setStatusMsg("Erro ao cadastrar produto.");
+      }
+    } catch (err) {
+      console.error(err);
+      setStatusMsg("Erro de conexão com o servidor.");
+    }
+  };
+
+  const fetchInventario = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8000/api/chamados/inventario/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setProdutos(Array.isArray(data) ? data : [data]);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar inventário:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!modoCadastro) fetchInventario();
+  }, [modoCadastro]);
   return (
     <div className="p-6 relative">
-      {/* Toggle no canto superior direito */}
+      {/* Toggle */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">
           {modoCadastro ? "Cadastrar Produto" : "Visualizar Inventário"}
         </span>
-
         <button
           onClick={() => setModoCadastro(!modoCadastro)}
-          className={`w-20 h-10 bg-gray-300 rounded-full flex items-center px-1 transition-colors duration-300 ${
-            modoCadastro ? "bg-blue-600" : "bg-gray-400"
+          className={`w-20 h-10 rounded-full flex items-center px-1 transition ${
+            modoCadastro ? "bg-blue-800" : "bg-gray-400"
           }`}
         >
           <div
-            className={`w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center transition-transform duration-300 transform ${
+            className={`w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center transform transition-transform ${
               modoCadastro ? "translate-x-10" : "translate-x-0"
             }`}
           >
-            {modoCadastro ? (
-              <Pencil size={18} className="text-blue-600" />
-            ) : (
-              <BookOpen size={18} className="text-gray-700" />
-            )}
+            {modoCadastro ? <Pencil size={18} className="text-blue-800" /> : <BookOpen size={18} />}
           </div>
         </button>
       </div>
 
-      {/* Conteúdo principal */}
-      <div className="mt-20">
-      {!modoCadastro ? (
-            <div className="bg-white p-4 rounded shadow text-sm text-gray-700">
-                <h2 className="text-xl font-semibold mb-4">Produtos do Inventário</h2>
+      <div className="mt-20 min-h-screen flex justify-center items-start px-4 lg:px-12">
+        <div className="w-full mx-auto bg-white rounded-xl shadow-md px-6 py-6">
+          {modoCadastro ? (
+            <>
+              <h2 className="text-xl font-semibold mb-6">Cadastrar Novo Produto</h2>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Seção: Responsáveis */}
+                <div>
+                  <h3 className="text-lg font-medium mb-2 text-gray-700">Responsáveis</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {["pavimento", "setor", "posicao", "gerente", "consultor"].map((field) => (
+                      <input
+                        key={field}
+                        placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                        value={(formData as any)[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full"
+                      />
+                    ))}
+                  </div>
+                </div>
 
-                <div className="overflow-x-auto">
-                <table className="min-w-full text-left border border-gray-300 rounded">
-                    <thead className="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th className="py-2 px-4 border-b">Produto</th>
-                        <th className="py-2 px-4 border-b">Quantidade</th>
-                        <th className="py-2 px-4 border-b">Consultor</th>
-                    </tr>
+                {/* Seção: Hardware */}
+                <div>
+                  <h3 className="text-lg font-medium mb-2 text-gray-700">Hardware</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {["marca", "modelo", "processador", "memoria", "armazenamento"].map((field) => (
+                      <input
+                        key={field}
+                        placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                        value={(formData as any)[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Seção: Rede */}
+                <div>
+                  <h3 className="text-lg font-medium mb-2 text-gray-700">Rede</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {["hostname", "ip", "anydesk"].map((field) => (
+                      <input
+                        key={field}
+                        placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                        value={(formData as any)[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Seção: Periféricos e Identificação */}
+                <div>
+                  <h3 className="text-lg font-medium mb-2 text-gray-700">Periféricos & Identificação</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {["impressora", "headset", "serial", "status"].map((field) => (
+                      <input
+                        key={field}
+                        placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                        value={(formData as any)[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full"
+                      />
+                    ))}
+                    <label className="flex items-center gap-2 mt-1">
+                      <input
+                        type="checkbox"
+                        checked={formData.ativo}
+                        onChange={(e) => handleChange("ativo", e.target.checked)}
+                      />
+                      <span>Ativo</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Observações */}
+                <div>
+                  <h3 className="text-lg font-medium mb-2 text-gray-700">Outros</h3>
+                  <textarea
+                    placeholder="Observações"
+                    value={formData.observacao}
+                    onChange={(e) => handleChange("observacao", e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+
+                {/* Botão */}
+                <div className="flex justify-end">
+                  <button type="submit" className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded">
+                    Cadastrar Produto
+                  </button>
+                </div>
+
+                {statusMsg && (
+                  <p className="text-center text-sm text-blue-800 mt-2">{statusMsg}</p>
+                )}
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-semibold mb-6 text-center">Produtos do Inventário</h2>
+                <div className="max-w-full overflow-x-auto">
+                  <table className="min-w-[1300px] border border-gray-200 text-sm">
+        
+                    <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                      <tr>
+                        {[
+                          "ID", "Pavimento", "Setor", "Posição", "Gerente", "Consultor",
+                          "Marca", "Modelo", "Processador", "Memória", "Armazenamento",
+                          "Hostname", "IP", "Anydesk", "Impressora", "Headset",
+                          "Serial", "Status", "Ativo", "Observação",
+                          "Criado em", "Atualizado em"
+                        ].map((col) => (
+                          <th key={col} className="px-4 py-3 border-b text-left whitespace-nowrap">{col}</th>
+                        ))}
+                      </tr>
                     </thead>
                     <tbody>
-                    {/* Dados simulados */}
-                    <tr className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b">Notebook Dell</td>
-                        <td className="py-2 px-4 border-b">3</td>
-                        <td className="py-2 px-4 border-b">Carlos</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b">Monitor Samsung</td>
-                        <td className="py-2 px-4 border-b">5</td>
-                        <td className="py-2 px-4 border-b">Juliana</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b">Headset Logitech</td>
-                        <td className="py-2 px-4 border-b">10</td>
-                        <td className="py-2 px-4 border-b">Fernanda</td>
-                    </tr>
+                      {produtos.map((produto) => (
+                        <tr key={produto.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 border-b">{produto.id}</td>
+                          <td className="px-4 py-2 border-b">{produto.pavimento ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.setor ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.posicao ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.gerente ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.consultor ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.marca ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.modelo ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.processador ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.memoria ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.armazenamento ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.hostname ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.ip ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.anydesk ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.impressora ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.headset ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.serial ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.status ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{produto.ativo ? "Sim" : "Não"}</td>
+                          <td className="px-4 py-2 border-b">{produto.observacao ?? "—"}</td>
+                          <td className="px-4 py-2 border-b">{new Date(produto.criado_em).toLocaleDateString("pt-BR")}</td>
+                          <td className="px-4 py-2 border-b">{new Date(produto.atualizado_em).toLocaleDateString("pt-BR")}</td>
+                        </tr>
+                      ))}
                     </tbody>
-                </table>
+                  </table>
                 </div>
-            </div>
-            ) : (
-                <div className="bg-white p-6 rounded shadow text-sm text-gray-700 max-w-xl">
-                <h2 className="text-xl font-semibold mb-4">Cadastrar Novo Produto</h2>
+                {produtos.length === 0 && (
+                  <p className="text-center text-gray-500 py-6">Nenhum produto encontrado.</p>
+                )}
               
-                <form className="space-y-4">
-                  {/* Nome do Produto */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Nome do Produto</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ex: Notebook Lenovo"
-                    />
-                  </div>
-              
-                  {/* Quantidade */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Quantidade</label>
-                    <input
-                      type="number"
-                      className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ex: 5"
-                    />
-                  </div>
-              
-                  {/* Consultor */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Consultor</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ex: Fernanda Silva"
-                    />
-                  </div>
-              
-                  {/* Botão de envio */}
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-                    >
-                      Cadastrar
-                    </button>
-                  </div>
-                </form>
-              </div>
-            
-        )}
+            </>
+
+
+          )}
+        </div>
       </div>
     </div>
   );
