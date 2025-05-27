@@ -29,3 +29,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "last_login"]
 
+class GerentePorSetorSerializer(serializers.ModelSerializer):
+    setor = serializers.CharField(source='setor.nome')
+    cargo = serializers.CharField(source='cargo.nome')
+
+    class Meta:
+        model = Usuario
+        fields = ['id', 'nome', 'setor', 'cargo']

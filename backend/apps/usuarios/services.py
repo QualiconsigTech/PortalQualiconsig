@@ -19,3 +19,10 @@ def deletar_usuario(usuario):
     usuario.deletado = True
     usuario.save()
     return usuario
+
+def listar_gerentes_por_setor(setor_id):
+    return Usuario.objects.filter(
+        setor_id=setor_id,
+        cargo_id=16
+    ).select_related("cargo", "setor")
+
