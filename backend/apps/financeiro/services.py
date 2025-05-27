@@ -1,13 +1,17 @@
+import traceback
 import uuid
 import pandas as pd
 import json
-from apps.financeiro.models import RepasseCessao, FaturaComissao, SeguroCartao, RelatorioRepasseQualibankingFinal
+import io 
+import base64
+from apps.financeiro.models import RepasseCessao, FaturaComissao, SeguroCartao, RelatorioRepasseQualibankingFinal, RelatorioOmie, Categoria
 from django.db import transaction
 from datetime import datetime
 from django.http import HttpResponse
-import io
 from django.utils.timezone import now
+from io import BytesIO
 
+## BANKING
 def safe_decimal(value):
     try:
         if pd.isna(value) or str(value).strip().lower() == "nan":
@@ -15,9 +19,6 @@ def safe_decimal(value):
         return float(value)
     except Exception:
         return 0
-
-
-
 
 def importar_repasses_cessao(files):
     processamento = uuid.uuid4()
@@ -61,50 +62,58 @@ def importar_faturas_comissao(files):
     for file in files:
         df = pd.read_excel(file)
 
-        for _, row in df.iterrows():
-            numero_contrato = ""
+        for idx, row in df.iterrows():
             try:
-                metadados = row.get("METADADOS")
-                if pd.notna(metadados):
-                    meta_dict = json.loads(metadados)
-                    numero_contrato = meta_dict.get("numero-ccb", "")
-            except Exception as e:
-                print(f"[ERRO] ao extrair numero-ccb: {e}")
+                numero_contrato = ""
+                metadados = row.get("METADADOS", "")
 
-            registros.append(FaturaComissao(
-                processamento=processamento,
-                id_venda=row['ID_VENDA'],
-                movimento=row['MOVIMENTO'],
-                apolice=row['APOLICE'],
-                segurado=row['SEGURADO'],
-                data_emissao=row['DATA_EMISSAO'],
-                inicio_vigencia=row['INICIO_VIGENCIA'],
-                fim_vigencia=row['FIM_VIGENCIA'],
-                data_movimento=row['DATA_MOVIMENTO'],
-                parcela=row['PARCELA'],
-                total_parcelas=row['TOTAL_PARCELAS'],
-                valor_comissao=row['VALOR_COMISSAO'],
-                cod_externo=row.get('COD_EXTERNO'),
-                metadados=row.get('METADADOS'),
-                id_fatura=row['ID_FATURA'],
-                data_fatura=row['DATA_FATURA'],
-                data_fechamento_fatura=row['DATA_FECHAMENTO_FATURA'],
-                id_intermediario=row['ID_INTERMEDIARIO'],
-                nome_intermediario=row['NOME_INTERMEDIARIO'],
-                insurance_id=row['INSURANCE_ID'],
-                cod_externo2=row['COD_EXTERNO2'],
-                iof=row.get("IOF", 0),
-                premio_tarifa=row.get("PREMIO_TARIFA", 0),
-                premio_bruto=row.get("PREMIO_BRUTO", 0),
-                numero_contrato=numero_contrato,
-            ))
+                if (
+                    pd.notna(metadados)
+                    and isinstance(metadados, str)
+                    and metadados.strip().startswith("{")
+                    and metadados.strip().endswith("}")
+                ):
+                    meta_dict = json.loads(metadados.strip())
+                    numero_contrato = meta_dict.get("numero-ccb", "")
+                else:
+                    print(f"[AVISO] Linha {idx + 2}: METADADOS inválido ou vazio: '{metadados}'")
+
+                registros.append(FaturaComissao(
+                    processamento=processamento,
+                    id_venda=row.get('ID_VENDA'),
+                    movimento=row.get('MOVIMENTO'),
+                    apolice=row.get('APOLICE'),
+                    segurado=row.get('SEGURADO'),
+                    data_emissao=pd.to_datetime(row.get('DATA_EMISSAO'), errors="coerce"),
+                    inicio_vigencia=pd.to_datetime(row.get('INICIO_VIGENCIA'), errors="coerce"),
+                    fim_vigencia=pd.to_datetime(row.get('FIM_VIGENCIA'), errors="coerce"),
+                    data_movimento=pd.to_datetime(row.get('DATA_MOVIMENTO'), errors="coerce"),
+                    parcela=row.get('PARCELA'),
+                    total_parcelas=row.get('TOTAL_PARCELAS'),
+                    valor_comissao=safe_decimal(row.get('VALOR_COMISSAO')),
+                    cod_externo=row.get('COD_EXTERNO'),
+                    metadados=metadados,
+                    id_fatura=row.get('ID_FATURA'),
+                    data_fatura=pd.to_datetime(row.get('DATA_FATURA'), errors="coerce"),
+                    data_fechamento_fatura=pd.to_datetime(row.get('DATA_FECHAMENTO_FATURA'), errors="coerce"),
+                    id_intermediario=row.get('ID_INTERMEDIARIO'),
+                    nome_intermediario=row.get('NOME_INTERMEDIARIO'),
+                    insurance_id=row.get('INSURANCE_ID'),
+                    cod_externo2=row.get('COD_EXTERNO2'),
+                    iof=safe_decimal(row.get("IOF")),
+                    premio_tarifa=safe_decimal(row.get("PREMIO_TARIFA")),
+                    premio_bruto=safe_decimal(row.get("PREMIO_BRUTO")),
+                    numero_contrato=numero_contrato,
+                ))
+            except Exception as e:
+                print(f"[ERRO] Linha {idx + 2}: erro ao processar linha: {e}")
+                traceback.print_exc()
+                raise
 
     with transaction.atomic():
         FaturaComissao.objects.bulk_create(registros)
 
     return str(processamento)
-
-
 
 def importar_seguro_cartao(file):
     df = pd.read_excel(file)
@@ -229,3 +238,77 @@ def download_relatorio_final():
     response = HttpResponse(buffer.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="relatorio_qualibanking_final_{now().date()}.xlsx"'
     return response
+
+## QUALICONSIG
+
+
+def get_categorias_por_tipo(tipo: str):
+    return list(Categoria.objects.filter(tipo=tipo, deletado=False).values_list('nome', flat=True))
+
+def processar_relatorio_omie(arquivo, usuario):
+    categorias_operacionais = get_categorias_por_tipo("Operacional")
+    categorias_nao_operacionais = get_categorias_por_tipo("Não Operacional")
+
+    df = pd.read_excel(arquivo, header=1)
+    df = df.fillna("")
+
+    total_quali = df.loc[
+        ~df['Projeto'].isin(["Garanhuns", "Parceiros", "Pró Labore"]),
+        'Valor Pago'
+    ].sum()
+
+    total_parceiros = df.loc[df['Projeto'] == "Parceiros", 'Valor Pago'].sum()
+    total_garanhus = df.loc[df['Projeto'] == "Garanhuns", 'Valor Pago'].sum()
+
+    total_despesas_op = df.loc[df['Categoria'].isin(categorias_operacionais), 'Valor Pago'].sum()
+    total_despesas_nao_op = df.loc[df['Categoria'].isin(categorias_nao_operacionais), 'Valor Pago'].sum()
+
+    conteudo = arquivo.read()
+    arquivo_base64 = base64.b64encode(conteudo).decode('utf-8')
+
+    relatorio = RelatorioOmie.objects.create(
+        nome_arquivo=arquivo.name,
+        arquivo_base64=arquivo_base64,
+        total_quali=total_quali,
+        total_parceiros=total_parceiros,
+        total_garanhus=total_garanhus,
+        total_despesas_op=total_despesas_op,
+        total_despesas_nao_op=total_despesas_nao_op,
+        usuario=usuario
+    )
+
+    return relatorio
+
+
+def criar_categorias(categorias_data):
+    categorias = []
+    for cat in categorias_data:
+        categoria = Categoria.objects.create(
+            nome=cat.get('nome'),
+            tipo=cat.get('tipo')
+        )
+        categorias.append(categoria)
+    return categorias
+
+def listar_categorias():
+    return Categoria.objects.all()
+
+def gerar_arquivos_filtrados(df):
+    arquivos = {}
+
+    garanhuns_df = df[df['Projeto'] == "Garanhuns"]
+    parceiros_df = df[df['Projeto'] == "Parceiros"]
+    quali_df = df[~df['Projeto'].isin(["Garanhuns", "Parceiros", "Pró Labore"])]
+
+    for nome, data in [
+        ("garanhuns.xlsx", garanhuns_df),
+        ("parceiros.xlsx", parceiros_df),
+        ("quali.xlsx", quali_df)
+    ]:
+        buffer = BytesIO()
+        data.to_excel(buffer, index=False)
+        buffer.seek(0)
+        arquivos[nome] = base64.b64encode(buffer.read()).decode('utf-8')
+
+    return arquivos
+
