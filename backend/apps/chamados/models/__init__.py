@@ -4,3 +4,5 @@ from .comentario import ComentarioChamado
 from .notificacao import Notificacao
 from .perguntas import PerguntaFrequente
 from .prioridade import Prioridade
+from .inventario import ProdutoInventario
+

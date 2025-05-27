@@ -8,6 +8,7 @@ from apps.chamados.views.notificacoes import *
 from apps.chamados.views.utils import *
 from apps.chamados.views.dashboard import *
 from apps.chamados.views.usuario import *
+from apps.chamados.views.inventario import *
 
 urlpatterns = [
     ## CHAMADOS
@@ -37,6 +38,7 @@ urlpatterns = [
     path('<int:chamado_id>/atender/', AtenderChamadoView.as_view(), name='atender-chamado'),
     path('atribuidos/', ChamadosAtribuidosView.as_view(), name='chamados-atribuidos'),
     path('<int:chamado_id>/encerrar/', EncerrarChamadoView.as_view(), name='encerrar-chamado'),
+    path('inventario/', ProdutoInventarioListCreateView.as_view(), name='inventario-list-create'), 
     
     ## ANALISTA ADMIN
     path('analista/admin/', ChamadosAdminView.as_view(), name='chamados-admin'),
