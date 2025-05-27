@@ -120,8 +120,8 @@ export default function Inventario() {
         </button>
       </div>
 
-      <div className="mt-20 min-h-screen flex justify-center items-start px-4 lg:px-12">
-        <div className="w-full mx-auto bg-white rounded-xl shadow-md px-6 py-6">
+        <div className="mt-20 flex justify-center px-4 lg:px-12">
+          <div className="w-full max-w-4xl bg-white rounded-xl shadow-md px-4 py-4 overflow-hidden">
           {modoCadastro ? (
             <>
               <h2 className="text-xl font-semibold mb-6">Cadastrar Novo Produto</h2>
@@ -224,51 +224,40 @@ export default function Inventario() {
           ) : (
             <>
               <h2 className="text-xl font-semibold mb-6 text-center">Produtos do Inventário</h2>
-                <div className="max-w-full overflow-x-auto">
-                  <table className="min-w-[1300px] border border-gray-200 text-sm">
-        
-                    <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                      <tr>
-                        {[
-                          "ID", "Pavimento", "Setor", "Posição", "Gerente", "Consultor",
-                          "Marca", "Modelo", "Processador", "Memória", "Armazenamento",
-                          "Hostname", "IP", "Anydesk", "Impressora", "Headset",
-                          "Serial", "Status", "Ativo", "Observação",
-                          "Criado em", "Atualizado em"
-                        ].map((col) => (
-                          <th key={col} className="px-4 py-3 border-b text-left whitespace-nowrap">{col}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {produtos.map((produto) => (
-                        <tr key={produto.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 border-b">{produto.id}</td>
-                          <td className="px-4 py-2 border-b">{produto.pavimento ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.setor ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.posicao ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.gerente ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.consultor ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.marca ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.modelo ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.processador ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.memoria ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.armazenamento ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.hostname ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.ip ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.anydesk ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.impressora ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.headset ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.serial ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.status ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{produto.ativo ? "Sim" : "Não"}</td>
-                          <td className="px-4 py-2 border-b">{produto.observacao ?? "—"}</td>
-                          <td className="px-4 py-2 border-b">{new Date(produto.criado_em).toLocaleDateString("pt-BR")}</td>
-                          <td className="px-4 py-2 border-b">{new Date(produto.atualizado_em).toLocaleDateString("pt-BR")}</td>
+                <div className="w-full overflow-x-auto">
+                  <div className="min-w-[1400px]">
+                    <table className="w-full border border-gray-200 text-sm">
+                       <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                        <tr>
+                          {[
+                            "Pavimento", "Setor", "Posição", "Gerente", "Marca", "Modelo",
+                            "Anydesk", "Status", "Ativo", "Atualizado em"
+                          ].map((col) => (
+                            <th key={col} className="px-4 py-3 border-b text-left whitespace-nowrap">{col}</th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {produtos.map((produto) => (
+                          <tr key={produto.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border-b">{produto.pavimento ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.setor ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.posicao ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.gerente ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.marca ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.modelo ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.anydesk ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.status ?? "—"}</td>
+                            <td className="px-4 py-2 border-b">{produto.ativo ? "Sim" : "Não"}</td>
+                            <td className="px-4 py-2 border-b">
+                              {new Date(produto.atualizado_em).toLocaleDateString("pt-BR")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+
+                    </table>
+                  </div>
                 </div>
                 {produtos.length === 0 && (
                   <p className="text-center text-gray-500 py-6">Nenhum produto encontrado.</p>
