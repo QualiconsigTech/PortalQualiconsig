@@ -30,7 +30,7 @@ interface LinhaSeguro {
   obs: string;
 }
 
-const Relatorios: React.FC = () => {
+const Qualibank: React.FC = () => {
     const [arquivos, setArquivos] = useState<File[]>([]);
     const [dadosCache, setDadosCache] = useState<{ [nome: string]: any[] }>({});
     const [arquivoSelecionado, setArquivoSelecionado] = useState<string | null>(null);
@@ -356,4 +356,4 @@ const Relatorios: React.FC = () => {
   );
 };
 
-export default Relatorios;
+export default Qualibank;
