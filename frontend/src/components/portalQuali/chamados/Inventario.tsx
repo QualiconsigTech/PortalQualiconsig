@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Pencil, BookOpen } from "lucide-react";
+import { api } from "@/services/api";
+
 
 interface Produto {
   id: number;
@@ -25,16 +27,29 @@ interface Produto {
   criado_em: string;
   atualizado_em: string;
 }
+interface Usuario {
+  id: number;
+  first_name: string;
+  nome: string
+}
+
+interface Setor {
+  id: number;
+  nome: string;
+  grupo: number;
+}
 
 export default function Inventario() {
   const [modoCadastro, setModoCadastro] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [setores, setSetores] = useState<Setor[]>([]);
+  const [gerentes, setGerentes] = useState<Usuario[]>([]);
   const [mostrarRede, setMostrarRede] = useState(false);
   const [mostrarPerifericos, setMostrarPerifericos] = useState(false);
-
+  
   const [formData, setFormData] = useState({
-    pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
+    tipo_local: "",pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
     marca: "", modelo: "", processador: "", memoria: "", armazenamento: "",
     hostname: "", ip: "", anydesk: "",
     impressora: "", headset: "",
@@ -43,58 +58,110 @@ export default function Inventario() {
   });
 
   const handleChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatusMsg(null);
+  setFormData((prev) => ({ ...prev, [field]: value }));
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/chamados/inventario/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+  if (field === "tipo_local" && typeof value === "string") {
+    fetchSetores(value);
+    setFormData((prev) => ({ ...prev, setor: "", gerente: "" })); 
+    setGerentes([]); 
+  }
+};
+  
+  const handleSetorChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const selectedSetor = e.target.value;
+  setFormData((prev) => ({ ...prev, setor: selectedSetor, gerente: "" }));
 
-      if (response.ok) {
-        setStatusMsg("Produto cadastrado com sucesso!");
-        setFormData({
-          pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
-          marca: "", modelo: "", processador: "", memoria: "", armazenamento: "",
-          hostname: "", ip: "", anydesk: "",
-          impressora: "", headset: "",
-          serial: "", status: "", ativo: true,
-          observacao: "",
-        });
-        fetchInventario();
-        setModoCadastro(false);
-      } else {
-        setStatusMsg("Erro ao cadastrar produto.");
-      }
-    } catch (err) {
-      console.error(err);
-      setStatusMsg("Erro de conexão com o servidor.");
-    }
-  };
+  const token = localStorage.getItem("token");
+  try {
+    const res = await api.get(`api/usuarios/gerentes/?setor_id=${selectedSetor}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setGerentes(res.data);
+  } catch (err) {
+    console.error("Erro ao buscar gerentes:", err);
+    setGerentes([]);
+  }
+};
+
+
+  const fetchSetores = async (tipoLocal: string) => {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await api.get("api/core/setores/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const setoresFiltrados = res.data.filter((setor: any) =>
+      tipoLocal === "Comercial" ? setor.grupo === 3 : setor.grupo !== 3
+    );
+
+    setSetores(setoresFiltrados);
+  } catch (err) {
+    console.error("Erro ao buscar setores:", err);
+  }
+};
+
 
   const fetchInventario = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/chamados/inventario/", {
-        headers: { Authorization: `Bearer ${token}` },
+  const token = localStorage.getItem("token");
+  try {
+    const res = await api.get("api/chamados/inventario/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setProdutos(Array.isArray(res.data) ? res.data : [res.data]);
+  } catch (err) {
+    console.error("Erro ao buscar inventário:", err);
+  }
+};
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setStatusMsg(null);
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await api.post("api/chamados/inventario/", formData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.status === 200 || res.status === 201) {
+      setStatusMsg("Produto cadastrado com sucesso!");
+      setFormData({
+        tipo_local: "",
+        pavimento: "",
+        setor: "",
+        posicao: "",
+        gerente: "",
+        consultor: "",
+        marca: "",
+        modelo: "",
+        processador: "",
+        memoria: "",
+        armazenamento: "",
+        hostname: "",
+        ip: "",
+        anydesk: "",
+        impressora: "",
+        headset: "",
+        serial: "",
+        status: "",
+        ativo: true,
+        observacao: "",
       });
-      if (response.ok) {
-        const data = await response.json();
-        setProdutos(Array.isArray(data) ? data : [data]);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar inventário:", error);
+      fetchInventario();
+      setModoCadastro(false);
+    } else {
+      setStatusMsg("Erro ao cadastrar produto.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setStatusMsg("Erro de conexão com o servidor.");
+  }
+};
 
   useEffect(() => {
     if (!modoCadastro) fetchInventario();
@@ -132,17 +199,93 @@ return (<section className="p-6 pt-20">
         {/* Responsáveis */}
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Localização</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {["pavimento", "setor", "posicao", "gerente", "consultor"].map((field) => (
-              <input
-                key={field}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                value={(formData as any)[field]}
-                onChange={(e) => handleChange(field, e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 w-full"
-              />
-            ))}
-          </div>
+          {/* Localização */}
+            <div>
+              {/* Switch Tipo de Local */}
+                <div className="flex items-center gap-6 mb-4">
+                  {/* Administrativo */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700">Administrativo</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.tipo_local === "Administrativo"}
+                        onChange={() => handleChange("tipo_local", "Administrativo")}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                    </label>
+                  </div>
+
+                  {/* Comercial */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700">Comercial</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.tipo_local === "Comercial"}
+                        onChange={() => handleChange("tipo_local", "Comercial")}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                    </label>
+                  </div>
+                </div>
+
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  placeholder="Pavimento"
+                  value={formData.pavimento}
+                  onChange={(e) => handleChange("pavimento", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+                <select
+                  value={formData.setor}
+                  onChange={handleSetorChange}
+                  className="border border-gray-300 rounded px-3 py-2 w-full text-gray-700"
+                >
+                  <option value="">Selecione o Setor</option>
+                  {setores.map((setor) => (
+                    <option key={setor.id} value={setor.id}>
+                      {setor.nome}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  placeholder="Posição"
+                  value={formData.posicao}
+                  onChange={(e) => handleChange("posicao", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+                <select
+                  value={formData.gerente}
+                  onChange={(e) => handleChange("gerente", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full text-gray-700"
+                >
+                  <option value="">Selecione o Gerente</option>
+                  {gerentes.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nome}
+                    </option>
+                  ))}
+                </select>
+
+                {formData.tipo_local !== "Comercial" && (
+                  <input
+                    placeholder="Consultor"
+                    value={formData.consultor}
+                    onChange={(e) => handleChange("consultor", e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 w-full"
+                  />
+                )}
+
+              </div>
+            </div>
+
         </div>
 
         {/* Hardware */}
