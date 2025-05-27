@@ -70,6 +70,31 @@ export default function TelaInicial(props: TelaInicialProps) {
 
     fetchUserType();
   }, []);
+
+  useEffect(() => {
+    const refreshToken = localStorage.getItem("refresh");
+    const isAnalistaAdmin = localStorage.getItem("analista_admin") === "true";
+
+    if (isAnalistaAdmin && refreshToken) {
+      const renewToken = async () => {
+        try {
+          const response = await api.post("/api/auth/token/refresh/", {
+            refresh: refreshToken,
+          });
+
+          const newAccessToken = response.data.access;
+          if (newAccessToken) {
+            localStorage.setItem("token", newAccessToken);
+            console.log("[AUTO REFRESH] Token renovado para analista_admin");
+          }
+        } catch (error) {
+          console.error("[AUTO REFRESH] Erro ao renovar token:", error);
+        }
+      };
+
+      renewToken();
+    }
+  }, []);
  
   const handleLogout = () => {
     localStorage.clear();

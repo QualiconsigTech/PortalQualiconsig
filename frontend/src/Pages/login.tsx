@@ -5,6 +5,8 @@ import { Mail, Eye, EyeOff, Lock } from "lucide-react";
 import { useRouter } from "next/router";
 import { api } from "@/services/api";
 import axios, { AxiosError } from "axios";
+import { getPerfilUsuario } from "@/utils/chamadoUtils";
+
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -45,6 +47,16 @@ const handleLogin = async (e: React.FormEvent) => {
 
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("grupos", JSON.stringify(grupos));
+    const perfil = getPerfilUsuario({
+        tipo: userData.tipo,
+        is_admin: userData.is_admin,
+      });
+
+      if (perfil === "analista_admin") {
+        localStorage.setItem("analista_admin", "true");
+      } else {
+        localStorage.removeItem("analista_admin");
+      }
 
     router.push("/tela-inicial");
   } catch (err) {
