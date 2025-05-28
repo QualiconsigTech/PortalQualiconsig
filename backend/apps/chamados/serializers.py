@@ -100,11 +100,6 @@ class UsuarioLogadoSerializer(serializers.ModelSerializer):
 
 
 class ProdutoInventarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProdutoInventario
-        fields = '__all__'
-
-class ProdutoInventarioSerializer(serializers.ModelSerializer):
     cargo_id = serializers.PrimaryKeyRelatedField(
         queryset=Cargo.objects.all(),
         source='cargo',
@@ -117,6 +112,11 @@ class ProdutoInventarioSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+
+    class Meta:
+        model = ProdutoInventario
+        fields = '__all__'
+
 
 
 
