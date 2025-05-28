@@ -71,18 +71,16 @@ export default function ChamadosAnalistasAdmin({ activeView, setActiveView }: Pr
       );
     }
 
-    const ordenado = [...chamadosRecebidos].sort((a, b) => {
-      const statusOrder = {
-        "Aberto": 0,
-        "Em Atendimento": 1,
-        "Aguardando Atendimento": 2,
-        "Encerrado": 3,
-      };
+    const ordenado = [...response.data].sort((a, b) => {
+        const statusOrder = {
+          "Aberto": 0,
+          "Em Atendimento": 1,
+          "Aguardando Atendimento": 2,
+          "Encerrado": 3,
+        };
 
-      return (
-        statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto]
-      );
-    });
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
+      });
 
     setChamados(ordenado);
   } catch (err: any) {
