@@ -8,7 +8,7 @@ import { NotificacoesDropdown } from "@/components/portalQuali/chamados/Notifica
 import { api } from "@/services/api";
 import { Chamado } from "@/utils/chamadoUtils";
 import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
-
+import { jwtDecode } from "jwt-decode";
 
 interface TelaInicialProps {
   nomeUsuario?: string;
@@ -72,29 +72,51 @@ export default function TelaInicial(props: TelaInicialProps) {
   }, []);
 
   useEffect(() => {
-    const refreshToken = localStorage.getItem("refresh");
-    const isAnalistaAdmin = localStorage.getItem("analista_admin") === "true";
+  const refreshToken = localStorage.getItem("refresh");
+  const isAnalistaAdmin = localStorage.getItem("analista_admin") === "true";
+  const accessToken = localStorage.getItem("token");
 
-    if (isAnalistaAdmin && refreshToken) {
-      const renewToken = async () => {
-        try {
-          const response = await api.post("/api/auth/token/refresh/", {
-            refresh: refreshToken,
-          });
+  if (accessToken) {
+    try {
+      const decoded: any = jwtDecode(accessToken);
+      const expTimestamp = decoded.exp * 1000;
+      const now = Date.now();
+      const diff = expTimestamp - now;
 
-          const newAccessToken = response.data.access;
-          if (newAccessToken) {
-            localStorage.setItem("token", newAccessToken);
-            console.log("[AUTO REFRESH] Token renovado para analista_admin");
-          }
-        } catch (error) {
-          console.error("[AUTO REFRESH] Erro ao renovar token:", error);
-        }
-      };
+      const minutos = Math.floor(diff / 60000);
+      const segundos = Math.floor((diff % 60000) / 1000);
 
-      renewToken();
+      if (diff > 0) {
+      } else {
+        console.warn("[TOKEN DEBUG] Token expirado.");
+        setTokenExpirado(true);
+      }
+    } catch (error) {
+      console.warn("[TOKEN DEBUG] Erro ao decodificar token.", error);
     }
-  }, []);
+  }
+
+  if (isAnalistaAdmin && refreshToken) {
+    const renewToken = async () => {
+      try {
+        const response = await api.post("/api/auth/token/refresh/", {
+          refresh: refreshToken,
+        });
+
+        const newAccessToken = response.data.access;
+        if (newAccessToken) {
+          localStorage.setItem("token", newAccessToken);
+        }
+      } catch (error) {
+        console.error("[AUTO REFRESH] Erro ao renovar token:", error);
+      }
+    };
+
+    renewToken();
+  }
+}, []);
+
+
  
   const handleLogout = () => {
     localStorage.clear();
