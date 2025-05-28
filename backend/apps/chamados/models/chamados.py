@@ -31,7 +31,7 @@ class Chamado(models.Model):
 
             if ultimo_comentario:
                 if ultimo_comentario.autor == self.analista:
-                    return "Aguardando Resposta"
+                    return "Aguardando Atendimento"
                 else:
                     return "Em Atendimento"
 
