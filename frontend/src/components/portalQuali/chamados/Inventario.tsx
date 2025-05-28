@@ -30,7 +30,7 @@ interface Produto {
 interface Usuario {
   id: number;
   first_name: string;
-  nome: string
+  nome: string;
 }
 
 interface Setor {
@@ -39,132 +39,181 @@ interface Setor {
   grupo: number;
 }
 
+interface Cargo {
+  id: number;
+  nome: string;
+}
+
 export default function Inventario() {
   const [modoCadastro, setModoCadastro] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [gerentes, setGerentes] = useState<Usuario[]>([]);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [mostrarRede, setMostrarRede] = useState(false);
   const [mostrarPerifericos, setMostrarPerifericos] = useState(false);
-  
+  const [tipoEquipamento, setTipoEquipamento] = useState<string>("");
+  const [possuiCelular, setPossuiCelular] = useState<boolean>(false);
+
   const [formData, setFormData] = useState({
-    tipo_local: "",pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
-    marca: "", modelo: "", processador: "", memoria: "", armazenamento: "",
-    hostname: "", ip: "", anydesk: "",
-    impressora: "", headset: "",
-    serial: "", status: "", ativo: true,
+    tipo_local: "",
+    pavimento: "",
+    setor: "",
+    posicao: "",
+    gerente: "",
+    consultor: "",
+    cargo: "",
+    marca: "",
+    modelo: "",
+    processador: "",
+    memoria: "",
+    armazenamento: "",
+    hostname: "",
+    ip: "",
+    anydesk: "",
+    impressora: "",
+    headset: "",
+    serial: "",
+    status: "",
+    ativo: true,
     observacao: "",
+    celular_modelo: "",
+    celular_marca: "",
+    celular_numero: "",
   });
 
   const handleChange = (field: string, value: string | boolean) => {
-  setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
-  if (field === "tipo_local" && typeof value === "string") {
-    fetchSetores(value);
-    setFormData((prev) => ({ ...prev, setor: "", gerente: "" })); 
-    setGerentes([]); 
-  }
-};
-  
+    if (field === "tipo_local" && typeof value === "string") {
+      fetchSetores(value);
+      setFormData((prev) => ({ ...prev, setor: "", gerente: "" }));
+      setGerentes([]);
+    }
+  };
+
   const handleSetorChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const selectedSetor = e.target.value;
-  setFormData((prev) => ({ ...prev, setor: selectedSetor, gerente: "" }));
+    const selectedSetor = e.target.value;
+    setFormData((prev) => ({ ...prev, setor: selectedSetor, gerente: "" }));
 
-  const token = localStorage.getItem("token");
-  try {
-    const res = await api.get(`api/usuarios/gerentes/?setor_id=${selectedSetor}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setGerentes(res.data);
-  } catch (err) {
-    console.error("Erro ao buscar gerentes:", err);
-    setGerentes([]);
-  }
-};
-
+    const token = localStorage.getItem("token");
+    try {
+      const res = await api.get(`api/usuarios/gerentes/?setor_id=${selectedSetor}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setGerentes(res.data);
+    } catch (err) {
+      console.error("Erro ao buscar gerentes:", err);
+      setGerentes([]);
+    }
+  };
 
   const fetchSetores = async (tipoLocal: string) => {
-  const token = localStorage.getItem("token");
-  try {
-    const res = await api.get("api/core/setores/", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token = localStorage.getItem("token");
+    try {
+      const res = await api.get("api/core/setores/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const setoresFiltrados = res.data.filter((setor: any) =>
-      tipoLocal === "Comercial" ? setor.grupo === 3 : setor.grupo !== 3
-    );
+      const setoresFiltrados = res.data.filter((setor: any) =>
+        tipoLocal === "Comercial" ? setor.grupo === 3 : setor.grupo !== 3
+      );
 
-    setSetores(setoresFiltrados);
-  } catch (err) {
-    console.error("Erro ao buscar setores:", err);
-  }
-};
+      setSetores(setoresFiltrados);
+    } catch (err) {
+      console.error("Erro ao buscar setores:", err);
+    }
+  };
 
+  const fetchCargos = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await api.get("/api/usuarios/cargos/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCargos(res.data);
+    } catch (err) {
+      console.error("Erro ao buscar cargos:", err);
+    }
+  };
 
   const fetchInventario = async () => {
-  const token = localStorage.getItem("token");
-  try {
-    const res = await api.get("api/chamados/inventario/", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token = localStorage.getItem("token");
+    try {
+      const res = await api.get("api/chamados/inventario/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    setProdutos(Array.isArray(res.data) ? res.data : [res.data]);
-  } catch (err) {
-    console.error("Erro ao buscar inventário:", err);
-  }
-};
+      setProdutos(Array.isArray(res.data) ? res.data : [res.data]);
+    } catch (err) {
+      console.error("Erro ao buscar inventário:", err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setStatusMsg(null);
-  const token = localStorage.getItem("token");
+    e.preventDefault();
+    setStatusMsg(null);
+    const token = localStorage.getItem("token");
 
-  try {
-    const res = await api.post("api/chamados/inventario/", formData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const { setor, gerente, ...rest } = formData;
+    const payload = {
+      ...rest,
+      setor_id: Number(setor),
+      cargo_id: Number(gerente),
+      usuario: 5, // ajustar para ID real do usuário logado
+    };
 
-    if (res.status === 200 || res.status === 201) {
-      setStatusMsg("Produto cadastrado com sucesso!");
-      setFormData({
-        tipo_local: "",
-        pavimento: "",
-        setor: "",
-        posicao: "",
-        gerente: "",
-        consultor: "",
-        marca: "",
-        modelo: "",
-        processador: "",
-        memoria: "",
-        armazenamento: "",
-        hostname: "",
-        ip: "",
-        anydesk: "",
-        impressora: "",
-        headset: "",
-        serial: "",
-        status: "",
-        ativo: true,
-        observacao: "",
+    try {
+      const res = await api.post("api/chamados/inventario/", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
-      fetchInventario();
-      setModoCadastro(false);
-    } else {
-      setStatusMsg("Erro ao cadastrar produto.");
+
+      if (res.status === 200 || res.status === 201) {
+        setStatusMsg("Produto cadastrado com sucesso!");
+        setFormData({
+          tipo_local: "",
+          pavimento: "",
+          setor: "",
+          posicao: "",
+          gerente: "",
+          consultor: "",
+          cargo: "",
+          marca: "",
+          modelo: "",
+          processador: "",
+          memoria: "",
+          armazenamento: "",
+          hostname: "",
+          ip: "",
+          anydesk: "",
+          impressora: "",
+          headset: "",
+          serial: "",
+          status: "",
+          ativo: true,
+          observacao: "",
+          celular_modelo: "",
+          celular_marca: "",
+          celular_numero: "",
+        });
+        fetchInventario();
+        setModoCadastro(false);
+      } else {
+        setStatusMsg("Erro ao cadastrar produto.");
+      }
+    } catch (err) {
+      console.error(err);
+      setStatusMsg("Erro de conexão com o servidor.");
     }
-  } catch (err) {
-    console.error(err);
-    setStatusMsg("Erro de conexão com o servidor.");
-  }
-};
+  };
 
   useEffect(() => {
     if (!modoCadastro) fetchInventario();
+    fetchCargos();
   }, [modoCadastro]);
 return (<section className="p-6 pt-20">
   <div className="flex justify-between items-center mb-4">
@@ -196,14 +245,10 @@ return (<section className="p-6 pt-20">
     <section className="bg-white p-6 rounded-xl shadow mt-4 max-h-[600px] overflow-y-auto">
       <form onSubmit={handleSubmit} className="space-y-6 pr-2">
         
-        {/* Responsáveis */}
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Localização</h3>
-          {/* Localização */}
             <div>
-              {/* Switch Tipo de Local */}
                 <div className="flex items-center gap-6 mb-4">
-                  {/* Administrativo */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-700">Administrativo</span>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -218,7 +263,6 @@ return (<section className="p-6 pt-20">
                     </label>
                   </div>
 
-                  {/* Comercial */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-700">Comercial</span>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -292,6 +336,46 @@ return (<section className="p-6 pt-20">
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Hardware</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Computador</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tipoEquipamento === "Computador"}
+                    onChange={() => setTipoEquipamento("Computador")}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Notebook</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tipoEquipamento === "Notebook"}
+                    onChange={() => setTipoEquipamento("Notebook")}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                </label>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center gap-3 mb-2">
+                <input
+                  type="checkbox"
+                  checked={possuiCelular}
+                  onChange={(e) => setPossuiCelular(e.target.checked)}
+                />
+                <span className="text-sm text-gray-700">Possui celular?</span>
+              </div>
+            </div>
+
             {["marca", "modelo", "processador", "memoria", "armazenamento"].map((field) => (
               <input
                 key={field}
@@ -301,6 +385,28 @@ return (<section className="p-6 pt-20">
                 className="border border-gray-300 rounded px-3 py-2 w-full"
               />
             ))}
+            {possuiCelular && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    placeholder="Modelo do celular"
+                    value={formData.celular_modelo}
+                    onChange={(e) => handleChange("celular_modelo", e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 w-full"
+                  />
+                  <input
+                    placeholder="Marca do celular"
+                    value={formData.celular_marca}
+                    onChange={(e) => handleChange("celular_marca", e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 w-full"
+                  />
+                  <input
+                    placeholder="Número com DDD"
+                    value={formData.celular_numero}
+                    onChange={(e) => handleChange("celular_numero", e.target.value)}
+                    className="border border-gray-300 rounded px-3 py-2 w-full md:col-span-2"
+                  />
+                </div>
+              )}
           </div>
         </div>
          {/* Switches de controle */}
