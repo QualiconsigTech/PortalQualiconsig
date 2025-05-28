@@ -2,7 +2,9 @@ import logging
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 import json
-from apps.chamados.models import Chamado
+from apps.chamados.models import Chamado, ComentarioChamado
+from datetime import timedelta
+from django.utils.timezone import localtime
 
 logger = logging.getLogger(__name__)
 
@@ -80,3 +82,42 @@ def encerrar_chamado(chamado_id, usuario, dados=None):
     chamado.save()
 
     return chamado
+
+def verificar_e_encerrar_chamados_inativos():
+    chamados = Chamado.objects.filter(
+        encerrado_em__isnull=True,
+        analista__isnull=False
+    )
+    chamados_aguardando = [c for c in chamados if c.status_calculado == "Aguardando Atendimento"]
+
+    for chamado in chamados_aguardando:
+        ultimo_comentario_analista = ComentarioChamado.objects.filter(
+            chamado=chamado,
+            autor=chamado.analista
+        ).order_by('-criado_em').first()
+
+        if not ultimo_comentario_analista:
+            continue
+
+        tempo_decorrido = localtime(timezone.now()) - localtime(ultimo_comentario_analista.criado_em)
+
+        if tempo_decorrido > timedelta(minutes=1):
+            comentarios_usuario_posteriores = ComentarioChamado.objects.filter(
+                chamado=chamado,
+                autor=chamado.usuario,
+                criado_em__gt=ultimo_comentario_analista.criado_em
+            )
+            if comentarios_usuario_posteriores.exists():
+                continue
+
+            logger.info(f"[AUTOENCERRAMENTO] Chamado {chamado.id} encerrado automaticamente por inatividade do usuário.")
+
+            encerrar_chamado(
+                chamado_id=chamado.id,
+                usuario=chamado.analista,
+                dados={
+                    "solucao": "Por falta de interação o seu chamado foi encerrado.",
+                    "comentarios": "Encerrado automaticamente após 1 hora sem interação do usuário."
+                }
+            )
+
