@@ -382,7 +382,7 @@ return (<section className="p-6 pt-20">
                 placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                 value={(formData as any)[field]}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 w-full"
+                className="border border-gray-300 rounded px-3 py-2 w-full h-10"
               />
             ))}
             {possuiCelular && (
