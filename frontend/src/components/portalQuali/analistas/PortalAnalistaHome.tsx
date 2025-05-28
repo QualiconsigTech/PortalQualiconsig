@@ -9,6 +9,8 @@ import { useRouter } from "next/router";
 import { ChamadoModal } from "@/components/portalQuali/chamados/ChamadoModal";
 import { NotificacoesDropdown } from "@/components/portalQuali/chamados/NotificacoesDropdown";
 import { Chamado } from "@/utils/chamadoUtils";
+import Inventario from "@/components/portalQuali/chamados/Inventario";
+
 
 interface PortalAnalistaHomeProps {
   activeView: string;
@@ -94,6 +96,8 @@ export default function PortalAnalistaHome({
         return (
             <ChamadosAnalistasAdmin activeView={activeView} setActiveView={setActiveView} />
           );
+      case "inventario":
+        return <Inventario />;
       case "qlinks":
         return <Qlinks />;
       case "dashboard":
@@ -110,6 +114,8 @@ export default function PortalAnalistaHome({
         case "meus":
         case "setor":
             return <ChamadosAnalistas key={activeView} activeView={activeView} />;
+        case "inventario":
+            return <Inventario />;
         case "qlinks":
           return <Qlinks />;
         default:

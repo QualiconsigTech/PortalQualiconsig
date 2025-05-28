@@ -5,6 +5,7 @@ from apps.usuarios.serializers import UsuarioSerializer
 from apps.chamados.models.comentario import ComentarioChamado
 from apps.chamados.models.notificacao import Notificacao
 from apps.usuarios.models import Usuario
+from .models.inventario import ProdutoInventario
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
@@ -96,7 +97,10 @@ class UsuarioLogadoSerializer(serializers.ModelSerializer):
         fields = ['id', 'nome', 'email', 'tipo', 'setor', 'cargo', 'is_admin', 'deletado']
 
 
-
+class ProdutoInventarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProdutoInventario
+        fields = '__all__'
 
 
 

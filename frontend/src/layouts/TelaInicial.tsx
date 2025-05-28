@@ -56,6 +56,7 @@ export default function TelaInicial(props: TelaInicialProps) {
         setTipoUsuario(response.data.tipo);
         setIsAdmin(response.data.is_admin);
         setNomeUsuario(response.data.nome);
+        localStorage.setItem("setor", response.data.setor);
 
         if (response.data.tipo === "analista" && !response.data.is_admin) {
           setSubView("meus");
@@ -68,6 +69,31 @@ export default function TelaInicial(props: TelaInicialProps) {
     };
 
     fetchUserType();
+  }, []);
+
+  useEffect(() => {
+    const refreshToken = localStorage.getItem("refresh");
+    const isAnalistaAdmin = localStorage.getItem("analista_admin") === "true";
+
+    if (isAnalistaAdmin && refreshToken) {
+      const renewToken = async () => {
+        try {
+          const response = await api.post("/api/auth/token/refresh/", {
+            refresh: refreshToken,
+          });
+
+          const newAccessToken = response.data.access;
+          if (newAccessToken) {
+            localStorage.setItem("token", newAccessToken);
+            console.log("[AUTO REFRESH] Token renovado para analista_admin");
+          }
+        } catch (error) {
+          console.error("[AUTO REFRESH] Erro ao renovar token:", error);
+        }
+      };
+
+      renewToken();
+    }
   }, []);
  
   const handleLogout = () => {
@@ -151,9 +177,16 @@ export default function TelaInicial(props: TelaInicialProps) {
 
   const subMenusComercialUsuarios = ["meus", "ajuda", "faq"];
 
-const getSubMenus = () => {
+  const subMenusSuporteAnalista = ["meus", "setor", "inventario"];
+
+  const getSubMenus = () => {
     if (grupoSelecionado === "Portal de Chamados") {
-      if (tipoUsuario === "analista" && !isAdmin) return subMenusTecnologiaAnalista;
+      if (tipoUsuario === "analista" && !isAdmin && nomeUsuario && nomeUsuario !== "") {
+        // Verifica o setor com base no nome do usuário
+        const setor = localStorage.getItem("setor"); // ou use outro estado se tiver
+        if (setor === "Suporte") return subMenusSuporteAnalista;
+        return subMenusTecnologiaAnalista;
+      }
       if (tipoUsuario === "usuario" && !isAdmin) return subMenusComercialUsuarios;
       return isAdmin && tipoUsuario === "analista"
         ? subMenusTecnologiaAdmin
@@ -161,6 +194,7 @@ const getSubMenus = () => {
     }
     return [];
   };
+  
 
   const renderConteudo = () => {
     if (grupoSelecionado === "Portal de Chamados") {
@@ -263,6 +297,7 @@ const getSubMenus = () => {
                             faq: "Perguntas Frequentes",
                             ajuda: "Ajuda",
                             analistas: "Analistas",
+                            inventario: "Inventário",
                           }[item] || item.charAt(0).toUpperCase() + item.slice(1)}
                         </button>
                       ))}
