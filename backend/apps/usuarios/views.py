@@ -5,6 +5,9 @@ from rest_framework.permissions import IsAuthenticated
 from apps.usuarios.models import Usuario
 from apps.usuarios.serializers import UsuarioSerializer, GerentePorSetorSerializer
 from apps.usuarios.services import listar_gerentes_por_setor
+from apps.core.models.cargo import Cargo
+from rest_framework import serializers
+
 
 class UsuarioViewSet(ModelViewSet):
     queryset = Usuario.objects.filter(deletado=False)
@@ -21,4 +24,17 @@ class GerentesPorSetorView(APIView):
 
         gerentes = listar_gerentes_por_setor(setor_id)
         serializer = GerentePorSetorSerializer(gerentes, many=True)
+        return Response(serializer.data)
+
+class CargoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cargo
+        fields = ['id', 'nome']
+
+class CargosListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cargos = Cargo.objects.all()
+        serializer = CargoSerializer(cargos, many=True)
         return Response(serializer.data)
