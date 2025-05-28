@@ -1,0 +1,27 @@
+import django.db.models.deletion
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('chamados', '0002_produtoinventario'),
+        ('core', '0003_alter_setor_grupo'),
+    ]
+
+    operations = [
+        migrations.RemoveField(
+            model_name='produtoinventario',
+            name='gerente',
+        ),
+        migrations.AddField(
+            model_name='produtoinventario',
+            name='cargo',
+            field=models.ForeignKey(blank=True, db_column='cargo_id', null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.cargo'),
+        ),
+        migrations.AlterField(
+            model_name='produtoinventario',
+            name='setor',
+            field=models.ForeignKey(blank=True, db_column='setor_id', null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.setor'),
+        ),
+    ]

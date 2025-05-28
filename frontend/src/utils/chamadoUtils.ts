@@ -30,8 +30,8 @@ export const getStatus = (chamado: { status: string }) => {
       return { texto: "Aberto", cor: "text-green-600" };
     case "Em Atendimento":
       return { texto: "Em Atendimento", cor: "text-yellow-500" };
-    case "Aguardando Resposta":
-      return { texto: "Aguardando Resposta", cor: "text-orange-500" };
+    case "Aguardando Atendimento":
+      return { texto: "Aguardando Atendimento", cor: "text-orange-500" };
     case "Encerrado":
       return { texto: "Encerrado", cor: "text-black" };
     default:

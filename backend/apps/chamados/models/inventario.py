@@ -1,11 +1,13 @@
 from django.db import models
 from apps.usuarios.models import Usuario
+from apps.core.models.setor import Setor
+from apps.core.models.cargo import Cargo
 
 class ProdutoInventario(models.Model):
     pavimento = models.CharField(max_length=100, blank=True, null=True)
-    setor = models.CharField(max_length=100, blank=True, null=True)
+    setor = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True, db_column='setor_id')
     posicao = models.CharField(max_length=100, blank=True, null=True)
-    gerente = models.CharField(max_length=100, blank=True, null=True)
+    cargo = models.ForeignKey(Cargo, on_delete=models.SET_NULL, null=True, blank=True, db_column='cargo_id')
     anydesk = models.CharField(max_length=100, blank=True, null=True)
     marca = models.CharField(max_length=100, blank=True, null=True)
     modelo = models.CharField(max_length=100, blank=True, null=True)

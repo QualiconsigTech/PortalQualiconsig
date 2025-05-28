@@ -6,6 +6,8 @@ from apps.chamados.models.comentario import ComentarioChamado
 from apps.chamados.models.notificacao import Notificacao
 from apps.usuarios.models import Usuario
 from .models.inventario import ProdutoInventario
+from apps.core.models.setor import Setor
+from apps.core.models.cargo import Cargo
 
 class ChamadoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
@@ -98,9 +100,24 @@ class UsuarioLogadoSerializer(serializers.ModelSerializer):
 
 
 class ProdutoInventarioSerializer(serializers.ModelSerializer):
+    cargo_id = serializers.PrimaryKeyRelatedField(
+        queryset=Cargo.objects.all(),
+        source='cargo',
+        required=False,
+        allow_null=True
+    )
+    setor_id = serializers.PrimaryKeyRelatedField(
+        queryset=Setor.objects.all(),
+        source='setor',
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = ProdutoInventario
         fields = '__all__'
+
+
 
 
 

@@ -1,5 +1,6 @@
 import logging
 from rest_framework import status
+from django.utils import timezone
 from apps.chamados.models.chamados import Chamado
 from apps.chamados.models.comentario import ComentarioChamado
 from apps.chamados.models.notificacao import Notificacao
@@ -42,5 +43,9 @@ def criar_comentario_chamado(chamado_id, texto, autor):
             chamado=chamado,
             mensagem=f"Novo comentário no chamado {chamado.titulo} que você está atendendo."
         )
+
+    if chamado.analista == autor:
+        chamado.editado_em = timezone.now()
+        chamado.save()
 
     return {"mensagem": "Comentário adicionado com sucesso."}, status.HTTP_201_CREATED
