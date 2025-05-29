@@ -26,11 +26,15 @@ interface Produto {
   observacao: string | null;
   criado_em: string;
   atualizado_em: string;
+  usuario_id: number;
+  setor_id: number;
+  usuario?: Usuario;
 }
 interface Usuario {
   id: number;
   first_name: string;
   nome: string;
+  setor_nome?: string;
 }
 
 interface Setor {
@@ -55,6 +59,8 @@ export default function Inventario() {
   const [mostrarPerifericos, setMostrarPerifericos] = useState(false);
   const [tipoEquipamento, setTipoEquipamento] = useState<string>("");
   const [possuiCelular, setPossuiCelular] = useState<boolean>(false);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: boolean }>({});
+
 
   const [formData, setFormData] = useState({
     tipo_local: "",
@@ -82,6 +88,26 @@ export default function Inventario() {
     celular_marca: "",
     celular_numero: "",
   });
+
+  const validarCampos = () => {
+  const novosErros: { [key: string]: boolean } = {};
+
+  if (!formData.pavimento) novosErros.pavimento = true;
+  if (!formData.setor) novosErros.setor = true;
+  if (!formData.gerente) novosErros.gerente = true;
+  if (!formData.marca) novosErros.marca = true;
+  if (!formData.modelo) novosErros.modelo = true;
+
+  if (possuiCelular) {
+    if (!formData.celular_modelo) novosErros.celular_modelo = true;
+    if (!formData.celular_marca) novosErros.celular_marca = true;
+    if (!formData.celular_numero) novosErros.celular_numero = true;
+  }
+
+  setFormErrors(novosErros);
+  return Object.keys(novosErros).length === 0;
+  };
+
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -129,7 +155,7 @@ export default function Inventario() {
   const fetchCargos = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await api.get("/api/usuarios/cargos/", {
+      const res = await api.get("/api/core/cargos/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCargos(res.data);
@@ -152,64 +178,66 @@ export default function Inventario() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatusMsg(null);
-    const token = localStorage.getItem("token");
+  e.preventDefault();
+  setStatusMsg(null);
+  const token = localStorage.getItem("token");
 
-    const { setor, gerente, ...rest } = formData;
-    const payload = {
-      ...rest,
-      setor_id: Number(setor),
-      cargo_id: Number(gerente),
-      usuario: 5, // ajustar para ID real do usuário logado
-    };
+  const payload = {
+  usuario_id: formData.gerente ? Number(formData.gerente) : null,
+  setor_id: Number(formData.setor) || null,
+  pavimento: formData.pavimento || null,
+  posicao: formData.posicao || null,
+  hostname: formData.hostname || null,
+  ip: formData.ip || null,
+  anydesk: formData.anydesk || null,
+  impressora: formData.impressora || null,
+  headset: formData.headset || null,
+  marca: formData.marca || null,
+  modelo: formData.modelo || null,
+  processador: formData.processador || null,
+  memoria: formData.memoria || null,
+  armazenamento: formData.armazenamento || null,
+  serial: formData.serial || null,
+  status: formData.status || null,
+  ativo: formData.ativo,
+  observacao: formData.observacao || null,
+  consultor: formData.consultor || null,
+  ...(possuiCelular && {
+    celular_modelo: formData.celular_modelo || null,
+    celular_marca: formData.celular_marca || null,
+    celular_numero: formData.celular_numero || null,
+  })
+};
 
-    try {
-      const res = await api.post("api/chamados/inventario/", payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+ 
+  if (!validarCampos()) {
+  setStatusMsg("Preencha todos os campos obrigatórios.");
+  return;
+  }
 
-      if (res.status === 200 || res.status === 201) {
-        setStatusMsg("Produto cadastrado com sucesso!");
-        setFormData({
-          tipo_local: "",
-          pavimento: "",
-          setor: "",
-          posicao: "",
-          gerente: "",
-          consultor: "",
-          cargo: "",
-          marca: "",
-          modelo: "",
-          processador: "",
-          memoria: "",
-          armazenamento: "",
-          hostname: "",
-          ip: "",
-          anydesk: "",
-          impressora: "",
-          headset: "",
-          serial: "",
-          status: "",
-          ativo: true,
-          observacao: "",
-          celular_modelo: "",
-          celular_marca: "",
-          celular_numero: "",
-        });
-        fetchInventario();
-        setModoCadastro(false);
-      } else {
-        setStatusMsg("Erro ao cadastrar produto.");
-      }
-    } catch (err) {
-      console.error(err);
-      setStatusMsg("Erro de conexão com o servidor.");
+  try {
+    console.log("Payload enviado:", payload);
+    const res = await api.post("api/chamados/inventario/", payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.status === 201) {
+      setStatusMsg("Produto cadastrado com sucesso!");
+      fetchInventario();
+      setModoCadastro(false);
+    } else {
+      setStatusMsg("Erro ao cadastrar produto.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    console.error("Erro completo:", err.response?.data || err.message);
+    setStatusMsg("Erro de conexão com o servidor.");
+  }
+};
+
 
   useEffect(() => {
     if (!modoCadastro) fetchInventario();
@@ -279,44 +307,51 @@ return (<section className="p-6 pt-20">
                 </div>
 
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
                 <input
                   placeholder="Pavimento"
                   value={formData.pavimento}
                   onChange={(e) => handleChange("pavimento", e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                  className={`border rounded px-3 py-2 w-full ${formErrors.pavimento ? "border-red-500" : "border-gray-300"}`}
                 />
-                <select
-                  value={formData.setor}
-                  onChange={handleSetorChange}
-                  className="border border-gray-300 rounded px-3 py-2 w-full text-gray-700"
-                >
-                  <option value="">Selecione o Setor</option>
-                  {setores.map((setor) => (
-                    <option key={setor.id} value={setor.id}>
-                      {setor.nome}
-                    </option>
-                  ))}
-                </select>
+                {formErrors.pavimento && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
 
-                <input
-                  placeholder="Posição"
-                  value={formData.posicao}
-                  onChange={(e) => handleChange("posicao", e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 w-full"
-                />
-                <select
-                  value={formData.gerente}
-                  onChange={(e) => handleChange("gerente", e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 w-full text-gray-700"
-                >
-                  <option value="">Selecione o Gerente</option>
-                  {gerentes.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.nome}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-col">
+                  <select
+                    value={formData.setor}
+                    onChange={handleSetorChange}
+                    className={`border rounded px-3 py-2 w-full text-gray-700 ${formErrors.setor ? "border-red-500" : "border-gray-300"}`}
+                  >
+                    <option value="">Selecione o Setor *</option>
+                    {setores.map((setor) => (
+                      <option key={setor.id} value={setor.id}>
+                        {setor.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.setor && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+                </div>
+
+
+                <input placeholder="Posição"
+                      value={formData.posicao}
+                      onChange={(e) => handleChange("posicao", e.target.value)}
+                      className="border border-gray-300 rounded px-3 py-2 w-full"/>
+                <div className="flex flex-col">
+                  <select
+                    value={formData.gerente}
+                    onChange={(e) => handleChange("gerente", e.target.value)}
+                    className={`border rounded px-3 py-2 w-full text-gray-700 ${formErrors.gerente ? "border-red-500" : "border-gray-300"}`}
+                  >
+                    <option value="">Selecione o Gerente *</option>
+                    {gerentes.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.gerente && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+                </div>
 
                 {formData.tipo_local !== "Comercial" && (
                   <input
@@ -372,7 +407,7 @@ return (<section className="p-6 pt-20">
                   checked={possuiCelular}
                   onChange={(e) => setPossuiCelular(e.target.checked)}
                 />
-                <span className="text-sm text-gray-700">Possui celular?</span>
+                <span className="text-sm text-gray-700">Possui celular</span>
               </div>
             </div>
 
@@ -386,25 +421,35 @@ return (<section className="p-6 pt-20">
               />
             ))}
             {possuiCelular && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    placeholder="Modelo do celular"
-                    value={formData.celular_modelo}
-                    onChange={(e) => handleChange("celular_modelo", e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 w-full"
+                <div className="flex flex-col">
+              <input
+                placeholder="Modelo do celular"
+                value={formData.celular_modelo}
+                onChange={(e) => handleChange("celular_modelo", e.target.value)}
+                className={`border rounded px-3 py-2 w-full ${
+                  formErrors.celular_modelo ? "border-red-500" : "border-gray-300"}`}
                   />
-                  <input
-                    placeholder="Marca do celular"
-                    value={formData.celular_marca}
-                    onChange={(e) => handleChange("celular_marca", e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 w-full"
-                  />
-                  <input
-                    placeholder="Número com DDD"
-                    value={formData.celular_numero}
-                    onChange={(e) => handleChange("celular_numero", e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 w-full md:col-span-2"
-                  />
+                  {formErrors.celular_modelo && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+              <div className="flex flex-col">
+                <input
+                  placeholder="Marca do celular"
+                  value={formData.celular_marca}
+                  onChange={(e) => handleChange("celular_marca", e.target.value)}
+                  className={`border rounded px-3 py-2 w-full ${formErrors.celular_marca ? "border-red-500" : "border-gray-300"}`}
+                />
+                {formErrors.celular_marca && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+              </div>
+
+                  <div className="flex flex-col md:col-span-2">
+                    <input
+                      placeholder="Número com DDD *"
+                      value={formData.celular_numero}
+                      onChange={(e) => handleChange("celular_numero", e.target.value)}
+                      className={`border rounded px-3 py-2 w-full ${formErrors.celular_numero ? "border-red-500" : "border-gray-300"}`}
+                    />
+                    {formErrors.celular_numero && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+                  </div>
+
                 </div>
               )}
           </div>
@@ -529,7 +574,7 @@ return (<section className="p-6 pt-20">
                 <td className="py-2 whitespace-nowrap">{produto.pavimento ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.setor ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.posicao ?? "—"}</td>
-                <td className="py-2 whitespace-nowrap">{produto.gerente ?? "—"}</td>
+                <td className="py-2 whitespace-nowrap">{produto.usuario?.nome ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.marca ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.modelo ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.anydesk ?? "—"}</td>
