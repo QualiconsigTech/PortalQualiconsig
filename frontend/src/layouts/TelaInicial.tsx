@@ -270,6 +270,12 @@ export default function TelaInicial(props: TelaInicialProps) {
       }`}
     >
       <div className="flex items-center justify-between px-4 pt-4">
+        <img
+          src="/images/LOGO 1 - Sombra.png"
+          alt="Logo"
+          className="h-6 w-6"
+        />
+        
         {sidebarAberto && (
           <h1 className="text-xl font-bold text-[#041161] whitespace-nowrap">Portal Qualiconsig</h1>
         )}
