@@ -26,17 +26,26 @@ interface Produto {
   observacao: string | null;
   criado_em: string;
   atualizado_em: string;
+  usuario_id: number;
+  setor_id: number;
+  usuario?: Usuario;
 }
 interface Usuario {
   id: number;
   first_name: string;
-  nome: string
+  nome: string;
+  setor_nome?: string;
 }
 
 interface Setor {
   id: number;
   nome: string;
   grupo: number;
+}
+
+interface Cargo {
+  id: number;
+  nome: string;
 }
 
 export default function Inventario() {
@@ -47,15 +56,53 @@ export default function Inventario() {
   const [gerentes, setGerentes] = useState<Usuario[]>([]);
   const [mostrarRede, setMostrarRede] = useState(false);
   const [mostrarPerifericos, setMostrarPerifericos] = useState(false);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [tipoEquipamento, setTipoEquipamento] = useState<string>("");
+  const [possuiCelular, setPossuiCelular] = useState<boolean>(false);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: boolean }>({});
   
   const [formData, setFormData] = useState({
-    tipo_local: "",pavimento: "", setor: "", posicao: "", gerente: "", consultor: "",
-    marca: "", modelo: "", processador: "", memoria: "", armazenamento: "",
-    hostname: "", ip: "", anydesk: "",
-    impressora: "", headset: "",
-    serial: "", status: "", ativo: true,
+    tipo_local: "",
+    pavimento: "",
+    setor: "",
+    posicao: "",
+    gerente: "",
+    consultor: "",
+    cargo: "",
+    marca: "",
+    modelo: "",
+    processador: "",
+    memoria: "",
+    armazenamento: "",
+    hostname: "",
+    ip: "",
+    anydesk: "",
+    impressora: "",
+    headset: "",
+    serial: "",
+    status: "",
+    ativo: true,
     observacao: "",
+    celular_modelo: "",
+    celular_marca: "",
+    celular_numero: "",
   });
+
+  const validarCampos = () => {
+  const novosErros: { [key: string]: boolean } = {};
+  if (!formData.pavimento) novosErros.pavimento = true;
+  if (!formData.setor) novosErros.setor = true;
+  if (!formData.gerente) novosErros.gerente = true;
+  if (!formData.marca) novosErros.marca = true;
+  if (!formData.modelo) novosErros.modelo = true;
+  if (possuiCelular) {
+    if (!formData.celular_modelo) novosErros.celular_modelo = true;
+    if (!formData.celular_marca) novosErros.celular_marca = true;
+    if (!formData.celular_numero) novosErros.celular_numero = true;
+  }
+  setFormErrors(novosErros);
+  return Object.keys(novosErros).length === 0;
+  };
 
   const handleChange = (field: string, value: string | boolean) => {
   setFormData((prev) => ({ ...prev, [field]: value }));
@@ -101,6 +148,18 @@ export default function Inventario() {
   }
 };
 
+  const fetchCargos = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await api.get("/api/core/cargos/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCargos(res.data);
+    } catch (err) {
+      console.error("Erro ao buscar cargos:", err);
+    }
+  };
+
 
   const fetchInventario = async () => {
   const token = localStorage.getItem("token");
@@ -115,10 +174,66 @@ export default function Inventario() {
   }
 };
 
+  const payload = {
+  usuario_id: formData.gerente ? Number(formData.gerente) : null,
+  setor_id: Number(formData.setor) || null,
+  pavimento: formData.pavimento || null,
+  posicao: formData.posicao || null,
+  hostname: formData.hostname || null,
+  ip: formData.ip || null,
+  anydesk: formData.anydesk || null,
+  impressora: formData.impressora || null,
+  headset: formData.headset || null,
+  marca: formData.marca || null,
+  modelo: formData.modelo || null,
+  processador: formData.processador || null,
+  memoria: formData.memoria || null,
+  armazenamento: formData.armazenamento || null,
+  serial: formData.serial || null,
+  status: formData.status || null,
+  ativo: formData.ativo,
+  observacao: formData.observacao || null,
+  consultor: formData.consultor || null,
+  ...(possuiCelular && {
+    celular_modelo: formData.celular_modelo || null,
+    celular_marca: formData.celular_marca || null,
+    celular_numero: formData.celular_numero || null,
+  })
+  
+};
+
+const formatPhoneNumber = (value: string) => {
+  const cleaned = value.replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{0,2})(\d{0,5})(\d{0,4})$/);
+
+  if (!match) return "";
+
+  const [, ddd, part1, part2] = match;
+  if (ddd && part1 && part2) return `(${ddd}) ${part1}-${part2}`;
+  if (ddd && part1) return `(${ddd}) ${part1}`;
+  if (ddd) return `(${ddd})`;
+
+  return "";
+};
+
+const handlePhoneChange = (value: string) => {
+  const formatted = formatPhoneNumber(value);
+  handleChange("celular_numero", formatted);
+};
+
+
+
+  
+
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setStatusMsg(null);
   const token = localStorage.getItem("token");
+
+  if (!validarCampos()) {
+    setStatusMsg("Preencha todos os campos obrigatórios.");
+    return;
+  }
 
   try {
     const res = await api.post("api/chamados/inventario/", formData, {
@@ -137,6 +252,7 @@ export default function Inventario() {
         posicao: "",
         gerente: "",
         consultor: "",
+        cargo: "",
         marca: "",
         modelo: "",
         processador: "",
@@ -151,6 +267,9 @@ export default function Inventario() {
         status: "",
         ativo: true,
         observacao: "",
+        celular_modelo: "",
+        celular_marca: "",
+        celular_numero: "",
       });
       fetchInventario();
       setModoCadastro(false);
@@ -159,12 +278,14 @@ export default function Inventario() {
     }
   } catch (err) {
     console.error(err);
+    console.error("Erro completo:", err.response?.data || err.message);
     setStatusMsg("Erro de conexão com o servidor.");
   }
 };
 
   useEffect(() => {
     if (!modoCadastro) fetchInventario();
+    fetchCargos();
   }, [modoCadastro]);
 return (<section className="p-6 pt-20">
   <div className="flex justify-between items-center mb-4">
@@ -201,53 +322,60 @@ return (<section className="p-6 pt-20">
           <h3 className="text-lg font-medium mb-2 text-gray-700">Localização</h3>
           {/* Localização */}
             <div>
-              {/* Switch Tipo de Local */}
-                <div className="flex items-center gap-6 mb-4">
-                  {/* Administrativo */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">Administrativo</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.tipo_local === "Administrativo"}
-                        onChange={() => handleChange("tipo_local", "Administrativo")}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
-                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
-                    </label>
-                  </div>
-
-                  {/* Comercial */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">Comercial</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.tipo_local === "Comercial"}
-                        onChange={() => handleChange("tipo_local", "Comercial")}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
-                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
-                    </label>
-                  </div>
+              {/* Switches de Tipo de Local */}
+              <div className="flex items-center gap-6 mb-4">
+                {/* Administrativo */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">Administrativo</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.tipo_local === "Administrativo"}
+                      onChange={() => handleChange("tipo_local", "Administrativo")}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                    <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                  </label>
                 </div>
 
+                {/* Comercial */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">Comercial</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.tipo_local === "Comercial"}
+                      onChange={() => handleChange("tipo_local", "Comercial")}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                    <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                  </label>
+                </div>
+              </div>
 
+              {/* Pavimento - abaixo dos switches */}
+              <input
+                placeholder="Pavimento"
+                value={formData.pavimento}
+                onChange={(e) => handleChange("pavimento", e.target.value)}
+                className={`border rounded px-3 py-2 w-full mb-4 ${
+                  formErrors.pavimento ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+
+              {/* Restante dos campos em grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  placeholder="Pavimento"
-                  value={formData.pavimento}
-                  onChange={(e) => handleChange("pavimento", e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 w-full"
-                />
+                {/* Setor */}
                 <select
                   value={formData.setor}
                   onChange={handleSetorChange}
-                  className="border border-gray-300 rounded px-3 py-2 w-full text-gray-700"
+                  className={`border rounded px-3 py-2 w-full text-gray-700 ${
+                    formErrors.setor ? "border-red-500" : "border-gray-300"
+                  }`}
                 >
-                  <option value="">Selecione o Setor</option>
+                  <option value="">Selecione o Setor *</option>
                   {setores.map((setor) => (
                     <option key={setor.id} value={setor.id}>
                       {setor.nome}
@@ -255,18 +383,23 @@ return (<section className="p-6 pt-20">
                   ))}
                 </select>
 
+                {/* Posição */}
                 <input
                   placeholder="Posição"
                   value={formData.posicao}
                   onChange={(e) => handleChange("posicao", e.target.value)}
                   className="border border-gray-300 rounded px-3 py-2 w-full"
                 />
+
+                {/* Gerente */}
                 <select
                   value={formData.gerente}
                   onChange={(e) => handleChange("gerente", e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 w-full text-gray-700"
+                  className={`border rounded px-3 py-2 w-full text-gray-700 ${
+                    formErrors.gerente ? "border-red-500" : "border-gray-300"
+                  }`}
                 >
-                  <option value="">Selecione o Gerente</option>
+                  <option value="">Selecione o Gerente *</option>
                   {gerentes.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.nome}
@@ -274,6 +407,7 @@ return (<section className="p-6 pt-20">
                   ))}
                 </select>
 
+                {/* Consultor (somente para Administrativo) */}
                 {formData.tipo_local !== "Comercial" && (
                   <input
                     placeholder="Consultor"
@@ -282,9 +416,9 @@ return (<section className="p-6 pt-20">
                     className="border border-gray-300 rounded px-3 py-2 w-full"
                   />
                 )}
-
               </div>
             </div>
+
 
         </div>
 
@@ -292,15 +426,132 @@ return (<section className="p-6 pt-20">
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Hardware</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {["marca", "modelo", "processador", "memoria", "armazenamento"].map((field) => (
-              <input
-                key={field}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                value={(formData as any)[field]}
-                onChange={(e) => handleChange(field, e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 w-full"
-              />
-            ))}
+            <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Computador</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tipoEquipamento === "Computador"}
+                    onChange={() => setTipoEquipamento("Computador")}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Notebook</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={tipoEquipamento === "Notebook"}
+                    onChange={() => setTipoEquipamento("Notebook")}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                </label>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center gap-3 mb-2">
+                <input
+                  type="checkbox"
+                  checked={possuiCelular}
+                  onChange={(e) => setPossuiCelular(e.target.checked)}
+                />
+                <span className="text-sm text-gray-700">Possui celular</span>
+              </div>
+            </div>
+
+            {/* marca */}
+                <input
+                  placeholder="marca"
+                  value={formData.marca}
+                  onChange={(e) => handleChange("marca", e.target.value)}
+                  className={`border rounded px-3 py-2 w-full mb-4 ${
+                  formErrors.pavimento ? "border-red-500" : "border-gray-300"
+                }`}
+                />
+
+              {/* modelo */}
+                <input
+                  placeholder="modelo"
+                  value={formData.modelo}
+                  onChange={(e) => handleChange("modelo", e.target.value)}
+                  className={`border rounded px-3 py-2 w-full mb-4 ${
+                  formErrors.pavimento ? "border-red-500" : "border-gray-300"
+                }`}
+                />
+
+              {/* processador */}
+                <input
+                  placeholder="processador"
+                  value={formData.processador}
+                  onChange={(e) => handleChange("processador", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+
+              {/* memoria */}
+                <input
+                  placeholder="memoria"
+                  value={formData.memoria}
+                  onChange={(e) => handleChange("memoria", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+
+
+                 {/* armazenamento */}
+                <input
+                  placeholder="armazenamento"
+                  value={formData.armazenamento}
+                  onChange={(e) => handleChange("armazenamento", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+              {possuiCelular && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="flex flex-col">
+                  <input
+                    placeholder="Modelo do celular"
+                    value={formData.celular_modelo}
+                    onChange={(e) => handleChange("celular_modelo", e.target.value)}
+                    className={`border rounded px-3 py-2 w-full h-10 ${
+                      formErrors.celular_modelo ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {formErrors.celular_modelo && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+                </div>
+
+                <div className="flex flex-col">
+                  <input
+                    placeholder="Marca do celular"
+                    value={formData.celular_marca}
+                    onChange={(e) => handleChange("celular_marca", e.target.value)}
+                    className={`border rounded px-3 py-2 w-full h-10 ${
+                      formErrors.celular_marca ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {formErrors.celular_marca && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+                </div>
+
+                <div className="flex flex-col">
+                  <input
+                    placeholder="Número com DDD *"
+                    value={formData.celular_numero}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    className={`border rounded px-3 py-2 w-full h-10 ${
+                      formErrors.celular_numero ? "border-red-500" : "border-gray-300"
+                    }`}
+                    maxLength={15}
+                  />
+                  {formErrors.celular_numero && <p className="text-red-500 text-xs mt-1">Número inválido</p>}
+                </div>
+              </div>
+            )}
+
+
           </div>
         </div>
          {/* Switches de controle */}
@@ -423,7 +674,7 @@ return (<section className="p-6 pt-20">
                 <td className="py-2 whitespace-nowrap">{produto.pavimento ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.setor ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.posicao ?? "—"}</td>
-                <td className="py-2 whitespace-nowrap">{produto.gerente ?? "—"}</td>
+                <td className="py-2 whitespace-nowrap">{produto.usuario?.nome ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.marca ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.modelo ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.anydesk ?? "—"}</td>
