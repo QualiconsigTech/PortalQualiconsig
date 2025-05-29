@@ -42,8 +42,10 @@ def atualizar_chamado(data, chamado_id, usuario):
     except Chamado.DoesNotExist:
         return {'erro': 'Chamado não encontrado'}, status.HTTP_404_NOT_FOUND
 
-    if usuario != chamado.usuario and not usuario.is_admin:
-        return {'erro': 'Você não tem permissão para atualizar este chamado.'}, status.HTTP_403_FORBIDDEN
+    if chamado.status_calculado != "Aberto":
+        return {
+            'erro': 'Você não tem permissão para atualizar este chamado.'
+        }, status.HTTP_403_FORBIDDEN
 
     serializer = ChamadoSerializer(chamado, data=data, partial=True)
     if serializer.is_valid():

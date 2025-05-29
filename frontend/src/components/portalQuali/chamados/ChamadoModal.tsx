@@ -11,6 +11,8 @@ interface Comentario {
   criado_em: string;
 }
 
+
+
 interface ChamadoModalProps {
   chamado: Chamado;
   aberto: boolean;
@@ -58,6 +60,9 @@ export const ChamadoModal = ({
   const [erroSolucao, setErroSolucao] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMensagem, setToastMensagem] = useState("");
+  const [setorSelecionado, setSetorSelecionado] = useState<number | null>(null);
+  const [setoresDisponiveis, setSetoresDisponiveis] = useState<{ id: number; nome: string; grupo: number }[]>([]);
+
 
 
   const fetchUsuario = async () => {
@@ -73,13 +78,54 @@ export const ChamadoModal = ({
       console.error("Erro ao buscar dados do usuário:", error);
     }
   };
+
+  const buscarSetores = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const response = await api.get("/api/core/setores/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setSetoresDisponiveis(response.data);
+  } catch (error) {
+    console.error("Erro ao buscar setores:", error);
+  }
+};
+const atualizarSetorChamado = async () => {
+    if (setorSelecionado === null) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      await api.put(`/api/chamados/atualizar/${chamado.id}/`, {
+        setor: setorSelecionado,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setToastMensagem("Setor atualizado com sucesso!");
+      setShowToast(true);
+
+      if (atualizarListaChamados) atualizarListaChamados();
+    } catch (error) {
+      console.error("Erro ao atualizar setor:", error);
+      setToastMensagem("Erro ao atualizar o setor do chamado.");
+      setShowToast(true);
+    }
+  };
+
   
   useEffect(() => {
-    if (chamado.id) {
-      buscarComentarios();
-      fetchUsuario();
-    }
-  }, [chamado.id]);
+  if (chamado.id) {
+    buscarComentarios();
+    fetchUsuario();
+    buscarSetores().then(() => {
+      setSetorSelecionado(chamado.setor ?? null);
+    });
+  }
+}, [chamado.id]);
+
 
     const buscarComentarios = async () => {
       try {
@@ -129,16 +175,15 @@ export const ChamadoModal = ({
     };
 
     const podeMostrarBotaoCancelar = () => {
-      if (!usuarioLogado) return false;
+    if (!usuarioLogado) return false;
 
-      const ehUsuario = usuarioLogado.tipo === "usuario";
-      const chamadoAbertoOuEmAndamento = ["Aberto", "Em Atendimento"].includes(status.texto);
-      const chamadoAberto = status.texto === "Aberto";
-      const semAnalistaAtribuido = !chamado.analista;
+    const ehUsuario = usuarioLogado.tipo === "usuario";
+    const chamadoAbertoOuEmAndamento = ["Aberto", "Em Atendimento"].includes(status.texto);
+    const semAnalistaAtribuido = !chamado.analista;
 
-      return ehUsuario && chamadoAbertoOuEmAndamento && semAnalistaAtribuido;
-      return ehUsuario && chamadoAberto && semAnalistaAtribuido;
-    };
+    return ehUsuario && chamadoAbertoOuEmAndamento && semAnalistaAtribuido;
+  };
+
     
     
 
@@ -231,6 +276,31 @@ export const ChamadoModal = ({
           <div><strong>Prioridade:</strong> {chamado.prioridade_nome}</div>
           <div><strong>Analista Atribuído:</strong> {chamado.analista?.nome || "Não Atribuido"} </div>
         </div>      
+         { usuarioLogado?.tipo === "analista" && status.texto === "Aberto" && !chamado.analista && (
+        <div className="mb-4">
+          <label className="block font-semibold mb-1">Alterar setor do chamado:</label>
+          <select
+            className="w-full border rounded p-2"
+            value={setorSelecionado ?? chamado.setor}
+            onChange={(e) => setSetorSelecionado(Number(e.target.value))}
+          >
+            <option value="">Selecione um setor</option>
+            {setoresDisponiveis
+                .filter((setor) => Number(setor.grupo) === 2)
+                .map((setor) => (
+                  <option key={setor.id} value={setor.id}>
+                    {setor.nome}
+                  </option>
+                ))}
+          </select>
+          <button
+            onClick={atualizarSetorChamado}
+            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          >
+            Atualizar Setor
+          </button>
+        </div>
+      )}
 
         <div className="mb-4">
           <label className="block font-semibold mb-1">Descrição:</label>

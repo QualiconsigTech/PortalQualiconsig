@@ -21,6 +21,7 @@ export interface Chamado {
     nome: string;
     setor_nome: string;
   };
+  setor?: number;
 }
 
 
