@@ -7,7 +7,6 @@ class ProdutoInventario(models.Model):
     pavimento = models.CharField(max_length=100, blank=True, null=True)
     setor = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True, db_column='setor_id')
     posicao = models.CharField(max_length=100, blank=True, null=True)
-    cargo = models.ForeignKey(Cargo, on_delete=models.SET_NULL, null=True, blank=True, db_column='cargo_id')
     anydesk = models.CharField(max_length=100, blank=True, null=True)
     marca = models.CharField(max_length=100, blank=True, null=True)
     modelo = models.CharField(max_length=100, blank=True, null=True)
@@ -22,6 +21,9 @@ class ProdutoInventario(models.Model):
     observacao = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=100, blank=True, null=True)
     ativo = models.BooleanField(default=True)
+    celular_modelo = models.CharField(max_length=100, null=True, blank=True)
+    celular_marca = models.CharField(max_length=100, null=True, blank=True)
+    celular_numero = models.CharField(max_length=20, null=True, blank=True)
 
     # Adicionais
     usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)

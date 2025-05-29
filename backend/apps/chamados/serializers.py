@@ -102,18 +102,23 @@ class UsuarioLogadoSerializer(serializers.ModelSerializer):
 
 
 class ProdutoInventarioSerializer(serializers.ModelSerializer):
-    cargo_id = serializers.PrimaryKeyRelatedField(
-        queryset=Cargo.objects.all(),
-        source='cargo',
+    usuario_id = serializers.PrimaryKeyRelatedField(
+        queryset=Usuario.objects.all(),
+        source='usuario',
         required=False,
         allow_null=True
     )
+
     setor_id = serializers.PrimaryKeyRelatedField(
         queryset=Setor.objects.all(),
         source='setor',
         required=False,
         allow_null=True
     )
+    pavimento = serializers.CharField(required=True)
+   
+
+    usuario = UsuarioSerializer(read_only=True)
 
     class Meta:
         model = ProdutoInventario
