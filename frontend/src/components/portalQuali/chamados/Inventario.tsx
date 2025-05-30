@@ -29,6 +29,7 @@ interface Produto {
   usuario_id: number;
   setor_id: number;
   usuario?: Usuario;
+  tipo_hardware?: string | null;
 }
 interface Usuario {
   id: number;
@@ -54,15 +55,13 @@ export default function Inventario() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [gerentes, setGerentes] = useState<Usuario[]>([]);
-  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [mostrarRede, setMostrarRede] = useState(false);
   const [mostrarPerifericos, setMostrarPerifericos] = useState(false);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [tipoEquipamento, setTipoEquipamento] = useState<string>("");
   const [possuiCelular, setPossuiCelular] = useState<boolean>(false);
   const [formErrors, setFormErrors] = useState<{ [key: string]: boolean }>({});
-
-
-
+  
   const [formData, setFormData] = useState({
     tipo_local: "",
     pavimento: "",
@@ -82,7 +81,6 @@ export default function Inventario() {
     impressora: "",
     headset: "",
     serial: "",
-    status: "",
     ativo: true,
     observacao: "",
     celular_modelo: "",
@@ -107,47 +105,48 @@ export default function Inventario() {
   };
 
   const handleChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  setFormData((prev) => ({ ...prev, [field]: value }));
 
-    if (field === "tipo_local" && typeof value === "string") {
-      fetchSetores(value);
-      setFormData((prev) => ({ ...prev, setor: "", gerente: "" }));
-      setGerentes([]);
-    }
-  };
-
+  if (field === "tipo_local" && typeof value === "string") {
+    fetchSetores(value);
+    setFormData((prev) => ({ ...prev, setor: "", gerente: "" })); 
+    setGerentes([]); 
+  }
+};
+  
   const handleSetorChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedSetor = e.target.value;
-    setFormData((prev) => ({ ...prev, setor: selectedSetor, gerente: "" }));
+  const selectedSetor = e.target.value;
+  setFormData((prev) => ({ ...prev, setor: selectedSetor, gerente: "" }));
 
-    const token = localStorage.getItem("token");
-    try {
-      const res = await api.get(`api/usuarios/gerentes/?setor_id=${selectedSetor}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setGerentes(res.data);
-    } catch (err) {
-      console.error("Erro ao buscar gerentes:", err);
-      setGerentes([]);
-    }
-  };
+  const token = localStorage.getItem("token");
+  try {
+    const res = await api.get(`api/usuarios/gerentes/?setor_id=${selectedSetor}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setGerentes(res.data);
+  } catch (err) {
+    console.error("Erro ao buscar gerentes:", err);
+    setGerentes([]);
+  }
+};
+
 
   const fetchSetores = async (tipoLocal: string) => {
-    const token = localStorage.getItem("token");
-    try {
-      const res = await api.get("api/core/setores/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const token = localStorage.getItem("token");
+  try {
+    const res = await api.get("api/core/setores/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      const setoresFiltrados = res.data.filter((setor: any) =>
-        tipoLocal === "Comercial" ? setor.grupo === 3 : setor.grupo !== 3
-      );
+    const setoresFiltrados = res.data.filter((setor: any) =>
+      tipoLocal === "Comercial" ? setor.grupo === 3 : setor.grupo !== 3
+    );
 
-      setSetores(setoresFiltrados);
-    } catch (err) {
-      console.error("Erro ao buscar setores:", err);
-    }
-  };
+    setSetores(setoresFiltrados);
+  } catch (err) {
+    console.error("Erro ao buscar setores:", err);
+  }
+};
 
   const fetchCargos = async () => {
     const token = localStorage.getItem("token");
@@ -161,24 +160,26 @@ export default function Inventario() {
     }
   };
 
-  const fetchInventario = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const res = await api.get("api/chamados/inventario/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      setProdutos(Array.isArray(res.data) ? res.data : [res.data]);
-    } catch (err) {
-      console.error("Erro ao buscar inventário:", err);
-    }
-  };
+  const fetchInventario = async () => {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await api.get("api/chamados/inventario/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setProdutos(Array.isArray(res.data) ? res.data : [res.data]);
+  } catch (err) {
+    console.error("Erro ao buscar inventário:", err);
+  }
+};
 
   const payload = {
   usuario_id: formData.gerente ? Number(formData.gerente) : null,
   setor_id: Number(formData.setor) || null,
   pavimento: formData.pavimento || null,
   posicao: formData.posicao || null,
+  tipo_hardware: tipoEquipamento || null,
   hostname: formData.hostname || null,
   ip: formData.ip || null,
   anydesk: formData.anydesk || null,
@@ -230,50 +231,50 @@ const handlePhoneChange = (value: string) => {
   setStatusMsg(null);
   const token = localStorage.getItem("token");
 
-  const payload = {
-  usuario_id: formData.gerente ? Number(formData.gerente) : null,
-  setor_id: Number(formData.setor) || null,
-  pavimento: formData.pavimento || null,
-  posicao: formData.posicao || null,
-  hostname: formData.hostname || null,
-  ip: formData.ip || null,
-  anydesk: formData.anydesk || null,
-  impressora: formData.impressora || null,
-  headset: formData.headset || null,
-  marca: formData.marca || null,
-  modelo: formData.modelo || null,
-  processador: formData.processador || null,
-  memoria: formData.memoria || null,
-  armazenamento: formData.armazenamento || null,
-  serial: formData.serial || null,
-  status: formData.status || null,
-  ativo: formData.ativo,
-  observacao: formData.observacao || null,
-  consultor: formData.consultor || null,
-  ...(possuiCelular && {
-    celular_modelo: formData.celular_modelo || null,
-    celular_marca: formData.celular_marca || null,
-    celular_numero: formData.celular_numero || null,
-  })
-};
-
- 
-  if (!validarCampos()) {
-  setStatusMsg("Preencha todos os campos obrigatórios.");
-  return;
+    if (!validarCampos()) {
+    setStatusMsg("Preencha todos os campos obrigatórios.");
+    return;
   }
 
   try {
-    console.log("Payload enviado:", payload);
-    const res = await api.post("api/chamados/inventario/", payload, {
+    
+    const finalFormData = { ...formData, tipo_hardware: tipoEquipamento || null };
+
+    const res = await api.post("api/chamados/inventario/", finalFormData, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (res.status === 201) {
+    if (res.status === 200 || res.status === 201) {
       setStatusMsg("Produto cadastrado com sucesso!");
+      setFormData({
+        tipo_local: "",
+        pavimento: "",
+        setor: "",
+        posicao: "",
+        gerente: "",
+        consultor: "",
+        cargo: "",
+        marca: "",
+        modelo: "",
+        processador: "",
+        memoria: "",
+        armazenamento: "",
+        hostname: "",
+        ip: "",
+        anydesk: "",
+        impressora: "",
+        headset: "",
+        serial: "",
+        status: "",
+        ativo: true,
+        observacao: "",
+        celular_modelo: "",
+        celular_marca: "",
+        celular_numero: "",
+      });
       fetchInventario();
       setModoCadastro(false);
     } else {
@@ -321,37 +322,26 @@ return (<section className="p-6 pt-20">
     <section className="bg-white p-6 rounded-xl shadow mt-4 max-h-[600px] overflow-y-auto">
       <form onSubmit={handleSubmit} className="space-y-6 pr-2">
         
+        {/* Responsáveis */}
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Localização</h3>
+          {/* Localização */}
             <div>
-                <div className="flex items-center gap-6 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">Administrativo</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.tipo_local === "Administrativo"}
-                        onChange={() => handleChange("tipo_local", "Administrativo")}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
-                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">Comercial</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.tipo_local === "Comercial"}
-                        onChange={() => handleChange("tipo_local", "Comercial")}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
-                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
-                    </label>
-                  </div>
+              {/* Switches de Tipo de Local */}
+              <div className="flex items-center gap-6 mb-4">
+                {/* Administrativo */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">Administrativo</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.tipo_local === "Administrativo"}
+                      onChange={() => handleChange("tipo_local", "Administrativo")}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                    <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                  </label>
                 </div>
 
                 {/* Comercial */}
@@ -369,51 +359,59 @@ return (<section className="p-6 pt-20">
                   </label>
                 </div>
               </div>
-              <div className="flex flex-col">
+
+              {/* Pavimento - abaixo dos switches */}
+              <input
+                placeholder="Pavimento"
+                value={formData.pavimento}
+                onChange={(e) => handleChange("pavimento", e.target.value)}
+                className={`border rounded px-3 py-2 w-full mb-4 ${
+                  formErrors.pavimento ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+
+              {/* Restante dos campos em grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Setor */}
+                <select
+                  value={formData.setor}
+                  onChange={handleSetorChange}
+                  className={`border rounded px-3 py-2 w-full text-gray-700 ${
+                    formErrors.setor ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Selecione o Setor *</option>
+                  {setores.map((setor) => (
+                    <option key={setor.id} value={setor.id}>
+                      {setor.nome}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Posição */}
                 <input
-                  placeholder="Pavimento"
-                  value={formData.pavimento}
-                  onChange={(e) => handleChange("pavimento", e.target.value)}
-                  className={`border rounded px-3 py-2 w-full ${formErrors.pavimento ? "border-red-500" : "border-gray-300"}`}
+                  placeholder="Posição"
+                  value={formData.posicao}
+                  onChange={(e) => handleChange("posicao", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
                 />
-                {formErrors.pavimento && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
 
-                <div className="flex flex-col">
-                  <select
-                    value={formData.setor}
-                    onChange={handleSetorChange}
-                    className={`border rounded px-3 py-2 w-full text-gray-700 ${formErrors.setor ? "border-red-500" : "border-gray-300"}`}
-                  >
-                    <option value="">Selecione o Setor *</option>
-                    {setores.map((setor) => (
-                      <option key={setor.id} value={setor.id}>
-                        {setor.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {formErrors.setor && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
-                </div>
+                {/* Gerente */}
+                <select
+                  value={formData.gerente}
+                  onChange={(e) => handleChange("gerente", e.target.value)}
+                  className={`border rounded px-3 py-2 w-full text-gray-700 ${
+                    formErrors.gerente ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Selecione o Gerente *</option>
+                  {gerentes.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nome}
+                    </option>
+                  ))}
+                </select>
 
-
-                <input placeholder="Posição"
-                      value={formData.posicao}
-                      onChange={(e) => handleChange("posicao", e.target.value)}
-                      className="border border-gray-300 rounded px-3 py-2 w-full"/>
-                <div className="flex flex-col">
-                  <select
-                    value={formData.gerente}
-                    onChange={(e) => handleChange("gerente", e.target.value)}
-                    className={`border rounded px-3 py-2 w-full text-gray-700 ${formErrors.gerente ? "border-red-500" : "border-gray-300"}`}
-                  >
-                    <option value="">Selecione o Gerente *</option>
-                    {gerentes.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {formErrors.gerente && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
-                </div>
                 {/* Consultor (somente para Administrativo) */}
                 {formData.tipo_local !== "Comercial" && (
                   <input
@@ -425,7 +423,10 @@ return (<section className="p-6 pt-20">
                 )}
               </div>
             </div>
-            
+
+
+        </div>
+
         {/* Hardware */}
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Hardware</h3>
@@ -469,6 +470,7 @@ return (<section className="p-6 pt-20">
                 <span className="text-sm text-gray-700">Possui celular</span>
               </div>
             </div>
+
             {/* marca */}
                 <input
                   placeholder="marca"
@@ -524,7 +526,6 @@ return (<section className="p-6 pt-20">
                       formErrors.celular_modelo ? "border-red-500" : "border-gray-300"
                     }`}
                   />
-                  {formErrors.celular_modelo && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
                 </div>
 
                 <div className="flex flex-col">
@@ -536,7 +537,6 @@ return (<section className="p-6 pt-20">
                       formErrors.celular_marca ? "border-red-500" : "border-gray-300"
                     }`}
                   />
-                  {formErrors.celular_marca && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
                 </div>
 
                 <div className="flex flex-col">
@@ -553,6 +553,8 @@ return (<section className="p-6 pt-20">
                 </div>
               </div>
             )}
+
+
           </div>
         </div>
          {/* Switches de controle */}
@@ -662,7 +664,7 @@ return (<section className="p-6 pt-20">
           <thead className="text-left text-gray-600 border-b">
             <tr>
               {[
-                "Pavimento", "Setor", "Posição", "Gerente", "Marca", "Modelo",
+                "Pavimento", "Setor", "Posição", "Gerente",  "Tipo Hardware", "Marca", "Modelo",
                 "Anydesk", "Status", "Ativo", "Atualizado em"
               ].map((col) => (
                 <th key={col} className="py-2 whitespace-nowrap">{col}</th>
@@ -676,6 +678,7 @@ return (<section className="p-6 pt-20">
                 <td className="py-2 whitespace-nowrap">{produto.setor ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.posicao ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.usuario?.nome ?? "—"}</td>
+                <td className="py-2 whitespace-nowrap">{produto.tipo_hardware ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.marca ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.modelo ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.anydesk ?? "—"}</td>
