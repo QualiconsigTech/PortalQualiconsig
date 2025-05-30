@@ -73,8 +73,8 @@ export default function ChamadosUsuariosAdmin({ tipo = "meus" }: { tipo: "meus" 
           "Encerrado": 3,
         };
 
-          return statusOrder[a.status] - statusOrder[b.status];
-        });
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
+      });
 
       setChamados(ordenado);
       } catch (error) {

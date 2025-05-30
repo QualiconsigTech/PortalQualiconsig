@@ -85,7 +85,7 @@ export default function ChamadosUsuarios({ activeView }: ChamadosUsuariosProps) 
           "Encerrado": 3,
         };
 
-       return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
+        return statusOrder[getStatus(a).texto] - statusOrder[getStatus(b).texto];
       });
 
       setChamados(ordenado);

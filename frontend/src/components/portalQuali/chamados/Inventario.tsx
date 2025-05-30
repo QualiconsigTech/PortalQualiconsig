@@ -62,6 +62,7 @@ export default function Inventario() {
   const [formErrors, setFormErrors] = useState<{ [key: string]: boolean }>({});
 
 
+
   const [formData, setFormData] = useState({
     tipo_local: "",
     pavimento: "",
@@ -91,23 +92,19 @@ export default function Inventario() {
 
   const validarCampos = () => {
   const novosErros: { [key: string]: boolean } = {};
-
   if (!formData.pavimento) novosErros.pavimento = true;
   if (!formData.setor) novosErros.setor = true;
   if (!formData.gerente) novosErros.gerente = true;
   if (!formData.marca) novosErros.marca = true;
   if (!formData.modelo) novosErros.modelo = true;
-
   if (possuiCelular) {
     if (!formData.celular_modelo) novosErros.celular_modelo = true;
     if (!formData.celular_marca) novosErros.celular_marca = true;
     if (!formData.celular_numero) novosErros.celular_numero = true;
   }
-
   setFormErrors(novosErros);
   return Object.keys(novosErros).length === 0;
   };
-
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -176,6 +173,57 @@ export default function Inventario() {
       console.error("Erro ao buscar inventário:", err);
     }
   };
+
+  const payload = {
+  usuario_id: formData.gerente ? Number(formData.gerente) : null,
+  setor_id: Number(formData.setor) || null,
+  pavimento: formData.pavimento || null,
+  posicao: formData.posicao || null,
+  hostname: formData.hostname || null,
+  ip: formData.ip || null,
+  anydesk: formData.anydesk || null,
+  impressora: formData.impressora || null,
+  headset: formData.headset || null,
+  marca: formData.marca || null,
+  modelo: formData.modelo || null,
+  processador: formData.processador || null,
+  memoria: formData.memoria || null,
+  armazenamento: formData.armazenamento || null,
+  serial: formData.serial || null,
+  status: formData.status || null,
+  ativo: formData.ativo,
+  observacao: formData.observacao || null,
+  consultor: formData.consultor || null,
+  ...(possuiCelular && {
+    celular_modelo: formData.celular_modelo || null,
+    celular_marca: formData.celular_marca || null,
+    celular_numero: formData.celular_numero || null,
+  })
+  
+};
+
+const formatPhoneNumber = (value: string) => {
+  const cleaned = value.replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{0,2})(\d{0,5})(\d{0,4})$/);
+
+  if (!match) return "";
+
+  const [, ddd, part1, part2] = match;
+  if (ddd && part1 && part2) return `(${ddd}) ${part1}-${part2}`;
+  if (ddd && part1) return `(${ddd}) ${part1}`;
+  if (ddd) return `(${ddd})`;
+
+  return "";
+};
+
+const handlePhoneChange = (value: string) => {
+  const formatted = formatPhoneNumber(value);
+  handleChange("celular_numero", formatted);
+};
+
+
+
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -306,7 +354,21 @@ return (<section className="p-6 pt-20">
                   </div>
                 </div>
 
-
+                {/* Comercial */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">Comercial</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.tipo_local === "Comercial"}
+                      onChange={() => handleChange("tipo_local", "Comercial")}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-800 transition-all"></div>
+                    <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-full shadow-md"></div>
+                  </label>
+                </div>
+              </div>
               <div className="flex flex-col">
                 <input
                   placeholder="Pavimento"
@@ -352,7 +414,7 @@ return (<section className="p-6 pt-20">
                   </select>
                   {formErrors.gerente && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
                 </div>
-
+                {/* Consultor (somente para Administrativo) */}
                 {formData.tipo_local !== "Comercial" && (
                   <input
                     placeholder="Consultor"
@@ -361,12 +423,9 @@ return (<section className="p-6 pt-20">
                     className="border border-gray-300 rounded px-3 py-2 w-full"
                   />
                 )}
-
               </div>
             </div>
-
-        </div>
-
+            
         {/* Hardware */}
         <div>
           <h3 className="text-lg font-medium mb-2 text-gray-700">Hardware</h3>
@@ -410,48 +469,90 @@ return (<section className="p-6 pt-20">
                 <span className="text-sm text-gray-700">Possui celular</span>
               </div>
             </div>
+            {/* marca */}
+                <input
+                  placeholder="marca"
+                  value={formData.marca}
+                  onChange={(e) => handleChange("marca", e.target.value)}
+                  className={`border rounded px-3 py-2 w-full mb-4 ${
+                  formErrors.pavimento ? "border-red-500" : "border-gray-300"
+                }`}
+                />
 
-            {["marca", "modelo", "processador", "memoria", "armazenamento"].map((field) => (
-              <input
-                key={field}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                value={(formData as any)[field]}
-                onChange={(e) => handleChange(field, e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 w-full h-10"
-              />
-            ))}
-            {possuiCelular && (
+              {/* modelo */}
+                <input
+                  placeholder="modelo"
+                  value={formData.modelo}
+                  onChange={(e) => handleChange("modelo", e.target.value)}
+                  className={`border rounded px-3 py-2 w-full mb-4 ${
+                  formErrors.pavimento ? "border-red-500" : "border-gray-300"
+                }`}
+                />
+
+              {/* processador */}
+                <input
+                  placeholder="processador"
+                  value={formData.processador}
+                  onChange={(e) => handleChange("processador", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+
+              {/* memoria */}
+                <input
+                  placeholder="memoria"
+                  value={formData.memoria}
+                  onChange={(e) => handleChange("memoria", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+
+
+                 {/* armazenamento */}
+                <input
+                  placeholder="armazenamento"
+                  value={formData.armazenamento}
+                  onChange={(e) => handleChange("armazenamento", e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                />
+              {possuiCelular && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div className="flex flex-col">
-              <input
-                placeholder="Modelo do celular"
-                value={formData.celular_modelo}
-                onChange={(e) => handleChange("celular_modelo", e.target.value)}
-                className={`border rounded px-3 py-2 w-full ${
-                  formErrors.celular_modelo ? "border-red-500" : "border-gray-300"}`}
+                  <input
+                    placeholder="Modelo do celular"
+                    value={formData.celular_modelo}
+                    onChange={(e) => handleChange("celular_modelo", e.target.value)}
+                    className={`border rounded px-3 py-2 w-full h-10 ${
+                      formErrors.celular_modelo ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
                   {formErrors.celular_modelo && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
-              <div className="flex flex-col">
-                <input
-                  placeholder="Marca do celular"
-                  value={formData.celular_marca}
-                  onChange={(e) => handleChange("celular_marca", e.target.value)}
-                  className={`border rounded px-3 py-2 w-full ${formErrors.celular_marca ? "border-red-500" : "border-gray-300"}`}
-                />
-                {formErrors.celular_marca && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
-              </div>
-
-                  <div className="flex flex-col md:col-span-2">
-                    <input
-                      placeholder="Número com DDD *"
-                      value={formData.celular_numero}
-                      onChange={(e) => handleChange("celular_numero", e.target.value)}
-                      className={`border rounded px-3 py-2 w-full ${formErrors.celular_numero ? "border-red-500" : "border-gray-300"}`}
-                    />
-                    {formErrors.celular_numero && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
-                  </div>
-
                 </div>
-              )}
+
+                <div className="flex flex-col">
+                  <input
+                    placeholder="Marca do celular"
+                    value={formData.celular_marca}
+                    onChange={(e) => handleChange("celular_marca", e.target.value)}
+                    className={`border rounded px-3 py-2 w-full h-10 ${
+                      formErrors.celular_marca ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {formErrors.celular_marca && <p className="text-red-500 text-xs mt-1">Campo obrigatório</p>}
+                </div>
+
+                <div className="flex flex-col">
+                  <input
+                    placeholder="Número com DDD *"
+                    value={formData.celular_numero}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    className={`border rounded px-3 py-2 w-full h-10 ${
+                      formErrors.celular_numero ? "border-red-500" : "border-gray-300"
+                    }`}
+                    maxLength={15}
+                  />
+                  {formErrors.celular_numero && <p className="text-red-500 text-xs mt-1">Número inválido</p>}
+                </div>
+              </div>
+            )}
           </div>
         </div>
          {/* Switches de controle */}

@@ -15,6 +15,8 @@ class ChamadoSerializer(serializers.ModelSerializer):
     categoria_nome  = serializers.CharField(source='categoria.nome', read_only=True)
     setor_nome  = serializers.CharField(source='setor.nome', read_only=True)
     prioridade_nome = serializers.CharField(source='prioridade.nome', read_only=True)
+    setor = serializers.PrimaryKeyRelatedField(queryset=Setor.objects.all(), required=False)
+    
     class Meta:
         model = Chamado
         fields = '__all__'
@@ -106,7 +108,7 @@ class ProdutoInventarioSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
-    
+
     setor_id = serializers.PrimaryKeyRelatedField(
         queryset=Setor.objects.all(),
         source='setor',
@@ -114,17 +116,15 @@ class ProdutoInventarioSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     pavimento = serializers.CharField(required=True)
-    marca = serializers.CharField(required=True)
-    modelo = serializers.CharField(required=True)
-    celular_modelo = serializers.CharField(required=True)
-    celular_marca = serializers.CharField(required=True)
-    celular_numero = serializers.CharField(required=True)
+
 
     usuario = UsuarioSerializer(read_only=True)
 
     class Meta:
         model = ProdutoInventario
         fields = '__all__'
+
+
 
 
 

@@ -12,3 +12,4 @@ def atualizar_produto_inventario(produto_id, data):
         setattr(produto, campo, valor)
     produto.save()
     return produto
+
