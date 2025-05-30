@@ -27,8 +27,5 @@ class Migration(migrations.Migration):
             name='celular_numero',
             field=models.CharField(blank=True, max_length=20, null=True),
         ),
-<<<<<<< HEAD
     ]
-=======
-    ]
->>>>>>> d5d1af462ed363eb4e800bd6acb8133927fef243
+

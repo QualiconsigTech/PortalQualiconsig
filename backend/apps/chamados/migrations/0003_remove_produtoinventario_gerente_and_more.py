@@ -24,8 +24,5 @@ class Migration(migrations.Migration):
             name='setor',
             field=models.ForeignKey(blank=True, db_column='setor_id', null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.setor'),
         ),
-<<<<<<< HEAD
     ]
-=======
-    ]
->>>>>>> d5d1af462ed363eb4e800bd6acb8133927fef243
+
