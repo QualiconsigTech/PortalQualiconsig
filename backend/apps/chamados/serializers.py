@@ -117,6 +117,7 @@ class ProdutoInventarioSerializer(serializers.ModelSerializer):
     )
     pavimento = serializers.CharField(required=True)
     tipo_hardware = serializers.CharField(required=False, allow_null=True)
+    setor_nome = serializers.CharField(source='setor.nome', read_only=True)
 
 
     usuario = UsuarioSerializer(read_only=True)
