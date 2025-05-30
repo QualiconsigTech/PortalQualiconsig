@@ -7,6 +7,7 @@ interface Produto {
   id: number;
   pavimento: string | null;
   setor: string | null;
+  setor_nome?: string | null;
   posicao: string | null;
   gerente: string | null;
   consultor: string | null;
@@ -191,7 +192,6 @@ export default function Inventario() {
   memoria: formData.memoria || null,
   armazenamento: formData.armazenamento || null,
   serial: formData.serial || null,
-  status: formData.status || null,
   ativo: formData.ativo,
   observacao: formData.observacao || null,
   consultor: formData.consultor || null,
@@ -268,7 +268,6 @@ const handlePhoneChange = (value: string) => {
         impressora: "",
         headset: "",
         serial: "",
-        status: "",
         ativo: true,
         observacao: "",
         celular_modelo: "",
@@ -390,6 +389,8 @@ return (<section className="p-6 pt-20">
 
                 {/* Posição */}
                 <input
+                  type="number"
+                  step="1"
                   placeholder="Posição"
                   value={formData.posicao}
                   onChange={(e) => handleChange("posicao", e.target.value)}
@@ -675,7 +676,7 @@ return (<section className="p-6 pt-20">
             {produtos.map((produto) => (
               <tr key={produto.id} className="hover:bg-gray-50">
                 <td className="py-2 whitespace-nowrap">{produto.pavimento ?? "—"}</td>
-                <td className="py-2 whitespace-nowrap">{produto.setor ?? "—"}</td>
+                <td className="py-2 whitespace-nowrap">{produto.setor_nome?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.posicao ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.usuario?.nome ?? "—"}</td>
                 <td className="py-2 whitespace-nowrap">{produto.tipo_hardware ?? "—"}</td>
